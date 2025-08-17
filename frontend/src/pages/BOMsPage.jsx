@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react";
+import React, {useMemo, useState} from "react";
+import {useNavigate} from "react-router-dom";
 
 /**
  * BOMsPage — lightweight ERP-style BOM registry page.
@@ -10,22 +11,103 @@ import React, { useMemo, useState } from "react";
 export const BOMsPage = () => {
     // --- Mocked BOMs ---
     const data = [
-        { id: "BOM-001", product: "Front Assembly", productId: "ITM-006", revision: "v3", status: "Active", components: 12, lastUpdated: "2025-02-14" },
-        { id: "BOM-002", product: "Large Widget", productId: "ITM-002", revision: "v1", status: "Active", components: 7,  lastUpdated: "2025-02-10" },
-        { id: "BOM-003", product: "Assembly Kit 10", productId: "ITM-010", revision: "v5", status: "Obsolete", components: 18, lastUpdated: "2024-12-02" },
-        { id: "BOM-004", product: "Steel Frame", productId: "ITM-007", revision: "v2", status: "Active", components: 9,  lastUpdated: "2025-01-29" },
-        { id: "BOM-005", product: "Lion Bracket", productId: "ITM-004", revision: "v1", status: "Draft", components: 5,  lastUpdated: "2025-02-18" },
-        { id: "BOM-006", product: "Chain Bracket", productId: "ITM-005", revision: "v4", status: "Active", components: 11, lastUpdated: "2025-01-12" },
-        { id: "BOM-007", product: "Plastic Case", productId: "ITM-003", revision: "v2", status: "Active", components: 6,  lastUpdated: "2025-02-01" },
-        { id: "BOM-008", product: "Warm Yellow LED Kit", productId: "ITM-001", revision: "v1", status: "Draft", components: 4,  lastUpdated: "2025-02-17" },
-        { id: "BOM-009", product: "Blue Paint Pack", productId: "ITM-008", revision: "v3", status: "Hold", components: 3,  lastUpdated: "2025-01-22" },
-        { id: "BOM-010", product: "Screws Pack M3x8", productId: "ITM-009", revision: "v2", status: "Active", components: 2,  lastUpdated: "2025-02-03" },
+        {
+            id: "BOM-001",
+            product: "Front Assembly",
+            productId: "ITM-006",
+            revision: "v3",
+            status: "Active",
+            components: 12,
+            lastUpdated: "2025-02-14"
+        },
+        {
+            id: "BOM-002",
+            product: "Large Widget",
+            productId: "ITM-002",
+            revision: "v1",
+            status: "Active",
+            components: 7,
+            lastUpdated: "2025-02-10"
+        },
+        {
+            id: "BOM-003",
+            product: "Assembly Kit 10",
+            productId: "ITM-010",
+            revision: "v5",
+            status: "Obsolete",
+            components: 18,
+            lastUpdated: "2024-12-02"
+        },
+        {
+            id: "BOM-004",
+            product: "Steel Frame",
+            productId: "ITM-007",
+            revision: "v2",
+            status: "Active",
+            components: 9,
+            lastUpdated: "2025-01-29"
+        },
+        {
+            id: "BOM-005",
+            product: "Lion Bracket",
+            productId: "ITM-004",
+            revision: "v1",
+            status: "Draft",
+            components: 5,
+            lastUpdated: "2025-02-18"
+        },
+        {
+            id: "BOM-006",
+            product: "Chain Bracket",
+            productId: "ITM-005",
+            revision: "v4",
+            status: "Active",
+            components: 11,
+            lastUpdated: "2025-01-12"
+        },
+        {
+            id: "BOM-007",
+            product: "Plastic Case",
+            productId: "ITM-003",
+            revision: "v2",
+            status: "Active",
+            components: 6,
+            lastUpdated: "2025-02-01"
+        },
+        {
+            id: "BOM-008",
+            product: "Warm Yellow LED Kit",
+            productId: "ITM-001",
+            revision: "v1",
+            status: "Draft",
+            components: 4,
+            lastUpdated: "2025-02-17"
+        },
+        {
+            id: "BOM-009",
+            product: "Blue Paint Pack",
+            productId: "ITM-008",
+            revision: "v3",
+            status: "Hold",
+            components: 3,
+            lastUpdated: "2025-01-22"
+        },
+        {
+            id: "BOM-010",
+            product: "Screws Pack M3x8",
+            productId: "ITM-009",
+            revision: "v2",
+            status: "Active",
+            components: 2,
+            lastUpdated: "2025-02-03"
+        },
     ];
 
+    const navigate = useNavigate();
     // --- State ---
     const [query, setQuery] = useState("");
     const [status, setStatus] = useState("all");
-    const [sort, setSort] = useState({ key: "product", dir: "asc" });
+    const [sort, setSort] = useState({key: "product", dir: "asc"});
     const [selected, setSelected] = useState({});
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(8);
@@ -44,14 +126,14 @@ export const BOMsPage = () => {
         }
         if (status !== "all") rows = rows.filter(r => r.status === status);
 
-        const { key, dir } = sort;
+        const {key, dir} = sort;
         rows = [...rows].sort((a, b) => {
             const av = a[key];
             const bv = b[key];
             const cmp =
                 key === "components"
                     ? av - bv
-                    : String(av).localeCompare(String(bv), undefined, { numeric: true });
+                    : String(av).localeCompare(String(bv), undefined, {numeric: true});
             return dir === "asc" ? cmp : -cmp;
         });
         return rows;
@@ -63,10 +145,10 @@ export const BOMsPage = () => {
     const paged = filtered.slice(pageStart, pageStart + pageSize);
 
     // --- Selection ---
-    const toggleOne = (id) => setSelected(s => ({ ...s, [id]: !s[id] }));
+    const toggleOne = (id) => setSelected(s => ({...s, [id]: !s[id]}));
     const allOnPageSelected = paged.length > 0 && paged.every(r => selected[r.id]);
     const toggleAll = () => {
-        const next = { ...selected };
+        const next = {...selected};
         if (allOnPageSelected) paged.forEach(r => delete next[r.id]);
         else paged.forEach(r => (next[r.id] = true));
         setSelected(next);
@@ -77,7 +159,7 @@ export const BOMsPage = () => {
     const th = (label, key, right = false) => (
         <th
             onClick={() =>
-                setSort(s => ({ key, dir: s.key === key && s.dir === "asc" ? "desc" : "asc" }))
+                setSort(s => ({key, dir: s.key === key && s.dir === "asc" ? "desc" : "asc"}))
             }
             className={`px-4 py-3 font-semibold text-gray-300 select-none cursor-pointer ${right ? "text-right" : "text-left"}`}
         >
@@ -89,7 +171,8 @@ export const BOMsPage = () => {
     );
 
     return (
-        <div className="min-h-[calc(100vh-140px)] bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
+        <div
+            className="min-h-[calc(100vh-140px)] bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
             {/* Header */}
             <header className="mx-auto max-w-6xl px-4 pt-10 pb-6">
                 <div className="flex items-end justify-between gap-4 flex-wrap">
@@ -98,8 +181,13 @@ export const BOMsPage = () => {
                         <p className="mt-2 text-gray-400">Define and manage bill of materials.</p>
                     </div>
                     <div className="flex gap-3">
-                        <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm">+ New BOM</button>
-                        <button className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">Import CSV</button>
+                        <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
+                                onClick={() => navigate("/boms/new")}>+ New BOM
+                        </button>
+                        <button
+                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">Import
+                            CSV
+                        </button>
                     </div>
                 </div>
             </header>
@@ -110,7 +198,10 @@ export const BOMsPage = () => {
                     <div className="flex flex-col md:flex-row md:items-center gap-3">
                         <select
                             value={status}
-                            onChange={(e) => { setStatus(e.target.value); setPage(1); }}
+                            onChange={(e) => {
+                                setStatus(e.target.value);
+                                setPage(1);
+                            }}
                             className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
                         >
                             <option value="all">All Statuses</option>
@@ -124,17 +215,22 @@ export const BOMsPage = () => {
                             <input
                                 placeholder="Search BOM ID, Product, or Item ID…"
                                 value={query}
-                                onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+                                onChange={(e) => {
+                                    setQuery(e.target.value);
+                                    setPage(1);
+                                }}
                                 className="w-full rounded-lg bg-gray-800 border border-white/10 pl-3 pr-10 py-2 text-sm"
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">⌕</span>
                         </div>
 
                         <div className="flex items-center gap-2 ml-auto">
-                            <button className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm hover:bg-gray-700">
+                            <button
+                                className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm hover:bg-gray-700">
                                 Export CSV
                             </button>
-                            <button className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm hover:bg-gray-700">
+                            <button
+                                className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm hover:bg-gray-700">
                                 Print / PDF
                             </button>
                             <button
@@ -155,7 +251,7 @@ export const BOMsPage = () => {
                         <thead className="bg-gray-900/80">
                         <tr>
                             <th className="px-4 py-3">
-                                <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll} />
+                                <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll}/>
                             </th>
                             {th("BOM ID", "id")}
                             {th("Product", "product")}
@@ -170,7 +266,8 @@ export const BOMsPage = () => {
                         {paged.map((bom) => (
                             <tr key={bom.id} className="hover:bg-gray-800/40 transition">
                                 <td className="px-4 py-3">
-                                    <input type="checkbox" checked={!!selected[bom.id]} onChange={() => toggleOne(bom.id)} />
+                                    <input type="checkbox" checked={!!selected[bom.id]}
+                                           onChange={() => toggleOne(bom.id)}/>
                                 </td>
                                 <td className="px-4 py-3 font-mono text-white">{bom.id}</td>
                                 <td className="px-4 py-3 text-gray-200">{bom.product}</td>
@@ -200,12 +297,16 @@ export const BOMsPage = () => {
                 </div>
 
                 {/* Pagination */}
-                <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-gray-400">
+                <div
+                    className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-gray-400">
                     <div className="flex items-center gap-2">
                         <span>Rows per page</span>
                         <select
                             value={pageSize}
-                            onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+                            onChange={(e) => {
+                                setPageSize(Number(e.target.value));
+                                setPage(1);
+                            }}
                             className="rounded bg-gray-800 border border-white/10 px-2 py-1"
                         >
                             {[8, 16, 24].map(n => <option key={n} value={n}>{n}</option>)}

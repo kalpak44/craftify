@@ -11,6 +11,7 @@ import {NotFoundPage} from "./pages/NotFoundPage";
 import {AuthenticationGuard} from "./components/authentication-guard/AuthenticationGuard.jsx";
 import {ItemsPage} from "./pages/ItemsPage.jsx";
 import {BOMsPage} from "./pages/BOMsPage.jsx";
+import BOMCreationPage from "./pages/BOMCreationPage.jsx";
 
 export default function App() {
     const {isLoading} = useAuth0();
@@ -40,6 +41,11 @@ export default function App() {
             <Route path="/boms" element={
                 <AuthenticationGuard>
                     <FullWidthLayout><BOMsPage/></FullWidthLayout>
+                </AuthenticationGuard>
+            }/>
+            <Route path="/boms/new" element={
+                <AuthenticationGuard>
+                    <FullWidthLayout><BOMCreationPage/></FullWidthLayout>
                 </AuthenticationGuard>
             }/>
             <Route

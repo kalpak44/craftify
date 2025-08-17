@@ -1,16 +1,16 @@
 import PropTypes from "prop-types";
-import { useEffect, useRef, useState } from "react";
-import { useAuth0 } from "@auth0/auth0-react";
-import { NavLink } from "react-router-dom";
-import { Loader as Spinner } from "../common/Loader";
+import {useEffect, useRef, useState} from "react";
+import {useAuth0} from "@auth0/auth0-react";
+import {NavLink} from "react-router-dom";
+import {Loader as Spinner} from "../common/Loader";
 
 /**
  * Layout with full width, navbar, and profile dropdown.
  * Tailwind-only. Mobile-first with an accessible hamburger menu + focus management.
  * Desktop styles preserved exactly from the previous design.
  */
-export const FullWidthLayout = ({ children }) => {
-    const { isAuthenticated, user, logout, loginWithRedirect, isLoading } = useAuth0();
+export const FullWidthLayout = ({children}) => {
+    const {isAuthenticated, user, logout, loginWithRedirect, isLoading} = useAuth0();
 
     const [showProfile, setShowProfile] = useState(false);
     const profileMenuRef = useRef(null);
@@ -51,39 +51,39 @@ export const FullWidthLayout = ({ children }) => {
 
     const handleSignUp = () => {
         loginWithRedirect({
-            appState: { returnTo: "/callback" },
-            authorizationParams: { prompt: "login", screen_hint: "signup" },
+            appState: {returnTo: "/callback"},
+            authorizationParams: {prompt: "login", screen_hint: "signup"},
         });
     };
 
     // Desktop: keep original visual design
-    const navLinkClassDesktop = ({ isActive }) =>
+    const navLinkClassDesktop = ({isActive}) =>
         `whitespace-nowrap ${isActive ? "text-white" : "text-gray-400 hover:text-white"}`;
 
     // Mobile: larger tap targets + focus styles
-    const navLinkClassMobile = ({ isActive }) =>
+    const navLinkClassMobile = ({isActive}) =>
         `block px-3 py-2 rounded-md text-sm font-medium focus:outline-none focus-visible:ring focus-visible:ring-blue-500/50 whitespace-nowrap ${
             isActive ? "bg-white/10 text-white" : "text-gray-300 hover:text-white hover:bg-white/5"
         }`;
 
     const AUTH_ITEMS = [
-        { to: "/", label: "Home" },
-        { to: "/items", label: "Items" },
-        { to: "/boms", label: "BOMs" },
-        { to: "/work-orders", label: "Work Orders" },
-        { to: "/inventory", label: "Inventory" },
-        { to: "/purchasing", label: "Purchasing" },
-        { to: "/production", label: "Production" },
-        { to: "/reports", label: "Reports" },
+        {to: "/", label: "Home"},
+        {to: "/items", label: "Items"},
+        {to: "/boms", label: "BOMs"},
+        {to: "/work-orders", label: "Work Orders"},
+        {to: "/inventory", label: "Inventory"},
+        {to: "/purchasing", label: "Purchasing"},
+        {to: "/production", label: "Production"},
+        {to: "/reports", label: "Reports"},
     ];
 
     const PUBLIC_ITEMS = [
-        { to: "/", label: "Home" },
-        { to: "/terms", label: "Terms" },
-        { to: "/privacy", label: "Privacy" },
+        {to: "/", label: "Home"},
+        {to: "/terms", label: "Terms"},
+        {to: "/privacy", label: "Privacy"},
     ];
 
-    if (isLoading) return <Spinner />;
+    if (isLoading) return <Spinner/>;
 
     const ITEMS = isAuthenticated ? AUTH_ITEMS : PUBLIC_ITEMS;
 
@@ -131,14 +131,14 @@ export const FullWidthLayout = ({ children }) => {
                                         role="menu"
                                     >
                                         <div className="flex items-center space-x-3 mb-3">
-                                            <img src={user?.picture} alt="avatar" className="w-10 h-10 rounded-full" />
+                                            <img src={user?.picture} alt="avatar" className="w-10 h-10 rounded-full"/>
                                             <div>
                                                 <p className="text-sm font-medium text-white">{user?.name}</p>
                                                 <p className="text-xs text-gray-400">{user?.email}</p>
                                             </div>
                                         </div>
                                         <button
-                                            onClick={() => logout({ returnTo: window.location.origin })}
+                                            onClick={() => logout({returnTo: window.location.origin})}
                                             className="w-full mt-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
                                         >
                                             Log Out
@@ -173,11 +173,16 @@ export const FullWidthLayout = ({ children }) => {
                         aria-label="Toggle menu"
                         onClick={() => setMobileOpen((v) => !v)}
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                             className="h-6 w-6">
                             {mobileOpen ? (
-                                <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 11-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clipRule="evenodd" />
+                                <path fillRule="evenodd"
+                                      d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 11-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z"
+                                      clipRule="evenodd"/>
                             ) : (
-                                <path fillRule="evenodd" d="M3.75 5.25a.75.75 0 000 1.5h16.5a.75.75 0 000-1.5H3.75zm0 6a.75.75 0 000 1.5h16.5a.75.75 0 000-1.5H3.75zm0 6a.75.75 0 000 1.5h16.5a.75.75 0 000-1.5H3.75z" clipRule="evenodd" />
+                                <path fillRule="evenodd"
+                                      d="M3.75 5.25a.75.75 0 000 1.5h16.5a.75.75 0 000-1.5H3.75zm0 6a.75.75 0 000 1.5h16.5a.75.75 0 000-1.5H3.75zm0 6a.75.75 0 000 1.5h16.5a.75.75 0 000-1.5H3.75z"
+                                      clipRule="evenodd"/>
                             )}
                         </svg>
                     </button>
@@ -202,15 +207,20 @@ export const FullWidthLayout = ({ children }) => {
                         {/* Header inside drawer */}
                         <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-3">
-                                <div className="h-8 w-8 rounded-2xl bg-blue-600 flex items-center justify-center font-bold">C</div>
+                                <div
+                                    className="h-8 w-8 rounded-2xl bg-blue-600 flex items-center justify-center font-bold">C
+                                </div>
                                 <div className="text-white text-base font-semibold">Craftify</div>
                             </div>
                             <button
                                 className="p-2 rounded-md border border-gray-700 focus:outline-none focus-visible:ring focus-visible:ring-blue-500/50"
                                 onClick={() => setMobileOpen(false)}
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-                                    <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 11-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clipRule="evenodd" />
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                                     className="h-5 w-5">
+                                    <path fillRule="evenodd"
+                                          d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 11-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z"
+                                          clipRule="evenodd"/>
                                 </svg>
                             </button>
                         </div>
@@ -232,13 +242,14 @@ export const FullWidthLayout = ({ children }) => {
                         </nav>
 
                         {/* Divider */}
-                        <div className="my-4 h-px bg-white/10" />
+                        <div className="my-4 h-px bg-white/10"/>
 
                         {/* Auth controls (mobile) */}
                         <div className="mt-1">
                             {isAuthenticated ? (
                                 <div className="flex items-center gap-3">
-                                    <img src={user?.picture} alt="avatar" className="w-10 h-10 rounded-full border border-gray-700" />
+                                    <img src={user?.picture} alt="avatar"
+                                         className="w-10 h-10 rounded-full border border-gray-700"/>
                                     <div className="min-w-0">
                                         <p className="text-sm font-medium truncate">{user?.name}</p>
                                         <p className="text-xs text-gray-400 truncate">{user?.email}</p>
@@ -246,7 +257,7 @@ export const FullWidthLayout = ({ children }) => {
                                     <button
                                         onClick={() => {
                                             setMobileOpen(false);
-                                            logout({ returnTo: window.location.origin });
+                                            logout({returnTo: window.location.origin});
                                         }}
                                         className="ml-auto whitespace-nowrap px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-xs"
                                     >
@@ -285,7 +296,8 @@ export const FullWidthLayout = ({ children }) => {
 
             {/* Footer */}
             <footer className="border-t border-white/5">
-                <div className="mx-auto max-w-6xl px-4 py-8 text-sm text-gray-500 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div
+                    className="mx-auto max-w-6xl px-4 py-8 text-sm text-gray-500 flex flex-col sm:flex-row items-center justify-between gap-3">
                     <p>© {new Date().getFullYear()} Craftify. All rights reserved.</p>
                     <div className="flex items-center gap-4">
                         <NavLink to="/terms" className="hover:text-gray-300">
@@ -301,4 +313,4 @@ export const FullWidthLayout = ({ children }) => {
     );
 };
 
-FullWidthLayout.propTypes = { children: PropTypes.node.isRequired };
+FullWidthLayout.propTypes = {children: PropTypes.node.isRequired};
