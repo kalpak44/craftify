@@ -14,6 +14,10 @@ import {BOMsPage} from "./pages/BOMsPage.jsx";
 import BOMCreationPage from "./pages/BOMCreationPage.jsx";
 import WorkOrdersPage from "./pages/WorkOrdersPage.jsx";
 import WorkOrderCreationPage from "./pages/WorkOrderCreationPage.jsx";
+import InventoryPage from "./pages/InventoryPage.jsx";
+import InventoryTransferPage from "./pages/InventoryTransferPage.jsx";
+import InventoryAdjustPage from "./pages/InventoryAdjustPage.jsx";
+import InventoryReceivePage from "./pages/InventoryReceivePage.jsx";
 
 export default function App() {
     const {isLoading} = useAuth0();
@@ -58,6 +62,26 @@ export default function App() {
             <Route path="/work-orders/new" element={
                 <AuthenticationGuard>
                     <FullWidthLayout><WorkOrderCreationPage/></FullWidthLayout>
+                </AuthenticationGuard>
+            }/>
+            <Route path="/inventory" element={
+                <AuthenticationGuard>
+                    <FullWidthLayout><InventoryPage/></FullWidthLayout>
+                </AuthenticationGuard>
+            }/>
+            <Route path="/inventory/transfer" element={
+                <AuthenticationGuard>
+                    <FullWidthLayout><InventoryTransferPage/></FullWidthLayout>
+                </AuthenticationGuard>
+            }/>
+            <Route path="/inventory/adjust" element={
+                <AuthenticationGuard>
+                    <FullWidthLayout><InventoryAdjustPage/></FullWidthLayout>
+                </AuthenticationGuard>
+            }/>
+            <Route path="/inventory/receive" element={
+                <AuthenticationGuard>
+                    <FullWidthLayout><InventoryReceivePage/></FullWidthLayout>
                 </AuthenticationGuard>
             }/>
             <Route
