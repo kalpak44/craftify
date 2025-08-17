@@ -18,6 +18,7 @@ import InventoryPage from "./pages/InventoryPage.jsx";
 import InventoryTransferPage from "./pages/InventoryTransferPage.jsx";
 import InventoryAdjustPage from "./pages/InventoryAdjustPage.jsx";
 import InventoryReceivePage from "./pages/InventoryReceivePage.jsx";
+import PurchasingPage from "./pages/PurchasingPage.jsx";
 
 export default function App() {
     const {isLoading} = useAuth0();
@@ -82,6 +83,11 @@ export default function App() {
             <Route path="/inventory/receive" element={
                 <AuthenticationGuard>
                     <FullWidthLayout><InventoryReceivePage/></FullWidthLayout>
+                </AuthenticationGuard>
+            }/>
+            <Route path="/purchasing" element={
+                <AuthenticationGuard>
+                    <FullWidthLayout><PurchasingPage/></FullWidthLayout>
                 </AuthenticationGuard>
             }/>
             <Route
