@@ -8,6 +8,8 @@ import {TermsPage} from "./pages/TermsPage";
 import {PrivacyPage} from "./pages/PrivacyPage";
 import {CallbackPage} from "./pages/CallbackPage";
 import {NotFoundPage} from "./pages/NotFoundPage";
+import {AuthenticationGuard} from "./components/authentication-guard/AuthenticationGuard.jsx";
+import {ItemsPage} from "./pages/ItemsPage.jsx";
 
 export default function App() {
     const {isLoading} = useAuth0();
@@ -28,6 +30,12 @@ export default function App() {
                     </FullWidthLayout>
                 }
             />
+
+            <Route path="/items" element={
+                <AuthenticationGuard>
+                    <FullWidthLayout><ItemsPage/></FullWidthLayout>
+                </AuthenticationGuard>
+            }/>
             <Route
                 path="/terms"
                 element={
