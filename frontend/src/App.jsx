@@ -13,6 +13,7 @@ import {ItemsPage} from "./pages/ItemsPage.jsx";
 import {BOMsPage} from "./pages/BOMsPage.jsx";
 import BOMCreationPage from "./pages/BOMCreationPage.jsx";
 import WorkOrdersPage from "./pages/WorkOrdersPage.jsx";
+import WorkOrderCreationPage from "./pages/WorkOrderCreationPage.jsx";
 
 export default function App() {
     const {isLoading} = useAuth0();
@@ -52,6 +53,11 @@ export default function App() {
             <Route path="/work-orders" element={
                 <AuthenticationGuard>
                     <FullWidthLayout><WorkOrdersPage/></FullWidthLayout>
+                </AuthenticationGuard>
+            }/>
+            <Route path="/work-orders/new" element={
+                <AuthenticationGuard>
+                    <FullWidthLayout><WorkOrderCreationPage/></FullWidthLayout>
                 </AuthenticationGuard>
             }/>
             <Route
