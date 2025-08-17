@@ -65,7 +65,7 @@ export const HomePage = () => {
 
     return (
         <div
-            className="min-h-[calc(100vh-140px)] bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
+            className="bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
             <header className="mx-auto max-w-6xl px-4 pt-14 pb-10 text-center">
                 <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white">Lightweight ERP for Inventory &
                     Manufacturing</h1>
