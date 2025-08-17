@@ -1,0 +1,88 @@
+### Root-Level ###
+HELP.md
+.DS_Store
+*.log
+.env
+*.env.*
+
+### IDEs ###
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# VS Code
+.vscode/
+
+# Eclipse / STScd
+.apt_generated/
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans/
+.sts4-cache/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### Maven / Java ###
+# Build artifacts
+/target/
+/**/target/
+
+# Maven Wrapper
+.mvn/
+!/.mvn/wrapper/maven-wrapper.jar
+mvnw
+mvnw.cmd
+
+# Logs & temp files
+hs_err_pid*.log
+
+# Spring Boot
+**/application-*.yaml
+**/application-*.yml
+**/application-*.properties
+**/src/test/resources/application-*.yaml
+**/src/test/resources/application-*.yml
+**/src/test/resources/application-*.properties
+
+### Node / Frontend ###
+# Dependency directories
+**/node_modules/
+
+# Build output
+**/dist/
+**/build/
+
+# Vite
+**/.vite/
+**/.cache/
+**/.vitepress/
+**/coverage/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local environment settings
+.env.local
+
+# Misc
+*.local
+*.svelte
+
+
+### OS-Specific ###
+.DS_Store
+Thumbs.db
+tmp/
+.DS_Store
