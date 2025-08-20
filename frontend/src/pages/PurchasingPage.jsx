@@ -41,6 +41,104 @@ export default function PurchasingPage() {
             totalCost: 480.0,
             details: [{item: "Chemical X", qty: 120, price: 4.0}],
         },
+        {
+            id: "PO-5004",
+            supplier: "Global Plastics Ltd.",
+            orderDate: "2025-02-05",
+            dueDate: "2025-02-20",
+            status: "Draft",
+            currency: "USD",
+            totalCost: 3200.0,
+            details: [
+                {item: "Plastic Resin", qty: 500, price: 6.4},
+                {item: "Additives", qty: 200, price: 2.0},
+            ],
+        },
+        {
+            id: "PO-5005",
+            supplier: "EuroTech Fasteners",
+            orderDate: "2025-02-01",
+            dueDate: "2025-02-12",
+            status: "Closed",
+            currency: "EUR",
+            totalCost: 1500.0,
+            details: [
+                {item: "Screws M5", qty: 5000, price: 0.25},
+                {item: "Washers", qty: 5000, price: 0.05},
+            ],
+        },
+        {
+            id: "PO-5006",
+            supplier: "AsiaSteel Corp",
+            orderDate: "2025-02-12",
+            dueDate: "2025-03-05",
+            status: "Hold",
+            currency: "USD",
+            totalCost: 24500.0,
+            details: [
+                {item: "Steel Rods", qty: 700, price: 25.0},
+                {item: "Plates", qty: 300, price: 40.0},
+            ],
+        },
+        {
+            id: "PO-5007",
+            supplier: "EcoPackaging",
+            orderDate: "2025-02-14",
+            dueDate: "2025-02-28",
+            status: "Cancelled",
+            currency: "EUR",
+            totalCost: 0.0,
+            details: [{item: "Carton Boxes", qty: 0, price: 0}],
+        },
+        {
+            id: "PO-5011",
+            supplier: "GreenEnergy Solutions",
+            orderDate: "2025-02-19",
+            dueDate: "2025-03-10",
+            status: "Draft",
+            currency: "EUR",
+            totalCost: 18400.0,
+            details: [
+                {item: "Solar Panel 300W", qty: 100, price: 150.0},
+                {item: "Mounting Kit", qty: 100, price: 34.0},
+            ],
+        },
+        {
+            id: "PO-5012",
+            supplier: "FoodPack Co.",
+            orderDate: "2025-02-03",
+            dueDate: "2025-02-10",
+            status: "Cancelled",
+            currency: "EUR",
+            totalCost: 0.0,
+            details: [{item: "Plastic Trays", qty: 0, price: 0}],
+        },
+        {
+            id: "PO-5013",
+            supplier: "AutoMech Tools",
+            orderDate: "2025-02-12",
+            dueDate: "2025-02-20",
+            status: "Hold",
+            currency: "USD",
+            totalCost: 6800.0,
+            details: [
+                {item: "Hydraulic Pump", qty: 12, price: 400.0},
+                {item: "Valve Set", qty: 40, price: 50.0},
+            ],
+        },
+        {
+            id: "PO-5014",
+            supplier: "EuroChemicals",
+            orderDate: "2025-02-08",
+            dueDate: "2025-02-15",
+            status: "Received",
+            currency: "EUR",
+            totalCost: 1500.0,
+            details: [
+                {item: "Lab Solvent A", qty: 100, price: 10.0},
+                {item: "Lab Solvent B", qty: 50, price: 20.0},
+            ],
+        },
     ];
 
     const [pos] = useState(initial);
@@ -61,7 +159,15 @@ export default function PurchasingPage() {
         [pos]
     );
 
-    const STATUSES = ["Draft", "Open", "Approved", "Received", "Closed", "Cancelled", "Hold"];
+    const STATUSES = [
+        "Draft",
+        "Open",
+        "Approved",
+        "Received",
+        "Closed",
+        "Cancelled",
+        "Hold",
+    ];
 
     const STATUS_CLS = {
         Draft: "bg-blue-600/30 text-blue-300",
@@ -76,8 +182,7 @@ export default function PurchasingPage() {
     const th = (label, key, right = false) => (
         <th
             onClick={() =>
-                key &&
-                setSort((s) => ({key, dir: s.key === key && s.dir === "asc" ? "desc" : "asc"}))
+                key && setSort((s) => ({key, dir: s.key === key && s.dir === "asc" ? "desc" : "asc"}))
             }
             className={`px-4 py-3 font-semibold text-gray-300 select-none ${
                 key ? "cursor-pointer" : ""
@@ -104,6 +209,7 @@ export default function PurchasingPage() {
         if (status !== "all") rows = rows.filter((r) => r.status === status);
         if (dateFrom) rows = rows.filter((r) => r.orderDate >= dateFrom);
         if (dateTo) rows = rows.filter((r) => r.orderDate <= dateTo);
+
         const {key, dir} = sort;
         rows = rows.sort((a, b) => {
             const av = a[key];
@@ -137,7 +243,9 @@ export default function PurchasingPage() {
         new Intl.NumberFormat(undefined, {style: "currency", currency}).format(value || 0);
 
     return (
-        <div className="bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
+        <div className="relative bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
+
+            {/* Header */}
             <header className="mx-auto max-w-6xl px-4 pt-10 pb-6">
                 <div className="flex items-end justify-between gap-4 flex-wrap">
                     <div>
@@ -159,6 +267,7 @@ export default function PurchasingPage() {
                 </div>
             </header>
 
+            {/* Filters */}
             <div className="mx-auto max-w-6xl px-4 pb-4">
                 <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4 flex flex-col gap-3">
                     <div className="flex flex-col md:flex-row md:items-center gap-3">
@@ -247,6 +356,7 @@ export default function PurchasingPage() {
                 </div>
             </div>
 
+            {/* Table */}
             <section className="mx-auto max-w-6xl px-4 pb-12">
                 <div className="overflow-x-auto border border-white/10 rounded-xl bg-gray-900/60">
                     <table className="min-w-full divide-y divide-gray-800 text-sm">
@@ -285,9 +395,7 @@ export default function PurchasingPage() {
                                     <td className="px-4 py-3 text-gray-400">{po.orderDate}</td>
                                     <td className="px-4 py-3 text-gray-400">{po.dueDate}</td>
                                     <td className="px-4 py-3">
-                      <span
-                          className={`px-2 py-1 text-xs rounded-full ${STATUS_CLS[po.status] || ""}`}
-                      >
+                      <span className={`px-2 py-1 text-xs rounded-full ${STATUS_CLS[po.status] || ""}`}>
                         {po.status}
                       </span>
                                     </td>
@@ -317,9 +425,7 @@ export default function PurchasingPage() {
                                                     <tr key={i} className="hover:bg-gray-800/40">
                                                         <td className="px-2 py-1">{line.item}</td>
                                                         <td className="px-2 py-1 text-right">{line.qty}</td>
-                                                        <td className="px-2 py-1 text-right">
-                                                            {fmtCurrency(line.price, po.currency)}
-                                                        </td>
+                                                        <td className="px-2 py-1 text-right">{fmtCurrency(line.price, po.currency)}</td>
                                                         <td className="px-2 py-1 text-right">
                                                             {fmtCurrency(line.qty * line.price, po.currency)}
                                                         </td>
@@ -336,6 +442,7 @@ export default function PurchasingPage() {
                     </table>
                 </div>
 
+                {/* Pagination */}
                 <div
                     className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-gray-400">
                     <div className="flex items-center gap-2">
@@ -356,8 +463,7 @@ export default function PurchasingPage() {
                         </select>
                         <span className="hidden sm:inline">•</span>
                         <span>
-              Showing {filtered.length === 0 ? 0 : pageStart + 1}–
-                            {Math.min(filtered.length, pageStart + pageSize)} of {filtered.length}
+              Showing {filtered.length === 0 ? 0 : pageStart + 1}–{Math.min(filtered.length, pageStart + pageSize)} of {filtered.length}
             </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -368,9 +474,7 @@ export default function PurchasingPage() {
                         >
                             Prev
                         </button>
-                        <span className="px-2">
-              {page} / {totalPages}
-            </span>
+                        <span className="px-2">{page} / {totalPages}</span>
                         <button
                             disabled={page === totalPages}
                             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
