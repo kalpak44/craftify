@@ -20,6 +20,7 @@ import InventoryAdjustPage from "./pages/InventoryAdjustPage.jsx";
 import InventoryReceivePage from "./pages/InventoryReceivePage.jsx";
 import PurchasingPage from "./pages/PurchasingPage.jsx";
 import POCreationPage from "./pages/POCreationPage.jsx";
+import ItemCreationPage from "./pages/ItemCreationPage.jsx";
 
 export default function App() {
     const {isLoading} = useAuth0();
@@ -44,6 +45,11 @@ export default function App() {
             <Route path="/items" element={
                 <AuthenticationGuard>
                     <FullWidthLayout><ItemsPage/></FullWidthLayout>
+                </AuthenticationGuard>
+            }/>
+            <Route path="/items/new" element={
+                <AuthenticationGuard>
+                    <FullWidthLayout><ItemCreationPage/></FullWidthLayout>
                 </AuthenticationGuard>
             }/>
             <Route path="/boms" element={

@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, {useMemo, useState} from "react";
+import {useNavigate} from "react-router-dom";
 
 /**
  * ItemsPage — ERP-style list with filters, search, table, and pagination.
@@ -8,16 +9,106 @@ import React, { useState, useMemo } from "react";
 export const ItemsPage = () => {
     // Mocked data
     const data = [
-        { id: "ITM-001", name: "Warm Yellow LED", status: "Active", category: "Component", uom: "pcs", onHand: 3150, allocated: 1000, reorder: 500 },
-        { id: "ITM-002", name: "Large Widget", status: "Active", category: "Assembly", uom: "pcs", onHand: 310, allocated: 600, reorder: 150 },
-        { id: "ITM-003", name: "Plastic Case", status: "Active", category: "Component", uom: "pcs", onHand: 1350, allocated: 330, reorder: 200 },
-        { id: "ITM-004", name: "Lion Bracket", status: "Active", category: "Fabrication", uom: "pcs", onHand: 350, allocated: 200, reorder: 100 },
-        { id: "ITM-005", name: "Chain Bracket", status: "Active", category: "Component", uom: "pcs", onHand: 1320, allocated: 800, reorder: 100 },
-        { id: "ITM-006", name: "Front Assembly", status: "Active", category: "Finished Good", uom: "ea", onHand: 208, allocated: 230, reorder: 30 },
-        { id: "ITM-007", name: "Steel Frame", status: "Active", category: "Fabrication", uom: "pcs", onHand: 1700, allocated: 230, reorder: 400 },
-        { id: "ITM-008", name: "Blue Paint (RAL5010)", status: "Hold", category: "Consumable", uom: "L", onHand: 12, allocated: 2, reorder: 8 },
-        { id: "ITM-009", name: "Screws M3x8", status: "Active", category: "Hardware", uom: "ea", onHand: 1500, allocated: 300, reorder: 1000 },
-        { id: "ITM-010", name: "Assembly Kit 10", status: "Discontinued", category: "Kit", uom: "kit", onHand: 5, allocated: 1, reorder: 0 },
+        {
+            id: "ITM-001",
+            name: "Warm Yellow LED",
+            status: "Active",
+            category: "Component",
+            uom: "pcs",
+            onHand: 3150,
+            allocated: 1000,
+            reorder: 500
+        },
+        {
+            id: "ITM-002",
+            name: "Large Widget",
+            status: "Active",
+            category: "Assembly",
+            uom: "pcs",
+            onHand: 310,
+            allocated: 600,
+            reorder: 150
+        },
+        {
+            id: "ITM-003",
+            name: "Plastic Case",
+            status: "Active",
+            category: "Component",
+            uom: "pcs",
+            onHand: 1350,
+            allocated: 330,
+            reorder: 200
+        },
+        {
+            id: "ITM-004",
+            name: "Lion Bracket",
+            status: "Active",
+            category: "Fabrication",
+            uom: "pcs",
+            onHand: 350,
+            allocated: 200,
+            reorder: 100
+        },
+        {
+            id: "ITM-005",
+            name: "Chain Bracket",
+            status: "Active",
+            category: "Component",
+            uom: "pcs",
+            onHand: 1320,
+            allocated: 800,
+            reorder: 100
+        },
+        {
+            id: "ITM-006",
+            name: "Front Assembly",
+            status: "Active",
+            category: "Finished Good",
+            uom: "ea",
+            onHand: 208,
+            allocated: 230,
+            reorder: 30
+        },
+        {
+            id: "ITM-007",
+            name: "Steel Frame",
+            status: "Active",
+            category: "Fabrication",
+            uom: "pcs",
+            onHand: 1700,
+            allocated: 230,
+            reorder: 400
+        },
+        {
+            id: "ITM-008",
+            name: "Blue Paint (RAL5010)",
+            status: "Hold",
+            category: "Consumable",
+            uom: "L",
+            onHand: 12,
+            allocated: 2,
+            reorder: 8
+        },
+        {
+            id: "ITM-009",
+            name: "Screws M3x8",
+            status: "Active",
+            category: "Hardware",
+            uom: "ea",
+            onHand: 1500,
+            allocated: 300,
+            reorder: 1000
+        },
+        {
+            id: "ITM-010",
+            name: "Assembly Kit 10",
+            status: "Discontinued",
+            category: "Kit",
+            uom: "kit",
+            onHand: 5,
+            allocated: 1,
+            reorder: 0
+        },
     ];
 
     // State
@@ -25,7 +116,7 @@ export const ItemsPage = () => {
     const [status, setStatus] = useState("all");
     const [category, setCategory] = useState("all");
     const [uom, setUom] = useState("all");
-    const [sort, setSort] = useState({ key: "name", dir: "asc" });
+    const [sort, setSort] = useState({key: "name", dir: "asc"});
     const [selected, setSelected] = useState({});
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(8);
@@ -45,7 +136,7 @@ export const ItemsPage = () => {
         if (category !== "all") rows = rows.filter((r) => r.category === category);
         if (uom !== "all") rows = rows.filter((r) => r.uom === uom);
 
-        const { key, dir } = sort;
+        const {key, dir} = sort;
         rows = [...rows].sort((a, b) => {
             const av = a[key];
             const bv = b[key];
@@ -63,7 +154,7 @@ export const ItemsPage = () => {
     // Selection
     const allOnPageSelected = paged.length > 0 && paged.every((r) => selected[r.id]);
     const toggleAll = () => {
-        const next = { ...selected };
+        const next = {...selected};
         if (allOnPageSelected) {
             paged.forEach((r) => delete next[r.id]);
         } else {
@@ -71,12 +162,13 @@ export const ItemsPage = () => {
         }
         setSelected(next);
     };
-    const toggleOne = (id) => setSelected((s) => ({ ...s, [id]: !s[id] }));
+    const toggleOne = (id) => setSelected((s) => ({...s, [id]: !s[id]}));
     const selectedCount = Object.values(selected).filter(Boolean).length;
+    const navigate = useNavigate();
 
     const th = (label, key, alignRight = false) => (
         <th
-            onClick={() => setSort((s) => ({ key, dir: s.key === key && s.dir === "asc" ? "desc" : "asc" }))}
+            onClick={() => setSort((s) => ({key, dir: s.key === key && s.dir === "asc" ? "desc" : "asc"}))}
             className={`px-4 py-3 font-semibold text-gray-300 select-none cursor-pointer ${alignRight ? "text-right" : "text-left"}`}
         >
       <span className="inline-flex items-center gap-1">
@@ -129,13 +221,13 @@ export const ItemsPage = () => {
 
     const handleExportCSV = () => {
         const csv = toCSV(rowsForExport());
-        downloadBlob(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" }), `items_${new Date().toISOString().slice(0,10)}.csv`);
+        downloadBlob(new Blob(["\ufeff" + csv], {type: "text/csv;charset=utf-8;"}), `items_${new Date().toISOString().slice(0, 10)}.csv`);
     };
 
     // Excel-friendly (CSV). Most users open CSV in Excel; set .xlsx-like mime not needed here.
     const handleExportExcel = () => {
         const csv = toCSV(rowsForExport());
-        downloadBlob(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" }), `items_${new Date().toISOString().slice(0,10)}.xls`);
+        downloadBlob(new Blob(["\ufeff" + csv], {type: "text/csv;charset=utf-8;"}), `items_${new Date().toISOString().slice(0, 10)}.xls`);
     };
 
     const handlePrint = () => {
@@ -194,7 +286,8 @@ export const ItemsPage = () => {
     };
 
     return (
-        <div className="min-h-[calc(100vh-140px)] bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
+        <div
+            className="min-h-[calc(100vh-140px)] bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
             {/* Header */}
             <header className="mx-auto max-w-6xl px-4 pt-10 pb-6">
                 <div className="flex items-end justify-between gap-4 flex-wrap">
@@ -203,8 +296,13 @@ export const ItemsPage = () => {
                         <p className="mt-2 text-gray-400">Search, filter, and manage SKUs.</p>
                     </div>
                     <div className="flex gap-3">
-                        <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm">+ New Item</button>
-                        <button className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">Import CSV</button>
+                        <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
+                                onClick={() => navigate("/items/new")}>+ New Item
+                        </button>
+                        <button
+                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">Import
+                            CSV
+                        </button>
                     </div>
                 </div>
             </header>
@@ -215,7 +313,10 @@ export const ItemsPage = () => {
                     <div className="flex flex-col md:flex-row md:items-center gap-3">
                         <select
                             value={category}
-                            onChange={(e) => { setCategory(e.target.value); setPage(1); }}
+                            onChange={(e) => {
+                                setCategory(e.target.value);
+                                setPage(1);
+                            }}
                             className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
                         >
                             {categories.map((c) => (
@@ -225,7 +326,10 @@ export const ItemsPage = () => {
 
                         <select
                             value={status}
-                            onChange={(e) => { setStatus(e.target.value); setPage(1); }}
+                            onChange={(e) => {
+                                setStatus(e.target.value);
+                                setPage(1);
+                            }}
                             className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
                         >
                             <option value="all">All Statuses</option>
@@ -236,7 +340,10 @@ export const ItemsPage = () => {
 
                         <select
                             value={uom}
-                            onChange={(e) => { setUom(e.target.value); setPage(1); }}
+                            onChange={(e) => {
+                                setUom(e.target.value);
+                                setPage(1);
+                            }}
                             className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
                         >
                             {uoms.map((u) => (
@@ -248,7 +355,10 @@ export const ItemsPage = () => {
                             <input
                                 placeholder="Search name or ID…"
                                 value={query}
-                                onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+                                onChange={(e) => {
+                                    setQuery(e.target.value);
+                                    setPage(1);
+                                }}
                                 className="w-full rounded-lg bg-gray-800 border border-white/10 pl-3 pr-10 py-2 text-sm"
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">⌕</span>
@@ -295,7 +405,7 @@ export const ItemsPage = () => {
                         <thead className="bg-gray-900/80">
                         <tr>
                             <th className="px-4 py-3">
-                                <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll} />
+                                <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll}/>
                             </th>
                             {th("ID", "id")}
                             {th("Product name", "name")}
@@ -311,7 +421,8 @@ export const ItemsPage = () => {
                         {paged.map((item) => (
                             <tr key={item.id} className="hover:bg-gray-800/40 transition">
                                 <td className="px-4 py-3">
-                                    <input type="checkbox" checked={!!selected[item.id]} onChange={() => toggleOne(item.id)} />
+                                    <input type="checkbox" checked={!!selected[item.id]}
+                                           onChange={() => toggleOne(item.id)}/>
                                 </td>
                                 <td className="px-4 py-3 font-mono text-white">{item.id}</td>
                                 <td className="px-4 py-3 text-gray-200">{item.name}</td>
@@ -340,7 +451,8 @@ export const ItemsPage = () => {
                 </div>
 
                 {/* Footer / Pagination */}
-                <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-gray-400">
+                <div
+                    className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-gray-400">
                     <div className="flex items-center gap-2">
                         <span>Rows per page</span>
                         <select
