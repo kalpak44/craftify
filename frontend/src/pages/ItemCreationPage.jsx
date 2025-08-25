@@ -1,4 +1,5 @@
 // ItemCreationPage.jsx
+// ItemCreationPage.jsx
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useNavigate} from "react-router-dom";
 
@@ -13,6 +14,11 @@ import {useNavigate} from "react-router-dom";
  * - Sticky summary
  * - Actions are placeholders (alert/disabled)
  * - Keyboard: Enter add row • Ctrl/⌘+D clone • Delete remove
+ *
+ * Alignments:
+ * - Numeric fields right-aligned with tabular numerals
+ * - UoM/Notes left-aligned
+ * - Consistent column widths via <colgroup>
  */
 
 const nextItemId = (() => {
@@ -219,8 +225,9 @@ export default function ItemCreationPage() {
                 </div>
 
                 {/* Autosave banner */}
-                <div className="mt-4 rounded-xl border border-white/10 bg-gray-900/60 px-4 py-3 text-sm flex items-center gap-3">
-                    <span className={`inline-flex h-2 w-2 rounded-full ${dirty ? "bg-yellow-400" : "bg-green-400"}`} />
+                <div
+                    className="mt-4 rounded-xl border border-white/10 bg-gray-900/60 px-4 py-3 text-sm flex items-center gap-3">
+                    <span className={`inline-flex h-2 w-2 rounded-full ${dirty ? "bg-yellow-400" : "bg-green-400"}`}/>
                     <span className="text-gray-300">
             {dirty ? "Saving draft…" : lastSavedAt ? `Last saved ${lastSavedAt.toLocaleTimeString()}` : "No changes yet"}
           </span>
@@ -294,7 +301,7 @@ export default function ItemCreationPage() {
                                     inputMode="decimal"
                                     value={stdCost}
                                     onChange={(e) => setStdCost(e.target.value)}
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm text-right font-mono tabular-nums"
                                     placeholder="0.00"
                                 />
                             </div>
@@ -304,7 +311,7 @@ export default function ItemCreationPage() {
                                     inputMode="numeric"
                                     value={reorderPt}
                                     onChange={(e) => setReorderPt(e.target.value)}
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm text-right font-mono tabular-nums"
                                     placeholder="0"
                                 />
                             </div>
@@ -338,13 +345,26 @@ export default function ItemCreationPage() {
                         </p>
 
                         <div className="overflow-x-auto border border-white/10 rounded-xl bg-gray-900/40">
-                            <table ref={tableRef} className="min-w-full divide-y divide-gray-800 text-sm">
+                            <table ref={tableRef} className="min-w-full divide-y divide-gray-800 text-sm table-fixed">
+                                {/* Consistent column widths */}
+                                <colgroup>
+                                    <col style={{width: 180}}/>
+                                    {/* UoM */}
+                                    <col style={{width: 140}}/>
+                                    {/* Coefficient */}
+                                    <col/>
+                                    {/* Notes (flex) */}
+                                    <col style={{width: 240}}/>
+                                    {/* Example */}
+                                    <col style={{width: 180}}/>
+                                    {/* Actions */}
+                                </colgroup>
                                 <thead className="bg-gray-900/80">
                                 <tr>
                                     <th className="px-4 py-3 text-left">UoM</th>
-                                    <th className="px-4 py-3 text-left">Coefficient</th>
+                                    <th className="px-4 py-3 text-right">Coefficient</th>
                                     <th className="px-4 py-3 text-left">Notes</th>
-                                    <th className="px-4 py-3 text-left">Example</th>
+                                    <th className="px-4 py-3 text-right">Example</th>
                                     <th className="px-4 py-3 text-right">Actions</th>
                                 </tr>
                                 </thead>
@@ -369,17 +389,18 @@ export default function ItemCreationPage() {
                                                     className={`w-40 rounded-lg bg-gray-800 border ${rowErrors.uom ? "border-red-500/60" : "border-white/10"} px-3 py-2 text-sm`}
                                                 />
                                                 {baseUom && r.uom === baseUom && (
-                                                    <div className="text-xs text-red-400 mt-1">Cannot equal base UoM.</div>
+                                                    <div className="text-xs text-red-400 mt-1">Cannot equal base
+                                                        UoM.</div>
                                                 )}
                                             </td>
-                                            <td className="px-4 py-3 align-top">
+                                            <td className="px-4 py-3 align-top text-right font-mono tabular-nums">
                                                 <input
                                                     data-rowkey={r.key}
                                                     inputMode="decimal"
                                                     value={r.coef}
                                                     onChange={(e) => updateRow(r.key, {coef: e.target.value})}
                                                     placeholder="> 0"
-                                                    className={`w-28 rounded-lg bg-gray-800 border ${rowErrors.coef ? "border-red-500/60" : "border-white/10"} px-3 py-2 text-sm`}
+                                                    className={`w-28 rounded-lg bg-gray-800 border ${rowErrors.coef ? "border-red-500/60" : "border-white/10"} px-3 py-2 text-sm text-right font-mono tabular-nums`}
                                                 />
                                             </td>
                                             <td className="px-4 py-3 align-top">
@@ -388,12 +409,14 @@ export default function ItemCreationPage() {
                                                     value={r.notes}
                                                     onChange={(e) => updateRow(r.key, {notes: e.target.value})}
                                                     placeholder="Optional"
-                                                    className="w-64 rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
                                                 />
                                             </td>
-                                            <td className="px-4 py-3 align-top text-gray-300">{ex}</td>
-                                            <td className="px-4 py-3 align-top text-right">
-                                                <div className="inline-flex items-center gap-2">
+                                            <td className="px-4 py-3 align-top text-right text-gray-300 font-mono tabular-nums">
+                                                {ex}
+                                            </td>
+                                            <td className="px-4 py-3 align-top">
+                                                <div className="flex justify-end items-center gap-2">
                                                     <button
                                                         onClick={() => cloneRow(r.key)}
                                                         className="px-2.5 py-1.5 rounded-md border text-xs bg-gray-800/60 border-white/10 hover:bg-gray-700/60"
@@ -483,26 +506,27 @@ export default function ItemCreationPage() {
                             </div>
                             <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
                                 <div className="text-xs text-gray-400">Std Cost</div>
-                                <div className="text-lg font-semibold text-gray-100">
+                                <div className="text-lg font-semibold text-gray-100 font-mono tabular-nums">
                                     {stdCost === "" ? "—" : `€${Number(stdCost).toFixed(2)}`}
                                 </div>
                             </div>
                             <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
                                 <div className="text-xs text-gray-400">Reorder pt</div>
-                                <div className="text-lg font-semibold text-gray-100">
+                                <div className="text-lg font-semibold text-gray-100 font-mono tabular-nums">
                                     {reorderPt === "" ? "—" : Number(reorderPt)}
                                 </div>
                             </div>
 
                             {/* Quick reference of conversions */}
-                            <div className="rounded-2xl bg-gray-900/60 p-4 text-xs text-gray-400 border border-white/10 col-span-2">
+                            <div
+                                className="rounded-2xl bg-gray-900/60 p-4 text-xs text-gray-400 border border-white/10 col-span-2">
                                 <div className="font-semibold text-gray-300 mb-2">Conversions</div>
                                 {validUoms.length === 0 ? (
                                     <div className="text-gray-500">No additional UoMs yet.</div>
                                 ) : (
                                     <ul className="list-disc pl-5 space-y-1">
                                         {validUoms.map((r) => (
-                                            <li key={r.key} className="text-gray-300">
+                                            <li key={r.key} className="text-gray-300 font-mono tabular-nums">
                                                 1 {r.uom} = {r.coef} {baseUom}
                                                 {r.notes ? <span className="text-gray-500"> — {r.notes}</span> : null}
                                             </li>
@@ -511,7 +535,8 @@ export default function ItemCreationPage() {
                                 )}
                             </div>
 
-                            <div className="rounded-2xl bg-gray-900/60 p-4 text-xs text-gray-400 border border-white/10 col-span-2">
+                            <div
+                                className="rounded-2xl bg-gray-900/60 p-4 text-xs text-gray-400 border border-white/10 col-span-2">
                                 <div className="font-semibold text-gray-300 mb-2">Tips</div>
                                 <ul className="list-disc pl-5 space-y-1">
                                     <li>Use short UoM codes (e.g., pcs, box, kg).</li>

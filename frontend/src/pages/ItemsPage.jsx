@@ -4,10 +4,12 @@ import {useNavigate} from "react-router-dom";
 /**
  * ItemsPage — ERP-style list with filters, search, table, and pagination.
  * Tailwind-only, self-contained with mocked data.
- * Now includes: CSV/Excel export + Print/PDF-friendly view.
+ * CSV/Excel export and Print/PDF-friendly view.
+ * Price (formatted with currency) and Shelf-life (days).
+ * Sorting for Price uses the raw numeric value.
  */
 export const ItemsPage = () => {
-    // Mocked data
+    // Mocked data (added price, currency, shelfLifeDays)
     const data = [
         {
             id: "ITM-001",
@@ -17,7 +19,10 @@ export const ItemsPage = () => {
             uom: "pcs",
             onHand: 3150,
             allocated: 1000,
-            reorder: 500
+            reorder: 500,
+            price: 0.18,
+            currency: "USD",
+            shelfLifeDays: 3650
         },
         {
             id: "ITM-002",
@@ -27,7 +32,10 @@ export const ItemsPage = () => {
             uom: "pcs",
             onHand: 310,
             allocated: 600,
-            reorder: 150
+            reorder: 150,
+            price: 49.9,
+            currency: "USD",
+            shelfLifeDays: 1825
         },
         {
             id: "ITM-003",
@@ -37,7 +45,10 @@ export const ItemsPage = () => {
             uom: "pcs",
             onHand: 1350,
             allocated: 330,
-            reorder: 200
+            reorder: 200,
+            price: 3.25,
+            currency: "EUR",
+            shelfLifeDays: 3650
         },
         {
             id: "ITM-004",
@@ -47,7 +58,10 @@ export const ItemsPage = () => {
             uom: "pcs",
             onHand: 350,
             allocated: 200,
-            reorder: 100
+            reorder: 100,
+            price: 7.8,
+            currency: "EUR",
+            shelfLifeDays: 3650
         },
         {
             id: "ITM-005",
@@ -57,7 +71,10 @@ export const ItemsPage = () => {
             uom: "pcs",
             onHand: 1320,
             allocated: 800,
-            reorder: 100
+            reorder: 100,
+            price: 5.6,
+            currency: "USD",
+            shelfLifeDays: 3650
         },
         {
             id: "ITM-006",
@@ -67,7 +84,10 @@ export const ItemsPage = () => {
             uom: "ea",
             onHand: 208,
             allocated: 230,
-            reorder: 30
+            reorder: 30,
+            price: 249.0,
+            currency: "USD",
+            shelfLifeDays: 3650
         },
         {
             id: "ITM-007",
@@ -77,7 +97,10 @@ export const ItemsPage = () => {
             uom: "pcs",
             onHand: 1700,
             allocated: 230,
-            reorder: 400
+            reorder: 400,
+            price: 15.4,
+            currency: "EUR",
+            shelfLifeDays: 3650
         },
         {
             id: "ITM-008",
@@ -87,7 +110,10 @@ export const ItemsPage = () => {
             uom: "L",
             onHand: 12,
             allocated: 2,
-            reorder: 8
+            reorder: 8,
+            price: 12.75,
+            currency: "EUR",
+            shelfLifeDays: 730
         },
         {
             id: "ITM-009",
@@ -97,7 +123,10 @@ export const ItemsPage = () => {
             uom: "ea",
             onHand: 1500,
             allocated: 300,
-            reorder: 1000
+            reorder: 1000,
+            price: 0.03,
+            currency: "USD",
+            shelfLifeDays: 3650
         },
         {
             id: "ITM-010",
@@ -107,9 +136,16 @@ export const ItemsPage = () => {
             uom: "kit",
             onHand: 5,
             allocated: 1,
-            reorder: 0
-        },
+            reorder: 0,
+            price: 129.99,
+            currency: "USD",
+            shelfLifeDays: 3650
+        }
     ];
+
+    // Money formatter (raw JS)
+    const formatMoney = (amount, currency) =>
+        new Intl.NumberFormat(undefined, {style: "currency", currency, maximumFractionDigits: 2}).format(amount);
 
     // State
     const [query, setQuery] = useState("");
@@ -140,7 +176,10 @@ export const ItemsPage = () => {
         rows = [...rows].sort((a, b) => {
             const av = a[key];
             const bv = b[key];
-            const cmp = typeof av === "number" && typeof bv === "number" ? av - bv : String(av).localeCompare(String(bv));
+            const cmp =
+                typeof av === "number" && typeof bv === "number"
+                    ? av - bv
+                    : String(av).localeCompare(String(bv), undefined, {numeric: true, sensitivity: "base"});
             return dir === "asc" ? cmp : -cmp;
         });
         return rows;
@@ -169,7 +208,9 @@ export const ItemsPage = () => {
     const th = (label, key, alignRight = false) => (
         <th
             onClick={() => setSort((s) => ({key, dir: s.key === key && s.dir === "asc" ? "desc" : "asc"}))}
-            className={`px-4 py-3 font-semibold text-gray-300 select-none cursor-pointer ${alignRight ? "text-right" : "text-left"}`}
+            className={`px-4 py-3 font-semibold text-gray-300 select-none cursor-pointer ${
+                alignRight ? "text-right" : "text-left"
+            }`}
         >
       <span className="inline-flex items-center gap-1">
         {label}
@@ -181,12 +222,24 @@ export const ItemsPage = () => {
     // ---------- Export helpers ----------
     const rowsForExport = () => {
         const selectedIds = Object.keys(selected).filter((k) => selected[k]);
-        const base = selectedIds.length ? filtered.filter((r) => selectedIds.includes(r.id)) : filtered;
-        return base;
+        return selectedIds.length ? filtered.filter((r) => selectedIds.includes(r.id)) : filtered;
     };
 
+    // CSV: include separate Price (numeric) and Currency for better sorting in Excel
     const toCSV = (rows) => {
-        const headers = ["ID", "Product name", "Status", "Category", "UoM", "On hand", "Allocated", "Reorder pt"];
+        const headers = [
+            "ID",
+            "Product name",
+            "Status",
+            "Category",
+            "UoM",
+            "On hand",
+            "Allocated",
+            "Reorder pt",
+            "Price",
+            "Currency",
+            "Shelf-life (days)"
+        ];
         const escape = (v) => {
             const s = String(v ?? "");
             if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
@@ -194,16 +247,21 @@ export const ItemsPage = () => {
         };
         const lines = [headers.join(",")];
         rows.forEach((r) => {
-            lines.push([
-                escape(r.id),
-                escape(r.name),
-                escape(r.status),
-                escape(r.category),
-                escape(r.uom),
-                r.onHand,
-                r.allocated,
-                r.reorder,
-            ].join(","));
+            lines.push(
+                [
+                    escape(r.id),
+                    escape(r.name),
+                    escape(r.status),
+                    escape(r.category),
+                    escape(r.uom),
+                    r.onHand,
+                    r.allocated,
+                    r.reorder,
+                    r.price, // numeric
+                    escape(r.currency),
+                    r.shelfLifeDays
+                ].join(",")
+            );
         });
         return lines.join("\n");
     };
@@ -221,19 +279,25 @@ export const ItemsPage = () => {
 
     const handleExportCSV = () => {
         const csv = toCSV(rowsForExport());
-        downloadBlob(new Blob(["\ufeff" + csv], {type: "text/csv;charset=utf-8;"}), `items_${new Date().toISOString().slice(0, 10)}.csv`);
+        downloadBlob(
+            new Blob(["\ufeff" + csv], {type: "text/csv;charset=utf-8;"}),
+            `items_${new Date().toISOString().slice(0, 10)}.csv`
+        );
     };
 
     // Excel-friendly (CSV). Most users open CSV in Excel; set .xlsx-like mime not needed here.
     const handleExportExcel = () => {
         const csv = toCSV(rowsForExport());
-        downloadBlob(new Blob(["\ufeff" + csv], {type: "text/csv;charset=utf-8;"}), `items_${new Date().toISOString().slice(0, 10)}.xls`);
+        downloadBlob(
+            new Blob(["\ufeff" + csv], {type: "text/csv;charset=utf-8;"}),
+            `items_${new Date().toISOString().slice(0, 10)}.xls`
+        );
     };
 
     const handlePrint = () => {
         const rows = rowsForExport();
         const html = `<!doctype html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <title>Items Export</title>
@@ -254,7 +318,7 @@ export const ItemsPage = () => {
 <table>
   <thead>
     <tr>
-      <th>ID</th><th>Product name</th><th>Status</th><th>Category</th><th>UoM</th><th>On hand</th><th>Allocated</th><th>Reorder pt</th>
+      <th>ID</th><th>Product name</th><th>Status</th><th>Category</th><th>UoM</th><th>On hand</th><th>Allocated</th><th>Reorder pt</th><th>Price</th><th>Shelf-life (days)</th>
     </tr>
   </thead>
   <tbody>
@@ -269,6 +333,12 @@ export const ItemsPage = () => {
           <td class="num">${r.onHand}</td>
           <td class="num">${r.allocated}</td>
           <td class="num">${r.reorder}</td>
+          <td class="num">${new Intl.NumberFormat(undefined, {
+                    style: 'currency',
+                    currency: r.currency,
+                    maximumFractionDigits: 2
+                }).format(r.price)}</td>
+          <td class="num">${r.shelfLifeDays}</td>
         </tr>`
             )
             .join("")}
@@ -287,7 +357,7 @@ export const ItemsPage = () => {
 
     return (
         <div
-            className="min-h-[calc(100vh-140px)] bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
+            className="bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
             {/* Header */}
             <header className="mx-auto max-w-6xl px-4 pt-10 pb-6">
                 <div className="flex items-end justify-between gap-4 flex-wrap">
@@ -296,12 +366,15 @@ export const ItemsPage = () => {
                         <p className="mt-2 text-gray-400">Search, filter, and manage SKUs.</p>
                     </div>
                     <div className="flex gap-3">
-                        <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
-                                onClick={() => navigate("/items/new")}>+ New Item
+                        <button
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
+                            onClick={() => navigate("/items/new")}
+                        >
+                            + New Item
                         </button>
                         <button
-                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">Import
-                            CSV
+                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">
+                            Import CSV
                         </button>
                     </div>
                 </div>
@@ -320,7 +393,9 @@ export const ItemsPage = () => {
                             className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
                         >
                             {categories.map((c) => (
-                                <option key={c} value={c}>{c === "all" ? "All Categories" : c}</option>
+                                <option key={c} value={c}>
+                                    {c === "all" ? "All Categories" : c}
+                                </option>
                             ))}
                         </select>
 
@@ -347,7 +422,9 @@ export const ItemsPage = () => {
                             className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
                         >
                             {uoms.map((u) => (
-                                <option key={u} value={u}>{u === "all" ? "All UoM" : u}</option>
+                                <option key={u} value={u}>
+                                    {u === "all" ? "All UoM" : u}
+                                </option>
                             ))}
                         </select>
 
@@ -415,6 +492,8 @@ export const ItemsPage = () => {
                             {th("On hand", "onHand", true)}
                             {th("Allocated", "allocated", true)}
                             {th("Reorder pt", "reorder", true)}
+                            {th("Price", "price", true)}
+                            {th("Shelf-life (days)", "shelfLifeDays", true)}
                         </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-800">
@@ -444,6 +523,11 @@ export const ItemsPage = () => {
                                 <td className="px-4 py-3 text-right text-gray-200">{item.onHand}</td>
                                 <td className="px-4 py-3 text-right text-gray-200">{item.allocated}</td>
                                 <td className="px-4 py-3 text-right text-gray-200">{item.reorder}</td>
+                                {/* Price shown as formatted currency (sorting uses numeric price field) */}
+                                <td className="px-4 py-3 text-right text-gray-200">
+                                    {formatMoney(item.price, item.currency)}
+                                </td>
+                                <td className="px-4 py-3 text-right text-gray-200">{item.shelfLifeDays}</td>
                             </tr>
                         ))}
                         </tbody>
