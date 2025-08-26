@@ -117,7 +117,7 @@ export const WorkOrdersPage = () => {
     const [selected, setSelected] = useState({});
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(8);
-    const [view, setView] = useState("table"); // "table" | "kanban"
+    const [view, setView] = useState("kanban"); // "table" | "kanban"
     const [dragOverCol, setDragOverCol] = useState(null); // for kanban column highlight
 
     // --- Derived
@@ -371,7 +371,7 @@ export const WorkOrdersPage = () => {
 
     return (
         <div
-            className="min-h-[calc(100vh-140px)] bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
+            className="bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
             {/* Header */}
             <header className="mx-auto max-w-6xl px-4 pt-10 pb-6">
                 <div className="flex items-end justify-between gap-4 flex-wrap">
