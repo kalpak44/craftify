@@ -417,36 +417,39 @@ function BOMCreationPage() {
                                        className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"/>
                             </div>
 
-                            <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <div>
-                                    <label className="block text-xs text-gray-400 mb-1">Release Rate (batch
-                                        size)</label>
-                                    <input
-                                        type="number"
-                                        min={0}
-                                        value={releaseRate}
-                                        onChange={(e) => setReleaseRate(Number(e.target.value))}
-                                        className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs text-gray-400 mb-1">Planned Yield (%)</label>
-                                    <input
-                                        type="number"
-                                        min={0}
-                                        max={100}
-                                        value={yieldPct}
-                                        onChange={(e) => setYieldPct(Number(e.target.value))}
-                                        className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
-                                    />
-                                </div>
-                                <div className="sm:col-span-1">
-                                    <label className="block text-xs text-gray-400 mb-1">Description / Notes</label>
-                                    <textarea value={description} onChange={(e) => setDescription(e.target.value)}
-                                              rows={1}
-                                              className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
-                                              placeholder="Optional, visible on BOM details and shop traveler."/>
-                                </div>
+                            {/* Release Rate and Planned Yield moved to main grid like others */}
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-1">Release Rate (batch size)</label>
+                                <input
+                                    type="number"
+                                    min={0}
+                                    value={releaseRate}
+                                    onChange={(e) => setReleaseRate(Number(e.target.value))}
+                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-1">Planned Yield (%)</label>
+                                <input
+                                    type="number"
+                                    min={0}
+                                    max={100}
+                                    value={yieldPct}
+                                    onChange={(e) => setYieldPct(Number(e.target.value))}
+                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                />
+                            </div>
+
+                            {/* Description / Notes full-width on the last row with more height */}
+                            <div className="sm:col-span-2">
+                                <label className="block text-xs text-gray-400 mb-1">Description / Notes</label>
+                                <textarea
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    rows={4}
+                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    placeholder="Optional, visible on BOM details and shop traveler."
+                                />
                             </div>
                         </div>
                     </div>
@@ -710,14 +713,15 @@ function BOMCreationPage() {
                             <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10 col-span-2">
                                 <div className="text-xs text-gray-400">Planned Cost / Net Unit</div>
                                 <div className="text-lg font-semibold text-gray-100">€{costPerNetUnit.toFixed(4)}</div>
-                                <div className="text-[11px] text-gray-500 mt-1">Includes scrap add-ons and yield.</div>
+                                <div className="text[11px] text-gray-500 mt-1">Includes scrap add-ons and yield.</div>
                             </div>
 
                             <div className="rounded-XL bg-gray-800/60 p-3 border border-white/10 col-span-2">
                                 <div className="text-xs text-gray-400">Parent Item</div>
-                                <div
-                                    className="text-sm text-gray-200 min-h-[20px]">{parentItem ? `${parentItem.id} — ${parentItem.name}` :
-                                    <span className="text-gray-500">(not set)</span>}</div>
+                                <div className="text-sm text-gray-200 min-h-[20px]">
+                                    {parentItem ? `${parentItem.id} — ${parentItem.name}` :
+                                        <span className="text-gray-500">(not set)</span>}
+                                </div>
                             </div>
 
                             {/* Capacity quick glance */}
@@ -756,8 +760,10 @@ function BOMCreationPage() {
                                 subtitle="Add components with quantities to see capacity."/>
                 ) : (
                     <div className="space-y-4">
-                        <div className="text-sm text-gray-300">Good units per batch after yield: <span
-                            className="text-gray-100 font-semibold">{goodUnitsPerBatch.toFixed(2)}</span></div>
+                        <div className="text-sm text-gray-300">
+                            Good units per batch after yield: <span
+                            className="text-gray-100 font-semibold">{goodUnitsPerBatch.toFixed(2)}</span>
+                        </div>
                         <div className="overflow-auto border border-white/10 rounded-xl">
                             <table className="min-w-full text-sm">
                                 <thead className="bg-gray-900/60">
