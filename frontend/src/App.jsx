@@ -90,6 +90,11 @@ export default function App() {
                     <FullWidthLayout><WorkOrderOperationsCreationPage/></FullWidthLayout>
                 </AuthenticationGuard>
             }/>
+            <Route path="/work-orders/:id/operations/:oid/edit" element={
+                <AuthenticationGuard>
+                    <FullWidthLayout><WorkOrderOperationsCreationPage/></FullWidthLayout>
+                </AuthenticationGuard>
+            }/>
 
             <Route path="/inventory" element={
                 <AuthenticationGuard>
