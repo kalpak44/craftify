@@ -22,6 +22,8 @@ import PurchasingPage from "./pages/PurchasingPage.jsx";
 import POCreationPage from "./pages/POCreationPage.jsx";
 import ItemCreationPage from "./pages/ItemCreationPage.jsx";
 import ProductionPage from "./pages/ProductionPage.jsx";
+import WorkOrderOperationsPage from "./pages/WorkOrderOperationsPage.jsx";
+import WorkOrderOperationsCreationPage from "./pages/WorkOrderOperationsCreationPage.jsx";
 
 export default function App() {
     const {isLoading} = useAuth0();
@@ -73,6 +75,22 @@ export default function App() {
                     <FullWidthLayout><WorkOrderCreationPage/></FullWidthLayout>
                 </AuthenticationGuard>
             }/>
+            <Route path="/work-orders/:id/edit" element={
+                <AuthenticationGuard>
+                    <FullWidthLayout><WorkOrderCreationPage/></FullWidthLayout>
+                </AuthenticationGuard>
+            }/>
+            <Route path="/work-orders/:id/operations" element={
+                <AuthenticationGuard>
+                    <FullWidthLayout><WorkOrderOperationsPage/></FullWidthLayout>
+                </AuthenticationGuard>
+            }/>
+            <Route path="/work-orders/:id/operations/new" element={
+                <AuthenticationGuard>
+                    <FullWidthLayout><WorkOrderOperationsCreationPage/></FullWidthLayout>
+                </AuthenticationGuard>
+            }/>
+
             <Route path="/inventory" element={
                 <AuthenticationGuard>
                     <FullWidthLayout><InventoryPage/></FullWidthLayout>
