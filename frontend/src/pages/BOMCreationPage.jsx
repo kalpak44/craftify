@@ -2,11 +2,29 @@ import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useNavigate} from "react-router-dom";
 
 /**
- * BOMCreationPage — React + Tailwind (pure JS)
- * UX: no browser alerts. Modals for results, optional action toasts (no autosave toasts).
- * Keeps the original dark design, layout, sticky summary, borders, and spacing.
- * Adds: Release Rate, Planned Yield, Scrap %, Per-Batch calc, Capacity (FEFO mock), Planned Cost.
+ * BOMCreationPage — React and Tailwind (pure JS)
+ *
+ * UX:
+ * - No browser alerts; results shown in modals.
+ * - Optional action toasts (no autosave toasts).
+ * - Dark design, sticky summary, consistent borders & spacing.
+ *
+ * Features:
+ * - Release Rate (batch size)
+ * - Planned Yield %
+ * - Scrap % per component
+ * - Planned Cost (per batch & per net unit)
+ * - Capacity check (on-hand stock only, no lots/expiry)
+ * - No batch/expiry tracking, only simple on-hand stock.
+ * - "Per Batch" column removed from the Components table.
+ * - Capacity modal redesigned: shows
+ *     • Component
+ *     • Avail
+ *     • Per FG
+ *     • Max Units by This
+ *   plus a headline “You can make X unit(s) now…”.
  */
+
 
 // ---- Mocked item master ----
 const MOCK_ITEMS = [
@@ -22,20 +40,17 @@ const MOCK_ITEMS = [
     {id: "ITM-010", name: "Assembly Kit 10", uom: "kit", status: "Discontinued", cost: 0},
 ];
 
-// ---- Mock FEFO inventory lots (demo only) ----
-const MOCK_LOTS = {
-    "ITM-001": [
-        {lot: "A1", exp: "2025-10-01", qty: 5000},
-        {lot: "B1", exp: "2026-02-01", qty: 7000},
-    ],
-    "ITM-002": [{lot: "W1", exp: "2026-01-15", qty: 3000}],
-    "ITM-003": [{lot: "P1", exp: "2025-12-31", qty: 6000}],
-    "ITM-004": [{lot: "L1", exp: "2026-03-01", qty: 4000}],
-    "ITM-005": [{lot: "C1", exp: "2026-05-01", qty: 4000}],
-    "ITM-007": [{lot: "S1", exp: "2026-04-01", qty: 2000}],
-    "ITM-008": [{lot: "B5010", exp: "2025-11-20", qty: 900}],
-    "ITM-009": [{lot: "SCR", exp: "2026-06-01", qty: 20000}],
-    "ITM-010": [{lot: "KIT", exp: "2026-07-01", qty: 500}],
+// ---- Mock on-hand inventory (no lots/expiry) ----
+const MOCK_STOCK = {
+    "ITM-001": 12000,
+    "ITM-002": 3000,
+    "ITM-003": 6000,
+    "ITM-004": 4000,
+    "ITM-005": 4000,
+    "ITM-007": 5,     // small value to showcase limiting examples easily
+    "ITM-008": 900,
+    "ITM-009": 200,
+    "ITM-010": 500,
 };
 
 const nextId = (() => {
@@ -246,10 +261,8 @@ function BOMCreationPage() {
     // ---- Helpers ----
     const sanitizePct = (n) => Math.max(0, Math.min(100, Number(n) || 0));
 
-    const getAvailableQtyFEFO = (itemId) => {
-        const lots = (MOCK_LOTS[itemId] || []).slice().sort((a, b) => a.exp.localeCompare(b.exp));
-        return lots.reduce((sum, l) => sum + (l.qty || 0), 0);
-    };
+    // On-hand stock getter (no lots/expiry)
+    const getAvailableQtyOnHand = (itemId) => Number(MOCK_STOCK[itemId] || 0);
 
     // ---- Item search / picker helpers ----
     const [itemQuery, setItemQuery] = useState("");
@@ -272,35 +285,35 @@ function BOMCreationPage() {
         const it = MOCK_ITEMS.find(i => i.id === r.itemId);
         const qty1pc = Number(r.qty || 0);
         const scrap = Math.max(0, Number(r.scrap || 0)) / 100;
-        const perUnitNeed = qty1pc * (1 + scrap);
+        const perUnitNeed = qty1pc * (1 + scrap);              // need per finished good (FG)
         const perBatch = perUnitNeed * Math.max(0, Number(releaseRate));
         const unitCost = (it?.cost || 0) * perUnitNeed;
         const batchCost = (it?.cost || 0) * perBatch;
-        const available = r.itemId ? getAvailableQtyFEFO(r.itemId) : 0;
-        const batchesPossible = perUnitNeed > 0 && releaseRate > 0 ? Math.floor(available / (perUnitNeed * releaseRate)) : 0;
-        return {row: r, item: it, perUnitNeed, perBatch, unitCost, batchCost, available, batchesPossible};
+        const available = r.itemId ? getAvailableQtyOnHand(r.itemId) : 0;
+
+        // NEW: units-based capacity per component (no batches)
+        const maxUnitsByThis = perUnitNeed > 0 ? Math.floor(available / perUnitNeed) : 0;
+
+        return {row: r, item: it, perUnitNeed, perBatch, unitCost, batchCost, available, maxUnitsByThis};
     }), [rows, releaseRate]);
 
     const costPerBatch = useMemo(() => perRowCalcs.reduce((s, x) => s + x.batchCost, 0), [perRowCalcs]);
     const goodUnitsPerBatch = useMemo(() => Math.max(0, Number(releaseRate)) * (sanitizePct(yieldPct) / 100 || 0), [releaseRate, yieldPct]);
     const costPerNetUnit = goodUnitsPerBatch > 0 ? costPerBatch / goodUnitsPerBatch : 0;
 
-    const limiting = useMemo(() => {
-        const rowsWithCap = perRowCalcs.filter(x => x.perUnitNeed > 0 && x.row.itemId);
-        if (!rowsWithCap.length) return null;
-        return rowsWithCap.reduce((min, x) => (x.batchesPossible < (min?.batchesPossible ?? Infinity) ? x : min), null);
+    // Units-based limiting component & capacity snapshot (for UI)
+    const limitingUnits = useMemo(() => {
+        const valid = perRowCalcs.filter(x => x.row.itemId && x.perUnitNeed > 0);
+        if (!valid.length) return null;
+        return valid.reduce((min, x) => (x.maxUnitsByThis < (min?.maxUnitsByThis ?? Infinity) ? x : min), null);
     }, [perRowCalcs]);
 
-    const totalGoodUnitsNow = useMemo(() => {
-        const batches = limiting ? limiting.batchesPossible : 0;
-        return Math.floor(batches * goodUnitsPerBatch);
-    }, [limiting, goodUnitsPerBatch]);
+    const maxUnitsNow = limitingUnits ? limitingUnits.maxUnitsByThis : 0;
 
     // ---- Actions ----
     const handleSaveDraft = () => {
         setLastSavedAt(new Date());
         setDirty(false);
-        // Intentionally NO autosave toast; this is a user-invoked save toast:
         pushToast({type: "success", title: "Draft saved", message: "Changes stored locally (mock)."});
     };
 
@@ -325,7 +338,7 @@ function BOMCreationPage() {
     return (
         <div className="bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
             {/* Header */}
-            <header className="mx-auto max-w-6xl px-4 pt-10 pb-6">
+            <header className="mx-auto max-w-7xl px-4 pt-10 pb-6">
                 <div className="flex items-end justify-between gap-4 flex-wrap">
                     <div>
                         <h1 className="text-3xl font-bold text-white">New BOM</h1>
@@ -360,7 +373,7 @@ function BOMCreationPage() {
             </header>
 
             {/* Content */}
-            <section className="mx-auto max-w-6xl px-4 pb-16 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            <section className="mx-auto max-w-7xl px-4 pb-16 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                 {/* Left: form */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* General */}
@@ -417,7 +430,6 @@ function BOMCreationPage() {
                                        className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"/>
                             </div>
 
-                            {/* Release Rate and Planned Yield moved to main grid like others */}
                             <div>
                                 <label className="block text-xs text-gray-400 mb-1">Release Rate (batch size)</label>
                                 <input
@@ -440,7 +452,6 @@ function BOMCreationPage() {
                                 />
                             </div>
 
-                            {/* Description / Notes full-width on the last row with more height */}
                             <div className="sm:col-span-2">
                                 <label className="block text-xs text-gray-400 mb-1">Description / Notes</label>
                                 <textarea
@@ -479,7 +490,6 @@ function BOMCreationPage() {
                                     <th className="px-4 py-3 text-left">Component Item</th>
                                     <th className="px-4 py-3 text-left">Qty / 1 pc</th>
                                     <th className="px-4 py-3 text-left">Scrap %</th>
-                                    <th className="px-4 py-3 text-left">Per Batch</th>
                                     <th className="px-4 py-3 text-left">UoM</th>
                                     <th className="px-4 py-3 text-left">Notes</th>
                                     <th className="px-4 py-3 text-right">Actions</th>
@@ -495,9 +505,6 @@ function BOMCreationPage() {
                                         scrap: Number(r.scrap) < 0,
                                         sameAsParent: r.itemId && r.itemId === parentItemId,
                                     };
-                                    const qty1pc = Number(r.qty || 0);
-                                    const scrap = Math.max(0, Number(r.scrap || 0)) / 100;
-                                    const perBatch = qty1pc * Math.max(0, Number(releaseRate)) * (1 + scrap);
 
                                     return (
                                         <tr key={r.key} className="hover:bg-gray-800/40 transition">
@@ -554,14 +561,6 @@ function BOMCreationPage() {
                                                     className={`w-24 rounded-lg bg-gray-800 border ${rowErrors.scrap ? "border-red-500/60" : "border-white/10"} px-3 py-2 text-sm`}
                                                 />
                                                 <div className="text-[11px] text-gray-500 mt-1">add-on %</div>
-                                            </td>
-
-                                            <td className="px-4 py-3 align-top">
-                                                <div
-                                                    className="w-32 rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm">
-                                                    {isFinite(perBatch) ? perBatch.toFixed(4) : "0"}
-                                                </div>
-                                                <div className="text-[11px] text-gray-500 mt-1">per batch</div>
                                             </td>
 
                                             <td className="px-4 py-3 align-top">
@@ -645,7 +644,7 @@ function BOMCreationPage() {
                                 <button
                                     onClick={() => setOpenCapacityModal(true)}
                                     className="px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs"
-                                    title="Calculation by ingredient availability (FEFO) and limiting component × Yield %"
+                                    title="Units you can make now based on on-hand component availability"
                                 >
                                     How much can I make now?
                                 </button>
@@ -724,14 +723,14 @@ function BOMCreationPage() {
                                 </div>
                             </div>
 
-                            {/* Capacity quick glance */}
+                            {/* Capacity quick glance (units-based) */}
                             <div
                                 className="rounded-xl bg-gray-800/60 p-3 border border-white/10 col-span-2 flex items-center gap-2">
                                 <div className="text-xs text-gray-400">Capacity snapshot</div>
-                                {limiting?.row?.itemId ? (
+                                {limitingUnits?.row?.itemId ? (
                                     <div className="flex items-center gap-2">
-                                        <Badge tone="warn">Limit: {limiting.row.itemId}</Badge>
-                                        <Badge>Good units now: {totalGoodUnitsNow}</Badge>
+                                        <Badge tone="warn">Limit: {limitingUnits.row.itemId}</Badge>
+                                        <Badge>Units now: {maxUnitsNow}</Badge>
                                     </div>
                                 ) : (
                                     <Badge tone="ok">No limiting component yet</Badge>
@@ -753,47 +752,62 @@ function BOMCreationPage() {
             </section>
 
             {/* ----- MODALS ----- */}
-            <Modal open={openCapacityModal} title="Capacity by Component (FEFO mock)"
+            <Modal open={openCapacityModal} title="Capacity by Component (On-hand stock)"
                    onClose={() => setOpenCapacityModal(false)}>
                 {perRowCalcs.length === 0 || perRowCalcs.every(x => !x.row.itemId) ? (
                     <EmptyState title="No components to analyze"
                                 subtitle="Add components with quantities to see capacity."/>
                 ) : (
                     <div className="space-y-4">
-                        <div className="text-sm text-gray-300">
-                            Good units per batch after yield: <span
-                            className="text-gray-100 font-semibold">{goodUnitsPerBatch.toFixed(2)}</span>
+                        {/* Headline like the screenshot */}
+                        <div className="rounded-xl border border-white/10 bg-gray-900/60 px-4 py-3 text-sm">
+                            You can make <span
+                            className="font-semibold text-white">{maxUnitsNow.toLocaleString()}</span> unit(s) now with
+                            on-hand stock.
                         </div>
+
                         <div className="overflow-auto border border-white/10 rounded-xl">
                             <table className="min-w-full text-sm">
                                 <thead className="bg-gray-900/60">
                                 <tr>
-                                    <th className="px-3 py-2 text-left">Item</th>
-                                    <th className="px-3 py-2 text-right">Available (FEFO)</th>
-                                    <th className="px-3 py-2 text-right">Need / 1 pc (+scrap)</th>
-                                    <th className="px-3 py-2 text-right">Need / batch</th>
-                                    <th className="px-3 py-2 text-right">Batches possible</th>
+                                    <th className="px-3 py-2 text-left">Component</th>
+                                    <th className="px-3 py-2 text-right">Avail</th>
+                                    <th className="px-3 py-2 text-right">Per FG</th>
+                                    <th className="px-3 py-2 text-right">Max Units by This</th>
                                 </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-800">
-                                {perRowCalcs.filter(x => x.row.itemId && x.perUnitNeed > 0).map(x => (
-                                    <tr key={x.row.key}
-                                        className={`${limiting && limiting.row.key === x.row.key ? "bg-yellow-500/5" : ""}`}>
-                                        <td className="px-3 py-2">{x.row.itemId} — {x.item?.name || ""}</td>
-                                        <td className="px-3 py-2 text-right">{x.available.toLocaleString()}</td>
-                                        <td className="px-3 py-2 text-right">{x.perUnitNeed.toFixed(4)} {x.item?.uom || ""}</td>
-                                        <td className="px-3 py-2 text-right">{x.perBatch.toFixed(4)} {x.item?.uom || ""}</td>
-                                        <td className="px-3 py-2 text-right font-semibold">{x.batchesPossible}</td>
-                                    </tr>
-                                ))}
+                                {perRowCalcs
+                                    .filter(x => x.row.itemId && x.perUnitNeed > 0)
+                                    .sort((a, b) => a.maxUnitsByThis - b.maxUnitsByThis) // limiting first
+                                    .map(x => {
+                                        const isLimiting = limitingUnits && limitingUnits.row.key === x.row.key;
+                                        return (
+                                            <tr key={x.row.key} className={isLimiting ? "bg-red-500/5" : ""}>
+                                                <td className="px-3 py-2">
+                                                    <div className="font-semibold text-gray-100">{x.row.itemId}</div>
+                                                    <div className="text-xs text-gray-400">{x.item?.name || ""}</div>
+                                                </td>
+                                                <td className="px-3 py-2 text-right">{x.available.toLocaleString()} {x.item?.uom || ""}</td>
+                                                <td className="px-3 py-2 text-right">{x.perUnitNeed.toFixed(4)}</td>
+                                                <td className="px-3 py-2 text-right">
+                          <span className={`inline-flex min-w-[2.5rem] justify-center rounded-full px-2 py-0.5 text-xs font-semibold
+                            ${isLimiting ? "bg-red-600/20 text-red-200 border border-red-500/40" : "bg-gray-700/50 text-gray-200 border border-white/10"}`}>
+                            {x.maxUnitsByThis.toLocaleString()}
+                          </span>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>
+
                         <div className="flex items-center gap-2">
-                            {limiting ? (
+                            {limitingUnits ? (
                                 <>
-                                    <Badge tone="warn">Limiting: {limiting.row.itemId}</Badge>
-                                    <Badge>Good units now: {totalGoodUnitsNow}</Badge>
+                                    <Badge tone="warn">Limiting: {limitingUnits.row.itemId}</Badge>
+                                    <Badge>Units now: {maxUnitsNow}</Badge>
                                 </>
                             ) : (
                                 <Badge tone="ok">No limiting component</Badge>
@@ -841,7 +855,7 @@ function BOMCreationPage() {
                                     <tr key={x.row.key}>
                                         <td className="px-3 py-2">{x.row.itemId} — {x.item?.name || ""}</td>
                                         <td className="px-3 py-2 text-right">€{(x.item?.cost ?? 0).toFixed(4)}</td>
-                                        <td className="px-3 py-2 text-right">{(x.row.qty || 0)} {x.item?.uom || ""}</td>
+                                        <td className="px-3 py-2 text-right">{(Number(x.row.qty) || 0)} {x.item?.uom || ""}</td>
                                         <td className="px-3 py-2 text-right">{Number(x.row.scrap || 0)}%</td>
                                         <td className="px-3 py-2 text-right">{x.perBatch.toFixed(4)} {x.item?.uom || ""}</td>
                                         <td className="px-3 py-2 text-right font-semibold">€{x.batchCost.toFixed(4)}</td>
