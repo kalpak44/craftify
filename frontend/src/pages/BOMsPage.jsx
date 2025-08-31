@@ -2,15 +2,21 @@ import React, {useMemo, useState} from "react";
 import {useNavigate} from "react-router-dom";
 
 /**
- * BOMsPage — lightweight ERP-style BOM registry page.
- * - Mocked data
- * - Filters, search, sort, pagination (client-side)
- * - Non-functional action buttons as placeholders
- * - Tailwind styles aligned with ItemsPage
+ * BOMsPage
+ *
+ * ERP-style Bill of Materials registry built with React + Tailwind (raw JS).
+ * Features:
+ * - Search, filter by status, sortable columns, pagination.
+ * - Row selection (checkboxes) with bulk delete + confirmation modal.
+ * - Consistent styling with ItemsPage (red Delete button, same modal look & feel).
+ * - Each table row opens the BOM Details view at /boms/:id.
+ *
+ * Notes:
+ * - Uses mocked data stored in component state for client-side ops.
  */
 export const BOMsPage = () => {
-    // --- Mocked BOMs ---
-    const data = [
+    // --- Mocked BOMs (stateful for deletion) ---
+    const initialData = [
         {
             id: "BOM-001",
             product: "Front Assembly",
@@ -100,8 +106,10 @@ export const BOMsPage = () => {
             status: "Active",
             components: 2,
             lastUpdated: "2025-02-03"
-        },
+        }
     ];
+
+    const [rows, setRows] = useState(initialData);
 
     const navigate = useNavigate();
     // --- State ---
@@ -111,33 +119,28 @@ export const BOMsPage = () => {
     const [selected, setSelected] = useState({});
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(8);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     // --- Derived rows ---
     const filtered = useMemo(() => {
-        let rows = data;
+        let data = rows;
         if (query) {
             const q = query.toLowerCase();
-            rows = rows.filter(
-                r =>
-                    r.id.toLowerCase().includes(q) ||
-                    r.product.toLowerCase().includes(q) ||
-                    r.productId.toLowerCase().includes(q)
+            data = data.filter(
+                (r) => r.id.toLowerCase().includes(q) || r.product.toLowerCase().includes(q) || r.productId.toLowerCase().includes(q)
             );
         }
-        if (status !== "all") rows = rows.filter(r => r.status === status);
+        if (status !== "all") data = data.filter((r) => r.status === status);
 
         const {key, dir} = sort;
-        rows = [...rows].sort((a, b) => {
+        data = [...data].sort((a, b) => {
             const av = a[key];
             const bv = b[key];
-            const cmp =
-                key === "components"
-                    ? av - bv
-                    : String(av).localeCompare(String(bv), undefined, {numeric: true});
+            const cmp = key === "components" ? av - bv : String(av).localeCompare(String(bv), undefined, {numeric: true});
             return dir === "asc" ? cmp : -cmp;
         });
-        return rows;
-    }, [data, query, status, sort]);
+        return data;
+    }, [rows, query, status, sort]);
 
     // --- Paging ---
     const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -145,22 +148,22 @@ export const BOMsPage = () => {
     const paged = filtered.slice(pageStart, pageStart + pageSize);
 
     // --- Selection ---
-    const toggleOne = (id) => setSelected(s => ({...s, [id]: !s[id]}));
-    const allOnPageSelected = paged.length > 0 && paged.every(r => selected[r.id]);
+    const selectedIds = Object.keys(selected).filter((k) => selected[k]);
+    const selectedCount = selectedIds.length;
+
+    const allOnPageSelected = paged.length > 0 && paged.every((r) => selected[r.id]);
     const toggleAll = () => {
         const next = {...selected};
-        if (allOnPageSelected) paged.forEach(r => delete next[r.id]);
-        else paged.forEach(r => (next[r.id] = true));
+        if (allOnPageSelected) paged.forEach((r) => delete next[r.id]);
+        else paged.forEach((r) => (next[r.id] = true));
         setSelected(next);
     };
-    const selectedCount = Object.values(selected).filter(Boolean).length;
+    const toggleOne = (id) => setSelected((s) => ({...s, [id]: !s[id]}));
 
     // --- Helpers ---
     const th = (label, key, right = false) => (
         <th
-            onClick={() =>
-                setSort(s => ({key, dir: s.key === key && s.dir === "asc" ? "desc" : "asc"}))
-            }
+            onClick={() => setSort((s) => ({key, dir: s.key === key && s.dir === "asc" ? "desc" : "asc"}))}
             className={`px-4 py-3 font-semibold text-gray-300 select-none cursor-pointer ${right ? "text-right" : "text-left"}`}
         >
       <span className="inline-flex items-center gap-1">
@@ -169,6 +172,28 @@ export const BOMsPage = () => {
       </span>
         </th>
     );
+
+    // --- Row navigation (details) ---
+    const goToDetails = (id) => navigate(`/boms/${encodeURIComponent(id)}/edit`);
+    const stopRowNav = (e) => e.stopPropagation();
+
+    // --- Delete modal control ---
+    const openDeleteModal = () => {
+        if (!selectedCount) return;
+        setShowDeleteModal(true);
+    };
+    const confirmDelete = () => {
+        if (!selectedCount) {
+            setShowDeleteModal(false);
+            return;
+        }
+        const keep = rows.filter((r) => !selectedIds.includes(r.id));
+        setRows(keep);
+        setSelected({});
+        const newTotalPages = Math.max(1, Math.ceil(keep.length / pageSize));
+        setPage((p) => Math.min(p, newTotalPages));
+        setShowDeleteModal(false);
+    };
 
     return (
         <div
@@ -181,12 +206,15 @@ export const BOMsPage = () => {
                         <p className="mt-2 text-gray-400">Define and manage bill of materials.</p>
                     </div>
                     <div className="flex gap-3">
-                        <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
-                                onClick={() => navigate("/boms/new")}>+ New BOM
+                        <button
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
+                            onClick={() => navigate("/boms/new")}
+                        >
+                            + New BOM
                         </button>
                         <button
-                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">Import
-                            CSV
+                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">
+                            Import CSV
                         </button>
                     </div>
                 </div>
@@ -234,8 +262,10 @@ export const BOMsPage = () => {
                                 Print / PDF
                             </button>
                             <button
+                                onClick={openDeleteModal}
                                 disabled={!selectedCount}
-                                className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm disabled:opacity-40"
+                                className="px-3 py-2 rounded-lg bg-red-600/80 hover:bg-red-600 text-white text-sm disabled:opacity-40"
+                                title={selectedCount ? `Delete ${selectedCount} selected` : "Select rows to delete"}
                             >
                                 Delete
                             </button>
@@ -251,7 +281,8 @@ export const BOMsPage = () => {
                         <thead className="bg-gray-900/80">
                         <tr>
                             <th className="px-4 py-3">
-                                <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll}/>
+                                <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll}
+                                       onClick={stopRowNav}/>
                             </th>
                             {th("BOM ID", "id")}
                             {th("Product", "product")}
@@ -264,12 +295,19 @@ export const BOMsPage = () => {
                         </thead>
                         <tbody className="divide-y divide-gray-800">
                         {paged.map((bom) => (
-                            <tr key={bom.id} className="hover:bg-gray-800/40 transition">
-                                <td className="px-4 py-3">
+                            <tr
+                                key={bom.id}
+                                className="hover:bg-gray-800/40 transition cursor-pointer"
+                                onClick={() => goToDetails(bom.id)}
+                                title="Open Details"
+                            >
+                                <td className="px-4 py-3" onClick={stopRowNav}>
                                     <input type="checkbox" checked={!!selected[bom.id]}
                                            onChange={() => toggleOne(bom.id)}/>
                                 </td>
-                                <td className="px-4 py-3 font-mono text-white">{bom.id}</td>
+                                <td className="px-4 py-3 font-mono text-white">
+                                    <span className="underline decoration-dotted">{bom.id}</span>
+                                </td>
                                 <td className="px-4 py-3 text-gray-200">{bom.product}</td>
                                 <td className="px-4 py-3 text-gray-400">{bom.productId}</td>
                                 <td className="px-4 py-3 text-gray-400">{bom.revision}</td>
@@ -292,6 +330,13 @@ export const BOMsPage = () => {
                                 <td className="px-4 py-3 text-gray-400">{bom.lastUpdated}</td>
                             </tr>
                         ))}
+                        {paged.length === 0 && (
+                            <tr>
+                                <td className="px-4 py-6 text-center text-gray-400" colSpan={8}>
+                                    No BOMs found.
+                                </td>
+                            </tr>
+                        )}
                         </tbody>
                     </table>
                 </div>
@@ -309,7 +354,11 @@ export const BOMsPage = () => {
                             }}
                             className="rounded bg-gray-800 border border-white/10 px-2 py-1"
                         >
-                            {[8, 16, 24].map(n => <option key={n} value={n}>{n}</option>)}
+                            {[8, 16, 24].map((n) => (
+                                <option key={n} value={n}>
+                                    {n}
+                                </option>
+                            ))}
                         </select>
                         <span className="hidden sm:inline">•</span>
                         <span>
@@ -321,15 +370,17 @@ export const BOMsPage = () => {
                     <div className="flex items-center gap-2">
                         <button
                             disabled={page === 1}
-                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            onClick={() => setPage((p) => Math.max(1, p - 1))}
                             className="px-3 py-1 rounded bg-gray-800 border border-white/10 disabled:opacity-40"
                         >
                             Prev
                         </button>
-                        <span className="px-2">{page} / {totalPages}</span>
+                        <span className="px-2">
+              {page} / {totalPages}
+            </span>
                         <button
                             disabled={page === totalPages}
-                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                             className="px-3 py-1 rounded bg-gray-800 border border-white/10 disabled:opacity-40"
                         >
                             Next
@@ -337,6 +388,33 @@ export const BOMsPage = () => {
                     </div>
                 </div>
             </section>
+
+            {/* Deletion Confirmation Modal */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => setShowDeleteModal(false)}/>
+                    <div
+                        className="relative z-10 w-[90%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
+                        <h2 className="text-lg font-semibold text-white">Confirm deletion</h2>
+                        <p className="mt-2 text-sm text-gray-300">
+                            You are about to delete <span className="font-medium text-white">{selectedCount}</span>{" "}
+                            {selectedCount === 1 ? "BOM" : "BOMs"}. This action cannot be undone.
+                        </p>
+                        <div className="mt-4 flex justify-end gap-2">
+                            <button
+                                onClick={() => setShowDeleteModal(false)}
+                                className="px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button onClick={confirmDelete}
+                                    className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

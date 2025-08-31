@@ -448,7 +448,7 @@ function CloseWoModal({open, onClose, plannedQty, onSubmit}) {
     );
 }
 
-export default function WorkOrderCreationPage() {
+export default function WorkOrderDetailsPage() {
     const navigate = useNavigate();
 
     // ----- General form -----
@@ -1282,4 +1282,4 @@ export default function WorkOrderCreationPage() {
     );
 }
 
-export {WorkOrderCreationPage};
+export {WorkOrderDetailsPage};

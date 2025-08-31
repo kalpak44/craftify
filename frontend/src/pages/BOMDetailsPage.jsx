@@ -138,7 +138,7 @@ function Badge({children, tone = "default"}) {
 }
 
 // ---------- Page ----------
-function BOMCreationPage() {
+function BOMDetailsPage() {
     const navigate = useNavigate();
 
     // ---- Form state ----
@@ -897,5 +897,4 @@ function BOMCreationPage() {
     );
 }
 
-export default BOMCreationPage;
-export {BOMCreationPage};
+export {BOMDetailsPage};

@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
  * Features:
  * - Search, filters (status/category/UoM), sortable columns.
  * - Pagination with selectable rows and bulk actions.
- * - CSV/Excel export and print-friendly view.
+ * - CSV export and print-friendly view.
  * - Row selection with bulk delete + confirmation modal.
  * - Per-row actions: “Search in Inventory” and “Search in PO”.
  * - Each table row opens the Edit view at /items/:id/edit.
@@ -128,13 +128,6 @@ export const ItemsPage = () => {
         downloadBlob(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" }), `items_${new Date()
             .toISOString()
             .slice(0, 10)}.csv`);
-    };
-
-    const handleExportExcel = () => {
-        const csv = toCSV(rowsForExport());
-        downloadBlob(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" }), `items_${new Date()
-            .toISOString()
-            .slice(0, 10)}.xls`);
     };
 
     const handlePrint = () => {
@@ -321,13 +314,6 @@ export const ItemsPage = () => {
                                 title={`Export ${selectedCount ? "selected" : "filtered"} rows to CSV`}
                             >
                                 Export CSV
-                            </button>
-                            <button
-                                onClick={handleExportExcel}
-                                className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm hover:bg-gray-700"
-                                title={`Export ${selectedCount ? "selected" : "filtered"} rows to Excel (CSV)`}
-                            >
-                                Excel (CSV)
                             </button>
                             <button
                                 onClick={handlePrint}

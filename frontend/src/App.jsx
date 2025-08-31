@@ -11,9 +11,9 @@ import {NotFoundPage} from "./pages/NotFoundPage";
 import {AuthenticationGuard} from "./components/authentication-guard/AuthenticationGuard.jsx";
 import {ItemsPage} from "./pages/ItemsPage.jsx";
 import {BOMsPage} from "./pages/BOMsPage.jsx";
-import BOMCreationPage from "./pages/BOMCreationPage.jsx";
+import {BOMDetailsPage} from "./pages/BOMDetailsPage.jsx";
 import WorkOrdersPage from "./pages/WorkOrdersPage.jsx";
-import WorkOrderCreationPage from "./pages/WorkOrderCreationPage.jsx";
+import {WorkOrderDetailsPage} from "./pages/WorkOrderDetailsPage.jsx";
 import InventoryPage from "./pages/InventoryPage.jsx";
 import InventoryTransferPage from "./pages/InventoryTransferPage.jsx";
 import InventoryAdjustPage from "./pages/InventoryAdjustPage.jsx";
@@ -65,9 +65,14 @@ export default function App() {
                     <FullWidthLayout><BOMsPage/></FullWidthLayout>
                 </AuthenticationGuard>
             }/>
+            <Route path="/boms/:id/edit" element={
+                <AuthenticationGuard>
+                    <FullWidthLayout><BOMDetailsPage/></FullWidthLayout>
+                </AuthenticationGuard>
+            }/>
             <Route path="/boms/new" element={
                 <AuthenticationGuard>
-                    <FullWidthLayout><BOMCreationPage/></FullWidthLayout>
+                    <FullWidthLayout><BOMDetailsPage/></FullWidthLayout>
                 </AuthenticationGuard>
             }/>
             <Route path="/work-orders" element={
@@ -77,12 +82,12 @@ export default function App() {
             }/>
             <Route path="/work-orders/new" element={
                 <AuthenticationGuard>
-                    <FullWidthLayout><WorkOrderCreationPage/></FullWidthLayout>
+                    <FullWidthLayout><WorkOrderDetailsPage/></FullWidthLayout>
                 </AuthenticationGuard>
             }/>
             <Route path="/work-orders/:id/edit" element={
                 <AuthenticationGuard>
-                    <FullWidthLayout><WorkOrderCreationPage/></FullWidthLayout>
+                    <FullWidthLayout><WorkOrderDetailsPage/></FullWidthLayout>
                 </AuthenticationGuard>
             }/>
             <Route path="/work-orders/:id/operations" element={
