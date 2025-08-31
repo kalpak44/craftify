@@ -55,17 +55,17 @@ export const FullWidthLayout = ({ children }) => {
 
     const handleSignUp = () => {
         loginWithRedirect({
-            appState: { returnTo: "/callback" },
-            authorizationParams: { prompt: "login", screen_hint: "signup" }
+            appState: {returnTo: "/callback"},
+            authorizationParams: {prompt: "login", screen_hint: "signup"},
         });
     };
 
     // Desktop: keep original visual design
-    const navLinkClassDesktop = ({ isActive }) =>
+    const navLinkClassDesktop = ({isActive}) =>
         `whitespace-nowrap ${isActive ? "text-white" : "text-gray-400 hover:text-white"}`;
 
     // Mobile: larger tap targets + focus styles
-    const navLinkClassMobile = ({ isActive }) =>
+    const navLinkClassMobile = ({isActive}) =>
         `block px-3 py-2 rounded-md text-sm font-medium focus:outline-none focus-visible:ring focus-visible:ring-blue-500/50 whitespace-nowrap ${
             isActive ? "bg-white/10 text-white" : "text-gray-300 hover:text-white hover:bg-white/5"
         }`;
@@ -134,34 +134,15 @@ export const FullWidthLayout = ({ children }) => {
                                         role="menu"
                                     >
                                         <div className="flex items-center space-x-3 mb-3">
-                                            <img src={user?.picture} alt="avatar" className="w-10 h-10 rounded-full" />
+                                            <img src={user?.picture} alt="avatar" className="w-10 h-10 rounded-full"/>
                                             <div>
                                                 <p className="text-sm font-medium text-white">{user?.name}</p>
                                                 <p className="text-xs text-gray-400">{user?.email}</p>
                                             </div>
                                         </div>
-
-                                        {/* Calendar link as GRAY BUTTON (centered) */}
-                                        <NavLink
-                                            to="/calendar"
-                                            onClick={() => setShowProfile(false)}
-                                            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md bg-gray-800 border border-white/10 text-white text-sm hover:bg-gray-700 focus:outline-none focus-visible:ring focus-visible:ring-blue-500/50"
-                                        >
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                className="h-4 w-4 text-gray-200"
-                                                viewBox="0 0 24 24"
-                                                fill="currentColor"
-                                                aria-hidden="true"
-                                            >
-                                                <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1V3a1 1 0 0 1 1-1Zm12 7H5v10h14V9ZM7 7h10V6H7v1Z" />
-                                            </svg>
-                                            <span>Calendar</span>
-                                        </NavLink>
-
                                         <button
-                                            onClick={() => logout({ returnTo: window.location.origin })}
-                                            className="w-full mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
+                                            onClick={() => logout({returnTo: window.location.origin})}
+                                            className="w-full mt-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
                                         >
                                             Log Out
                                         </button>
@@ -186,7 +167,7 @@ export const FullWidthLayout = ({ children }) => {
                         </div>
                     )}
 
-                    {/* Hamburger (mobile) */}
+                    {/* Hamburger (mobile only, does not affect desktop) */}
                     <button
                         type="button"
                         className="md:hidden inline-flex items-center justify-center p-2 rounded-md border border-gray-700 focus:outline-none focus-visible:ring focus-visible:ring-blue-500/50"
@@ -195,19 +176,16 @@ export const FullWidthLayout = ({ children }) => {
                         aria-label="Toggle menu"
                         onClick={() => setMobileOpen((v) => !v)}
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                             className="h-6 w-6">
                             {mobileOpen ? (
-                                <path
-                                    fillRule="evenodd"
-                                    d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 11-1.06 1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z"
-                                    clipRule="evenodd"
-                                />
+                                <path fillRule="evenodd"
+                                      d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 11-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z"
+                                      clipRule="evenodd"/>
                             ) : (
-                                <path
-                                    fillRule="evenodd"
-                                    d="M3.75 5.25a.75.75 0 000 1.5h16.5a.75.75 0 000-1.5H3.75zm0 6a.75.75 0 000 1.5h16.5a.75.75 0 000-1.5H3.75zm0 6a.75.75 0 000 1.5h16.5a.75.75 0 000-1.5H3.75z"
-                                    clipRule="evenodd"
-                                />
+                                <path fillRule="evenodd"
+                                      d="M3.75 5.25a.75.75 0 000 1.5h16.5a.75.75 0 000-1.5H3.75zm0 6a.75.75 0 000 1.5h16.5a.75.75 0 000-1.5H3.75zm0 6a.75.75 0 000 1.5h16.5a.75.75 0 000-1.5H3.75z"
+                                      clipRule="evenodd"/>
                             )}
                         </svg>
                     </button>
@@ -232,19 +210,20 @@ export const FullWidthLayout = ({ children }) => {
                         {/* Header inside drawer */}
                         <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-3">
-                                <div className="h-8 w-8 rounded-2xl bg-blue-600 flex items-center justify-center font-bold">C</div>
+                                <div
+                                    className="h-8 w-8 rounded-2xl bg-blue-600 flex items-center justify-center font-bold">C
+                                </div>
                                 <div className="text-white text-base font-semibold">Craftify</div>
                             </div>
                             <button
                                 className="p-2 rounded-md border border-gray-700 focus:outline-none focus-visible:ring focus-visible:ring-blue-500/50"
                                 onClick={() => setMobileOpen(false)}
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-                                    <path
-                                        fillRule="evenodd"
-                                        d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 11-1.06 1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z"
-                                        clipRule="evenodd"
-                                    />
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                                     className="h-5 w-5">
+                                    <path fillRule="evenodd"
+                                          d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 11-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z"
+                                          clipRule="evenodd"/>
                                 </svg>
                             </button>
                         </div>
@@ -266,44 +245,28 @@ export const FullWidthLayout = ({ children }) => {
                         </nav>
 
                         {/* Divider */}
-                        <div className="my-4 h-px bg-white/10" />
+                        <div className="my-4 h-px bg-white/10"/>
 
                         {/* Auth controls (mobile) */}
                         <div className="mt-1">
                             {isAuthenticated ? (
-                                <>
-                                    <div className="flex items-center gap-3">
-                                        <img
-                                            src={user?.picture}
-                                            alt="avatar"
-                                            className="w-10 h-10 rounded-full border border-gray-700"
-                                        />
-                                        <div className="min-w-0">
-                                            <p className="text-sm font-medium truncate">{user?.name}</p>
-                                            <p className="text-xs text-gray-400 truncate">{user?.email}</p>
-                                        </div>
+                                <div className="flex items-center gap-3">
+                                    <img src={user?.picture} alt="avatar"
+                                         className="w-10 h-10 rounded-full border border-gray-700"/>
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-medium truncate">{user?.name}</p>
+                                        <p className="text-xs text-gray-400 truncate">{user?.email}</p>
                                     </div>
-
-                                    {/* Calendar (GRAY BUTTON) + Logout */}
-                                    <div className="grid grid-cols-2 gap-2 mt-3">
-                                        <NavLink
-                                            to="/calendar"
-                                            onClick={() => setMobileOpen(false)}
-                                            className="text-center px-3 py-2 bg-gray-800 border border-white/10 hover:bg-gray-700 text-white rounded text-sm focus:outline-none focus-visible:ring focus-visible:ring-blue-500/50"
-                                        >
-                                            Calendar
-                                        </NavLink>
-                                        <button
-                                            onClick={() => {
-                                                setMobileOpen(false);
-                                                logout({ returnTo: window.location.origin });
-                                            }}
-                                            className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
-                                        >
-                                            Log Out
-                                        </button>
-                                    </div>
-                                </>
+                                    <button
+                                        onClick={() => {
+                                            setMobileOpen(false);
+                                            logout({returnTo: window.location.origin});
+                                        }}
+                                        className="ml-auto whitespace-nowrap px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-xs"
+                                    >
+                                        Log Out
+                                    </button>
+                                </div>
                             ) : (
                                 <div className="grid grid-cols-2 gap-2">
                                     <button
@@ -336,7 +299,8 @@ export const FullWidthLayout = ({ children }) => {
 
             {/* Footer */}
             <footer className="border-t border-white/5">
-                <div className="mx-auto max-w-6xl px-4 py-8 text-sm text-gray-500 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div
+                    className="mx-auto max-w-6xl px-4 py-8 text-sm text-gray-500 flex flex-col sm:flex-row items-center justify-between gap-3">
                     <p>© {new Date().getFullYear()} Craftify. All rights reserved.</p>
                     <div className="flex items-center gap-4">
                         <NavLink to="/terms" className="hover:text-gray-300">
@@ -352,4 +316,4 @@ export const FullWidthLayout = ({ children }) => {
     );
 };
 
-FullWidthLayout.propTypes = { children: PropTypes.node.isRequired };
+FullWidthLayout.propTypes = {children: PropTypes.node.isRequired};
