@@ -1,8 +1,8 @@
 import PropTypes from "prop-types";
-import { useEffect, useRef, useState } from "react";
-import { useAuth0 } from "@auth0/auth0-react";
-import { NavLink } from "react-router-dom";
-import { Loader as Spinner } from "../common/Loader";
+import {useEffect, useRef, useState} from "react";
+import {useAuth0} from "@auth0/auth0-react";
+import {NavLink} from "react-router-dom";
+import {Loader as Spinner} from "../common/Loader";
 
 /**
  * Layout with full width, navbar, and profile dropdown.
@@ -13,8 +13,8 @@ import { Loader as Spinner } from "../common/Loader";
  * - Style the "Calendar" link as a gray button (desktop dropdown + mobile drawer).
  * - Keep "Calendar" centered in desktop dropdown; keep extra margin-top for Logout.
  */
-export const FullWidthLayout = ({ children }) => {
-    const { isAuthenticated, user, logout, loginWithRedirect, isLoading } = useAuth0();
+export const FullWidthLayout = ({children}) => {
+    const {isAuthenticated, user, logout, loginWithRedirect, isLoading} = useAuth0();
 
     const [showProfile, setShowProfile] = useState(false);
     const profileMenuRef = useRef(null);
@@ -56,7 +56,7 @@ export const FullWidthLayout = ({ children }) => {
     const handleSignUp = () => {
         loginWithRedirect({
             appState: {returnTo: "/callback"},
-            authorizationParams: {prompt: "login", screen_hint: "signup"},
+            authorizationParams: {prompt: "login", screen_hint: "signup"}
         });
     };
 
@@ -71,22 +71,22 @@ export const FullWidthLayout = ({ children }) => {
         }`;
 
     const AUTH_ITEMS = [
-        { to: "/", label: "Home" },
-        { to: "/items", label: "Items" },
-        { to: "/boms", label: "BOMs" },
-        { to: "/work-orders", label: "Work Orders" },
-        { to: "/inventory", label: "Inventory" },
-        { to: "/production", label: "Production" },
-        { to: "/purchasing", label: "Purchasing" }
+        {to: "/", label: "Home"},
+        {to: "/items", label: "Items"},
+        {to: "/boms", label: "BOMs"},
+        {to: "/work-orders", label: "Work Orders"},
+        {to: "/inventory", label: "Inventory"},
+        {to: "/production", label: "Production"},
+        {to: "/purchasing", label: "Purchasing"}
     ];
 
     const PUBLIC_ITEMS = [
-        { to: "/", label: "Home" },
-        { to: "/terms", label: "Terms" },
-        { to: "/privacy", label: "Privacy" }
+        {to: "/", label: "Home"},
+        {to: "/terms", label: "Terms"},
+        {to: "/privacy", label: "Privacy"}
     ];
 
-    if (isLoading) return <Spinner />;
+    if (isLoading) return <Spinner/>;
 
     const ITEMS = isAuthenticated ? AUTH_ITEMS : PUBLIC_ITEMS;
 
@@ -140,9 +140,29 @@ export const FullWidthLayout = ({ children }) => {
                                                 <p className="text-xs text-gray-400">{user?.email}</p>
                                             </div>
                                         </div>
+
+                                        {/* Calendar link as GRAY BUTTON (centered) */}
+                                        <NavLink
+                                            to="/calendar"
+                                            onClick={() => setShowProfile(false)}
+                                            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md bg-gray-800 border border-white/10 text-white text-sm hover:bg-gray-700 focus:outline-none focus-visible:ring focus-visible:ring-blue-500/50"
+                                        >
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                className="h-4 w-4 text-gray-200"
+                                                viewBox="0 0 24 24"
+                                                fill="currentColor"
+                                                aria-hidden="true"
+                                            >
+                                                <path
+                                                    d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1V3a1 1 0 0 1 1-1Zm12 7H5v10h14V9ZM7 7h10V6H7v1Z"/>
+                                            </svg>
+                                            <span>Calendar</span>
+                                        </NavLink>
+
                                         <button
                                             onClick={() => logout({returnTo: window.location.origin})}
-                                            className="w-full mt-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
+                                            className="w-full mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
                                         >
                                             Log Out
                                         </button>
@@ -167,7 +187,7 @@ export const FullWidthLayout = ({ children }) => {
                         </div>
                     )}
 
-                    {/* Hamburger (mobile only, does not affect desktop) */}
+                    {/* Hamburger (mobile) */}
                     <button
                         type="button"
                         className="md:hidden inline-flex items-center justify-center p-2 rounded-md border border-gray-700 focus:outline-none focus-visible:ring focus-visible:ring-blue-500/50"
@@ -179,13 +199,17 @@ export const FullWidthLayout = ({ children }) => {
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
                              className="h-6 w-6">
                             {mobileOpen ? (
-                                <path fillRule="evenodd"
-                                      d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 11-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z"
-                                      clipRule="evenodd"/>
+                                <path
+                                    fillRule="evenodd"
+                                    d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 11-1.06 1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z"
+                                    clipRule="evenodd"
+                                />
                             ) : (
-                                <path fillRule="evenodd"
-                                      d="M3.75 5.25a.75.75 0 000 1.5h16.5a.75.75 0 000-1.5H3.75zm0 6a.75.75 0 000 1.5h16.5a.75.75 0 000-1.5H3.75zm0 6a.75.75 0 000 1.5h16.5a.75.75 0 000-1.5H3.75z"
-                                      clipRule="evenodd"/>
+                                <path
+                                    fillRule="evenodd"
+                                    d="M3.75 5.25a.75.75 0 000 1.5h16.5a.75.75 0 000-1.5H3.75zm0 6a.75.75 0 000 1.5h16.5a.75.75 0 000-1.5H3.75zm0 6a.75.75 0 000 1.5h16.5a.75.75 0 000-1.5H3.75z"
+                                    clipRule="evenodd"
+                                />
                             )}
                         </svg>
                     </button>
@@ -221,9 +245,11 @@ export const FullWidthLayout = ({ children }) => {
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
                                      className="h-5 w-5">
-                                    <path fillRule="evenodd"
-                                          d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 11-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z"
-                                          clipRule="evenodd"/>
+                                    <path
+                                        fillRule="evenodd"
+                                        d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 11-1.06 1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z"
+                                        clipRule="evenodd"
+                                    />
                                 </svg>
                             </button>
                         </div>
@@ -250,23 +276,39 @@ export const FullWidthLayout = ({ children }) => {
                         {/* Auth controls (mobile) */}
                         <div className="mt-1">
                             {isAuthenticated ? (
-                                <div className="flex items-center gap-3">
-                                    <img src={user?.picture} alt="avatar"
-                                         className="w-10 h-10 rounded-full border border-gray-700"/>
-                                    <div className="min-w-0">
-                                        <p className="text-sm font-medium truncate">{user?.name}</p>
-                                        <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                                <>
+                                    <div className="flex items-center gap-3">
+                                        <img
+                                            src={user?.picture}
+                                            alt="avatar"
+                                            className="w-10 h-10 rounded-full border border-gray-700"
+                                        />
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-medium truncate">{user?.name}</p>
+                                            <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                                        </div>
                                     </div>
-                                    <button
-                                        onClick={() => {
-                                            setMobileOpen(false);
-                                            logout({returnTo: window.location.origin});
-                                        }}
-                                        className="ml-auto whitespace-nowrap px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-xs"
-                                    >
-                                        Log Out
-                                    </button>
-                                </div>
+
+                                    {/* Calendar (GRAY BUTTON) + Logout */}
+                                    <div className="grid grid-cols-2 gap-2 mt-3">
+                                        <NavLink
+                                            to="/calendar"
+                                            onClick={() => setMobileOpen(false)}
+                                            className="text-center px-3 py-2 bg-gray-800 border border-white/10 hover:bg-gray-700 text-white rounded text-sm focus:outline-none focus-visible:ring focus-visible:ring-blue-500/50"
+                                        >
+                                            Calendar
+                                        </NavLink>
+                                        <button
+                                            onClick={() => {
+                                                setMobileOpen(false);
+                                                logout({returnTo: window.location.origin});
+                                            }}
+                                            className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
+                                        >
+                                            Log Out
+                                        </button>
+                                    </div>
+                                </>
                             ) : (
                                 <div className="grid grid-cols-2 gap-2">
                                     <button

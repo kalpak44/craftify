@@ -447,7 +447,7 @@ export default function CalendarPage() {
                         <button
                             key={d.toISOString()}
                             onClick={() => onPickDay(new Date(d.getFullYear(), d.getMonth(), d.getDate()))}
-                            className={`min-h-9 bg-gray-900 hover:bg-gray-800/60 transition text-xs text-gray-300 p-1 text-right ${
+                            className={`min-h-9 bg-gray-900 hover:bg-gray-800/60 transition text-xs text-gray-300 p-1 text-center ${
                                 d.getMonth() !== monthDate.getMonth() ? "opacity-40" : ""
                             } ${isSameDay(d, new Date()) ? "ring-1 ring-blue-400" : ""}`}
                             title="Open this date"
