@@ -1,6 +1,6 @@
 // WorkOrderOperationsCreationPage.jsx
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import React, {useEffect, useMemo, useRef, useState} from "react";
+import {useNavigate, useParams} from "react-router-dom";
 
 /**
  * WorkOrderOperationsCreationPage — "New Operation" for a Work Order
@@ -35,8 +35,8 @@ const nextOpId = (() => {
     return () => `OP-${String(n++).padStart(4, "0")}`;
 })();
 
-export default function WorkOrderOperationsCreationPage() {
-    const { id: woId } = useParams();
+export default function WorkOrderOperationsDetailsPage() {
+    const {id: woId} = useParams();
     const navigate = useNavigate();
 
     // ---------- Form state ----------
@@ -124,12 +124,12 @@ export default function WorkOrderOperationsCreationPage() {
         navigate(`/work-orders/${woId}/operations`);
     };
 
-    const PriorityBadge = ({ value }) => (
+    const PriorityBadge = ({value}) => (
         <span
             className={`inline-flex items-center gap-2 px-2 py-1 text-xs rounded-full ${PRIORITY_CLS[value]}`}
             title={`Priority: ${value}`}
         >
-      <span className={`h-2 w-2 rounded-full ${PRIORITY_DOT[value]}`} />
+      <span className={`h-2 w-2 rounded-full ${PRIORITY_DOT[value]}`}/>
             {value}
     </span>
     );
@@ -141,7 +141,8 @@ export default function WorkOrderOperationsCreationPage() {
                 <div className="flex items-end justify-between gap-4 flex-wrap">
                     <div>
                         <h1 className="text-3xl font-bold text-white">New Operation • {woId}</h1>
-                        <p className="mt-2 text-gray-400">Create an operation for this work order. Fields marked with * are required.</p>
+                        <p className="mt-2 text-gray-400">Create an operation for this work order. Fields marked with *
+                            are required.</p>
                     </div>
                     <div className="flex gap-3">
                         <button
@@ -165,8 +166,9 @@ export default function WorkOrderOperationsCreationPage() {
                 </div>
 
                 {/* Autosave banner */}
-                <div className="mt-4 rounded-xl border border-white/10 bg-gray-900/60 px-4 py-3 text-sm flex items-center gap-3">
-                    <span className={`inline-flex h-2 w-2 rounded-full ${dirty ? "bg-yellow-400" : "bg-green-400"}`} />
+                <div
+                    className="mt-4 rounded-xl border border-white/10 bg-gray-900/60 px-4 py-3 text-sm flex items-center gap-3">
+                    <span className={`inline-flex h-2 w-2 rounded-full ${dirty ? "bg-yellow-400" : "bg-green-400"}`}/>
                     <span className="text-gray-300">
             {dirty ? "Saving draft…" : lastSavedAt ? `Last saved ${lastSavedAt.toLocaleTimeString()}` : "No changes yet"}
           </span>
@@ -294,25 +296,29 @@ export default function WorkOrderOperationsCreationPage() {
                             <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
                                 <div className="text-xs text-gray-400">Priority</div>
                                 <div className="text-sm text-gray-200">
-                                    <PriorityBadge value={priority} />
+                                    <PriorityBadge value={priority}/>
                                 </div>
                             </div>
                             <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
                                 <div className="text-xs text-gray-400">Assignee</div>
-                                <div className="text-sm text-gray-200">{assignee || <span className="text-gray-500">(not set)</span>}</div>
+                                <div className="text-sm text-gray-200">{assignee ||
+                                    <span className="text-gray-500">(not set)</span>}</div>
                             </div>
                             <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
                                 <div className="text-xs text-gray-400">Estimation</div>
                                 <div className="text-lg font-semibold text-gray-100">{estimate || "—"}</div>
                             </div>
 
-                            <div className="col-span-2 rounded-2xl bg-gray-900/60 p-4 text-xs text-gray-400 border border-white/10">
+                            <div
+                                className="col-span-2 rounded-2xl bg-gray-900/60 p-4 text-xs text-gray-400 border border-white/10">
                                 <div className="font-semibold text-gray-300 mb-2">Tips</div>
                                 <ul className="list-disc pl-5 space-y-1">
                                     <li>Use clear, action-based titles (e.g., “CNC milling – top plate”).</li>
                                     <li>
-                                        Estimation supports minutes (m), hours (h), and days (d), e.g., <span className="text-gray-300">30m</span>,{" "}
-                                        <span className="text-gray-300">6h</span>, <span className="text-gray-300">2d</span>.
+                                        Estimation supports minutes (m), hours (h), and days (d), e.g., <span
+                                        className="text-gray-300">30m</span>,{" "}
+                                        <span className="text-gray-300">6h</span>, <span
+                                        className="text-gray-300">2d</span>.
                                     </li>
                                     <li>You can edit fields on the Kanban card later via inline editing.</li>
                                 </ul>
@@ -324,3 +330,5 @@ export default function WorkOrderOperationsCreationPage() {
         </div>
     );
 }
+
+export {WorkOrderOperationsDetailsPage};
