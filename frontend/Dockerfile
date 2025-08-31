@@ -10,7 +10,7 @@ COPY package*.json ./
 RUN npm install
 
 # Copy the rest of the app's source code
-COPY ../craftify-app .
+COPY . .
 
 # Build the React app
 RUN npm run build

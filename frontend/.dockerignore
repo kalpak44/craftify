@@ -1,0 +1,52 @@
+# Reduce Docker build context and avoid leaking local files/secrets
+# VCS
+.git
+.gitignore
+
+# Node dependencies (reinstalled in image via npm install)
+node_modules
+
+# Package manager caches
+.npm
+.pnpm-store
+.yarn
+.yarn-cache
+
+# Build artifacts
+/dist
+/build
+.vite
+.cache
+.cache-loader
+.eslintcache
+coverage
+
+# Logs and pids
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.pid
+
+# Environment files (keep example)
+.env
+.env.*
+!.env.example
+
+# Docker / CI configs that aren't needed at runtime
+Dockerfile
+.dockerignore
+/docker-compose*.yml
+.github
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea
+.vscode
+
+# Misc
+*.seed
