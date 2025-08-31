@@ -243,7 +243,7 @@ export default function PurchasingPage() {
         new Intl.NumberFormat(undefined, {style: "currency", currency}).format(value || 0);
 
     return (
-        <div className="relative bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
+        <div className="min-h-[calc(100vh-140px)] bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
 
             {/* Header */}
             <header className="mx-auto max-w-6xl px-4 pt-10 pb-6">

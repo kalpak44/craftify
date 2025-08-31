@@ -58,7 +58,7 @@ const emptyLine = () => ({
     notes: "",
 });
 
-export default function POCreationPage() {
+export default function PODetailsPage() {
     const navigate = useNavigate();
 
     // ---------- Form state ----------
@@ -691,4 +691,4 @@ export default function POCreationPage() {
     );
 }
 
-export { POCreationPage };
+export { PODetailsPage };

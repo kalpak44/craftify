@@ -210,7 +210,7 @@ export default function InventoryPage() {
     const locations = ["Main WH", "Chem Store", "Yard", "Electronics"];
 
     return (
-        <div className="bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
+        <div className="min-h-[calc(100vh-140px)] bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
             {/* Header */}
             <header className="mx-auto max-w-7xl px-4 pt-10 pb-6">
                 <div className="flex items-end justify-between gap-4 flex-wrap">

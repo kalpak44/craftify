@@ -12,18 +12,18 @@ import {AuthenticationGuard} from "./components/authentication-guard/Authenticat
 import {ItemsPage} from "./pages/ItemsPage.jsx";
 import {BOMsPage} from "./pages/BOMsPage.jsx";
 import {BOMDetailsPage} from "./pages/BOMDetailsPage.jsx";
-import WorkOrdersPage from "./pages/WorkOrdersPage.jsx";
+import {WorkOrdersPage} from "./pages/WorkOrdersPage.jsx";
 import {WorkOrderDetailsPage} from "./pages/WorkOrderDetailsPage.jsx";
 import InventoryPage from "./pages/InventoryPage.jsx";
 import InventoryTransferPage from "./pages/InventoryTransferPage.jsx";
 import InventoryAdjustPage from "./pages/InventoryAdjustPage.jsx";
 import InventoryReceivePage from "./pages/InventoryReceivePage.jsx";
 import PurchasingPage from "./pages/PurchasingPage.jsx";
-import POCreationPage from "./pages/POCreationPage.jsx";
+import {PODetailsPage} from "./pages/PODetailsPage.jsx";
 import ItemDetailsPage from "./pages/ItemDetailsPage.jsx";
 import ProductionPage from "./pages/ProductionPage.jsx";
 import WorkOrderOperationsPage from "./pages/WorkOrderOperationsPage.jsx";
-import WorkOrderOperationsCreationPage from "./pages/WorkOrderOperationsCreationPage.jsx";
+import {WorkOrderOperationsDetailsPage} from "./pages/WorkOrderOperationsDetailsPage.jsx";
 
 export default function App() {
     const {isLoading} = useAuth0();
@@ -97,12 +97,12 @@ export default function App() {
             }/>
             <Route path="/work-orders/:id/operations/new" element={
                 <AuthenticationGuard>
-                    <FullWidthLayout><WorkOrderOperationsCreationPage/></FullWidthLayout>
+                    <FullWidthLayout><WorkOrderOperationsDetailsPage/></FullWidthLayout>
                 </AuthenticationGuard>
             }/>
             <Route path="/work-orders/:id/operations/:oid/edit" element={
                 <AuthenticationGuard>
-                    <FullWidthLayout><WorkOrderOperationsCreationPage/></FullWidthLayout>
+                    <FullWidthLayout><WorkOrderOperationsDetailsPage/></FullWidthLayout>
                 </AuthenticationGuard>
             }/>
 
@@ -133,7 +133,7 @@ export default function App() {
             }/>
             <Route path="/purchasing/new" element={
                 <AuthenticationGuard>
-                    <FullWidthLayout><POCreationPage/></FullWidthLayout>
+                    <FullWidthLayout><PODetailsPage/></FullWidthLayout>
                 </AuthenticationGuard>
             }/>
             <Route path="/production" element={

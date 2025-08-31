@@ -71,8 +71,8 @@ export const FullWidthLayout = ({children}) => {
         {to: "/items", label: "Items"},
         {to: "/boms", label: "BOMs"},
         {to: "/work-orders", label: "Work Orders"},
-        {to: "/production", label: "Production"},
         {to: "/inventory", label: "Inventory"},
+        {to: "/production", label: "Production"},
         {to: "/purchasing", label: "Purchasing"}
     ];
 
