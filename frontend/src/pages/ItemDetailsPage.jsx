@@ -1,24 +1,29 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
-import {useNavigate} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 
 /**
- * ItemCreationPage — "New Item" (ERP lightweight)
- * - General info (ID, name, category, status, base UoM, cost, reorder pt)
- * - Additional UoMs table with coefficients (conversions)
- *   • Rule: 1 <alt UoM> = <coef> × <base UoM>
- * - Client-side validation
- * - Fake autosave banner with debounce
- * - Unsaved-changes guard
- * - Sticky summary
- * - Actions are placeholders (alert/disabled)
- * - Keyboard: Enter add row • Ctrl/⌘+D clone • Delete remove
+ * ItemDetailsPage
  *
- * Alignments:
- * - Numeric fields right-aligned with tabular numerals
- * - UoM/Notes left-aligned
- * - Consistent column widths via <colgroup>
+ * Purpose:
+ * A single, unified page for creating and editing Items in an ERP-style app.
+ * It captures general item data (ID, name, status, category, base UoM) and
+ * optional additional UoM conversions. The Item ID is always read-only.
+ *
+ * Key features:
+ * - Works for both "new" and "edit" flows:
+ *    • New Item: auto-generates a read-only ID.
+ *    • Edit Item: reads :id from URL and uses it as the read-only ID.
+ * - Single "Save" action that validates inputs and simulates create/update.
+ * - Client-side validation with error summary.
+ * - Additional UoMs table with conversions:
+ *    Rule: 1 <alt UoM> = <coef> × <base UoM>
+ * - Fake autosave banner with debounce, and unsaved-changes guard.
+ * - Keyboard shortcuts in the UoM table: Enter add • Ctrl/⌘+D clone • Delete remove.
+ *
+ * Notes:
+ * - No cost or reorder-point fields.
+ * - Raw JS (no TypeScript), Tailwind-only styling, self-contained (no API).
  */
-
 const nextItemId = (() => {
     let n = 11; // assume ITM-010 exists; next is ITM-011
     return () => `ITM-${String(n++).padStart(3, "0")}`;
@@ -31,7 +36,7 @@ const CATEGORIES = [
     "Assembly",
     "Finished Good",
     "Consumable",
-    "Kit",
+    "Kit"
 ];
 
 const STATUS = ["Draft", "Active", "Hold", "Discontinued"];
@@ -45,20 +50,20 @@ const emptyUomRow = () => ({
     key: uid(),
     uom: "",
     coef: "",
-    notes: "",
+    notes: ""
 });
 
-export default function ItemCreationPage() {
+export default function ItemDetailsPage() {
     const navigate = useNavigate();
+    const {id: routeId} = useParams(); // /items/:id/edit → routeId is the Item ID when editing
 
     // ---------- Form state ----------
-    const [itemId, setItemId] = useState(nextItemId());
+    const isEdit = !!routeId;
+    const [itemId, setItemId] = useState(isEdit ? routeId : nextItemId());
     const [name, setName] = useState("");
     const [category, setCategory] = useState("Component");
-    const [status, setStatus] = useState("Draft");
+    const [status, setStatus] = useState(isEdit ? "Active" : "Draft");
     const [baseUom, setBaseUom] = useState("");
-    const [stdCost, setStdCost] = useState("");
-    const [reorderPt, setReorderPt] = useState("");
     const [description, setDescription] = useState("");
 
     const [uomRows, setUomRows] = useState([emptyUomRow()]);
@@ -80,7 +85,7 @@ export default function ItemCreationPage() {
     useEffect(() => {
         requestSave();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [itemId, name, category, status, baseUom, stdCost, reorderPt, description, uomRows]);
+    }, [itemId, name, category, status, baseUom, description, uomRows]);
 
     // ---------- Unsaved changes guard ----------
     useEffect(() => {
@@ -154,35 +159,27 @@ export default function ItemCreationPage() {
                 if (!r.coef || !(c > 0)) list.push(`UoM row ${idx + 1}: Coefficient must be > 0.`);
             });
 
-        // numeric sanity (optional fields)
-        if (stdCost !== "" && Number(stdCost) < 0) list.push("Standard cost cannot be negative.");
-        if (reorderPt !== "" && Number.isNaN(Number(reorderPt))) list.push("Reorder point must be a number.");
-
         return list;
-    }, [itemId, name, baseUom, uomRows, stdCost, reorderPt]);
+    }, [itemId, name, baseUom, uomRows]);
 
     // derived
     const validUoms = useMemo(
-        () =>
-            uomRows.filter((r) => r.uom && r.uom !== baseUom && Number(r.coef) > 0),
+        () => uomRows.filter((r) => r.uom && r.uom !== baseUom && Number(r.coef) > 0),
         [uomRows, baseUom]
     );
 
     // ---------- Actions (mock) ----------
-    const handleSaveDraft = () => {
-        setLastSavedAt(new Date());
-        setDirty(false);
-        alert("Item draft saved (mock).");
-    };
-    const handleCreate = () => {
+    const handleSave = () => {
         if (errors.length) {
-            alert("Please resolve errors before creating the item.");
+            alert("Please resolve errors before saving.");
             return;
         }
-        setStatus("Active");
-        alert("Item created (mock). Status set to Active.");
+        setLastSavedAt(new Date());
+        setDirty(false);
+        alert(isEdit ? "Item updated (mock)." : "Item created (mock).");
         navigate("/items");
     };
+
     const handleCancel = () => {
         if (dirty && !window.confirm("Discard unsaved changes?")) return;
         navigate("/items");
@@ -194,28 +191,25 @@ export default function ItemCreationPage() {
             <header className="mx-auto max-w-7xl px-4 pt-10 pb-6">
                 <div className="flex items-end justify-between gap-4 flex-wrap">
                     <div>
-                        <h1 className="text-3xl font-bold text-white">New Item</h1>
+                        <h1 className="text-3xl font-bold text-white">{isEdit ? "Edit Item" : "New Item"}</h1>
                         <p className="mt-2 text-gray-400">
-                            Define a SKU with base UoM and optional additional UoMs with conversion coefficients.
+                            Define base information and optional UoM conversions. ID is read-only.
                         </p>
                     </div>
                     <div className="flex gap-3">
+                        {/* Equal width buttons */}
                         <button
-                            onClick={handleSaveDraft}
-                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
-                        >
-                            Save Draft
-                        </button>
-                        <button
-                            onClick={handleCreate}
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
+                            onClick={handleSave}
+                            className="w-32 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm disabled:opacity-60"
                             disabled={errors.length > 0}
+                            title={errors.length ? "Fix errors to enable Save" : "Save"}
                         >
-                            Create Item
+                            Save
                         </button>
                         <button
                             onClick={handleCancel}
-                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                            className="w-32 px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                            title="Cancel and go back"
                         >
                             Cancel
                         </button>
@@ -247,8 +241,8 @@ export default function ItemCreationPage() {
                                 <label className="block text-xs text-gray-400 mb-1">Item ID</label>
                                 <input
                                     value={itemId}
-                                    onChange={(e) => setItemId(e.target.value)}
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    readOnly
+                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm opacity-80 cursor-not-allowed"
                                 />
                             </div>
                             <div>
@@ -293,26 +287,6 @@ export default function ItemCreationPage() {
                                     placeholder="e.g. pcs / L / kg / ea"
                                 />
                             </div>
-                            <div>
-                                <label className="block text-xs text-gray-400 mb-1">Standard Cost</label>
-                                <input
-                                    inputMode="decimal"
-                                    value={stdCost}
-                                    onChange={(e) => setStdCost(e.target.value)}
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm text-right font-mono tabular-nums"
-                                    placeholder="0.00"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs text-gray-400 mb-1">Reorder point</label>
-                                <input
-                                    inputMode="numeric"
-                                    value={reorderPt}
-                                    onChange={(e) => setReorderPt(e.target.value)}
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm text-right font-mono tabular-nums"
-                                    placeholder="0"
-                                />
-                            </div>
                             <div className="sm:col-span-2">
                                 <label className="block text-xs text-gray-400 mb-1">Description</label>
                                 <textarea
@@ -339,7 +313,10 @@ export default function ItemCreationPage() {
                         </div>
 
                         <p className="text-xs text-gray-400 mb-2">
-                            Conversion rule: <span className="text-gray-300 font-medium">1 &lt;additional UoM&gt; = coef × 1 {baseUom || "base UoM"}</span>
+                            Conversion rule:{" "}
+                            <span className="text-gray-300 font-medium">
+                1 &lt;additional UoM&gt; = coef × 1 {baseUom || "base UoM"}
+              </span>
                         </p>
 
                         <div className="overflow-x-auto border border-white/10 rounded-xl bg-gray-900/40">
@@ -352,9 +329,9 @@ export default function ItemCreationPage() {
                                     {/* Coefficient */}
                                     <col/>
                                     {/* Notes (flex) */}
-                                    <col style={{width: 240}}/>
-                                    {/* Example */}
                                     <col style={{width: 180}}/>
+                                    {/* Example */}
+                                    <col style={{width: 160}}/>
                                     {/* Actions */}
                                 </colgroup>
                                 <thead className="bg-gray-900/80">
@@ -374,7 +351,7 @@ export default function ItemCreationPage() {
                                         : "Set base UoM to see example";
                                     const rowErrors = {
                                         uom: !r.uom || (baseUom && r.uom === baseUom),
-                                        coef: !r.coef || !(coef > 0),
+                                        coef: !r.coef || !(coef > 0)
                                     };
                                     return (
                                         <tr key={r.key} className="hover:bg-gray-800/40 transition">
@@ -384,7 +361,9 @@ export default function ItemCreationPage() {
                                                     value={r.uom}
                                                     onChange={(e) => updateRow(r.key, {uom: e.target.value})}
                                                     placeholder="e.g. box, pack, kg"
-                                                    className={`w-40 rounded-lg bg-gray-800 border ${rowErrors.uom ? "border-red-500/60" : "border-white/10"} px-3 py-2 text-sm`}
+                                                    className={`w-40 rounded-lg bg-gray-800 border ${
+                                                        rowErrors.uom ? "border-red-500/60" : "border-white/10"
+                                                    } px-3 py-2 text-sm`}
                                                 />
                                                 {baseUom && r.uom === baseUom && (
                                                     <div className="text-xs text-red-400 mt-1">Cannot equal base
@@ -398,7 +377,9 @@ export default function ItemCreationPage() {
                                                     value={r.coef}
                                                     onChange={(e) => updateRow(r.key, {coef: e.target.value})}
                                                     placeholder="> 0"
-                                                    className={`w-28 rounded-lg bg-gray-800 border ${rowErrors.coef ? "border-red-500/60" : "border-white/10"} px-3 py-2 text-sm text-right font-mono tabular-nums`}
+                                                    className={`w-28 rounded-lg bg-gray-800 border ${
+                                                        rowErrors.coef ? "border-red-500/60" : "border-white/10"
+                                                    } px-3 py-2 text-sm text-right font-mono tabular-nums`}
                                                 />
                                             </td>
                                             <td className="px-4 py-3 align-top">
@@ -502,18 +483,6 @@ export default function ItemCreationPage() {
                                     {baseUom || <span className="text-gray-500">(not set)</span>}
                                 </div>
                             </div>
-                            <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
-                                <div className="text-xs text-gray-400">Std Cost</div>
-                                <div className="text-lg font-semibold text-gray-100 font-mono tabular-nums">
-                                    {stdCost === "" ? "—" : `€${Number(stdCost).toFixed(2)}`}
-                                </div>
-                            </div>
-                            <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
-                                <div className="text-xs text-gray-400">Reorder pt</div>
-                                <div className="text-lg font-semibold text-gray-100 font-mono tabular-nums">
-                                    {reorderPt === "" ? "—" : Number(reorderPt)}
-                                </div>
-                            </div>
 
                             {/* Quick reference of conversions */}
                             <div
@@ -537,9 +506,9 @@ export default function ItemCreationPage() {
                                 className="rounded-2xl bg-gray-900/60 p-4 text-xs text-gray-400 border border-white/10 col-span-2">
                                 <div className="font-semibold text-gray-300 mb-2">Tips</div>
                                 <ul className="list-disc pl-5 space-y-1">
-                                    <li>Use short UoM codes (e.g., pcs, box, kg).</li>
-                                    <li>Coefficient expresses how many base units are in 1 additional unit.</li>
-                                    <li>Keep financial fields optional; you can update after item creation.</li>
+                                    <li>Use concise UoM codes (e.g., pcs, box, kg, ea).</li>
+                                    <li>Coefficient shows how many base units are in 1 additional unit.</li>
+                                    <li>Keep descriptions short and specific for easier search.</li>
                                 </ul>
                             </div>
                         </div>
@@ -550,4 +519,4 @@ export default function ItemCreationPage() {
     );
 }
 
-export {ItemCreationPage};
+export {ItemDetailsPage};

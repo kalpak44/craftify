@@ -1,189 +1,78 @@
-import React, {useMemo, useState} from "react";
-import {useNavigate} from "react-router-dom";
+import React, { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 /**
- * ItemsPage — ERP-style list with filters, search, table, and pagination.
- * Tailwind-only, self-contained with mocked data.
- * CSV/Excel export and Print/PDF-friendly view.
- * Price (formatted with currency) and Shelf-life (days).
- * Sorting for Price uses the raw numeric value.
+ * ItemsPage
+ *
+ * ERP-style Items list built with React + Tailwind (raw JS).
+ * Features:
+ * - Search, filters (status/category/UoM), sortable columns.
+ * - Pagination with selectable rows and bulk actions.
+ * - CSV/Excel export and print-friendly view.
+ * - Row selection with bulk delete + confirmation modal.
+ * - Per-row actions: “Search in Inventory” and “Search in PO”.
+ * - Each table row opens the Edit view at /items/:id/edit.
+ *
+ * Notes:
+ * - Mock data intentionally minimal (id, name, status, category, uom).
+ * - No price/on-hand/allocated/reorder/shelf-life columns or fields.
  */
 export const ItemsPage = () => {
-    // Mocked data (added price, currency, shelfLifeDays)
-    const data = [
-        {
-            id: "ITM-001",
-            name: "Warm Yellow LED",
-            status: "Active",
-            category: "Component",
-            uom: "pcs",
-            onHand: 3150,
-            allocated: 1000,
-            reorder: 500,
-            price: 0.18,
-            currency: "USD",
-            shelfLifeDays: 3650
-        },
-        {
-            id: "ITM-002",
-            name: "Large Widget",
-            status: "Active",
-            category: "Assembly",
-            uom: "pcs",
-            onHand: 310,
-            allocated: 600,
-            reorder: 150,
-            price: 49.9,
-            currency: "USD",
-            shelfLifeDays: 1825
-        },
-        {
-            id: "ITM-003",
-            name: "Plastic Case",
-            status: "Active",
-            category: "Component",
-            uom: "pcs",
-            onHand: 1350,
-            allocated: 330,
-            reorder: 200,
-            price: 3.25,
-            currency: "EUR",
-            shelfLifeDays: 3650
-        },
-        {
-            id: "ITM-004",
-            name: "Lion Bracket",
-            status: "Active",
-            category: "Fabrication",
-            uom: "pcs",
-            onHand: 350,
-            allocated: 200,
-            reorder: 100,
-            price: 7.8,
-            currency: "EUR",
-            shelfLifeDays: 3650
-        },
-        {
-            id: "ITM-005",
-            name: "Chain Bracket",
-            status: "Active",
-            category: "Component",
-            uom: "pcs",
-            onHand: 1320,
-            allocated: 800,
-            reorder: 100,
-            price: 5.6,
-            currency: "USD",
-            shelfLifeDays: 3650
-        },
-        {
-            id: "ITM-006",
-            name: "Front Assembly",
-            status: "Active",
-            category: "Finished Good",
-            uom: "ea",
-            onHand: 208,
-            allocated: 230,
-            reorder: 30,
-            price: 249.0,
-            currency: "USD",
-            shelfLifeDays: 3650
-        },
-        {
-            id: "ITM-007",
-            name: "Steel Frame",
-            status: "Active",
-            category: "Fabrication",
-            uom: "pcs",
-            onHand: 1700,
-            allocated: 230,
-            reorder: 400,
-            price: 15.4,
-            currency: "EUR",
-            shelfLifeDays: 3650
-        },
-        {
-            id: "ITM-008",
-            name: "Blue Paint (RAL5010)",
-            status: "Hold",
-            category: "Consumable",
-            uom: "L",
-            onHand: 12,
-            allocated: 2,
-            reorder: 8,
-            price: 12.75,
-            currency: "EUR",
-            shelfLifeDays: 730
-        },
-        {
-            id: "ITM-009",
-            name: "Screws M3x8",
-            status: "Active",
-            category: "Hardware",
-            uom: "ea",
-            onHand: 1500,
-            allocated: 300,
-            reorder: 1000,
-            price: 0.03,
-            currency: "USD",
-            shelfLifeDays: 3650
-        },
-        {
-            id: "ITM-010",
-            name: "Assembly Kit 10",
-            status: "Discontinued",
-            category: "Kit",
-            uom: "kit",
-            onHand: 5,
-            allocated: 1,
-            reorder: 0,
-            price: 129.99,
-            currency: "USD",
-            shelfLifeDays: 3650
-        }
+    // Mocked data (simplified)
+    const initialData = [
+        { id: "ITM-001", name: "Warm Yellow LED", status: "Active", category: "Component", uom: "pcs" },
+        { id: "ITM-002", name: "Large Widget", status: "Active", category: "Assembly", uom: "pcs" },
+        { id: "ITM-003", name: "Plastic Case", status: "Active", category: "Component", uom: "pcs" },
+        { id: "ITM-004", name: "Lion Bracket", status: "Active", category: "Fabrication", uom: "pcs" },
+        { id: "ITM-005", name: "Chain Bracket", status: "Active", category: "Component", uom: "pcs" },
+        { id: "ITM-006", name: "Front Assembly", status: "Active", category: "Finished Good", uom: "ea" },
+        { id: "ITM-007", name: "Steel Frame", status: "Active", category: "Fabrication", uom: "pcs" },
+        { id: "ITM-008", name: "Blue Paint (RAL5010)", status: "Hold", category: "Consumable", uom: "L" },
+        { id: "ITM-009", name: "Screws M3x8", status: "Active", category: "Hardware", uom: "ea" },
+        { id: "ITM-010", name: "Assembly Kit 10", status: "Discontinued", category: "Kit", uom: "kit" }
     ];
 
-    // Money formatter (raw JS)
-    const formatMoney = (amount, currency) =>
-        new Intl.NumberFormat(undefined, {style: "currency", currency, maximumFractionDigits: 2}).format(amount);
-
     // State
+    const [rows, setRows] = useState(initialData);
     const [query, setQuery] = useState("");
     const [status, setStatus] = useState("all");
     const [category, setCategory] = useState("all");
     const [uom, setUom] = useState("all");
-    const [sort, setSort] = useState({key: "name", dir: "asc"});
+    const [sort, setSort] = useState({ key: "name", dir: "asc" });
     const [selected, setSelected] = useState({});
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(8);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+    const navigate = useNavigate();
 
     // Options
-    const categories = useMemo(() => ["all", ...new Set(data.map((d) => d.category))], []);
-    const uoms = useMemo(() => ["all", ...new Set(data.map((d) => d.uom))], []);
+    const categories = useMemo(() => ["all", ...new Set(rows.map((d) => d.category))], [rows]);
+    const uoms = useMemo(() => ["all", ...new Set(rows.map((d) => d.uom))], [rows]);
 
     // Filtering + sorting
     const filtered = useMemo(() => {
-        let rows = data;
+        let data = rows;
         if (query) {
             const q = query.toLowerCase();
-            rows = rows.filter((r) => r.name.toLowerCase().includes(q) || r.id.toLowerCase().includes(q));
+            data = data.filter((r) => r.name.toLowerCase().includes(q) || r.id.toLowerCase().includes(q));
         }
-        if (status !== "all") rows = rows.filter((r) => r.status === status);
-        if (category !== "all") rows = rows.filter((r) => r.category === category);
-        if (uom !== "all") rows = rows.filter((r) => r.uom === uom);
+        if (status !== "all") data = data.filter((r) => r.status === status);
+        if (category !== "all") data = data.filter((r) => r.category === category);
+        if (uom !== "all") data = data.filter((r) => r.uom === uom);
 
-        const {key, dir} = sort;
-        rows = [...rows].sort((a, b) => {
+        const { key, dir } = sort;
+        data = [...data].sort((a, b) => {
             const av = a[key];
             const bv = b[key];
             const cmp =
                 typeof av === "number" && typeof bv === "number"
                     ? av - bv
-                    : String(av).localeCompare(String(bv), undefined, {numeric: true, sensitivity: "base"});
+                    : String(av).localeCompare(String(bv), undefined, { numeric: true, sensitivity: "base" });
             return dir === "asc" ? cmp : -cmp;
         });
-        return rows;
-    }, [query, status, category, uom, sort]);
+        return data;
+    }, [rows, query, status, category, uom, sort]);
 
     // Paging
     const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -191,9 +80,12 @@ export const ItemsPage = () => {
     const paged = filtered.slice(pageStart, pageStart + pageSize);
 
     // Selection
+    const selectedIds = Object.keys(selected).filter((k) => selected[k]);
+    const selectedCount = selectedIds.length;
+
     const allOnPageSelected = paged.length > 0 && paged.every((r) => selected[r.id]);
     const toggleAll = () => {
-        const next = {...selected};
+        const next = { ...selected };
         if (allOnPageSelected) {
             paged.forEach((r) => delete next[r.id]);
         } else {
@@ -201,67 +93,21 @@ export const ItemsPage = () => {
         }
         setSelected(next);
     };
-    const toggleOne = (id) => setSelected((s) => ({...s, [id]: !s[id]}));
-    const selectedCount = Object.values(selected).filter(Boolean).length;
-    const navigate = useNavigate();
-
-    const th = (label, key, alignRight = false) => (
-        <th
-            onClick={() => setSort((s) => ({key, dir: s.key === key && s.dir === "asc" ? "desc" : "asc"}))}
-            className={`px-4 py-3 font-semibold text-gray-300 select-none cursor-pointer ${
-                alignRight ? "text-right" : "text-left"
-            }`}
-        >
-      <span className="inline-flex items-center gap-1">
-        {label}
-          {sort.key === key && <span className="text-gray-500">{sort.dir === "asc" ? "▲" : "▼"}</span>}
-      </span>
-        </th>
-    );
+    const toggleOne = (id) => setSelected((s) => ({ ...s, [id]: !s[id] }));
 
     // ---------- Export helpers ----------
-    const rowsForExport = () => {
-        const selectedIds = Object.keys(selected).filter((k) => selected[k]);
-        return selectedIds.length ? filtered.filter((r) => selectedIds.includes(r.id)) : filtered;
-    };
+    const rowsForExport = () => (selectedCount ? filtered.filter((r) => selectedIds.includes(r.id)) : filtered);
 
-    // CSV: include separate Price (numeric) and Currency for better sorting in Excel
-    const toCSV = (rows) => {
-        const headers = [
-            "ID",
-            "Product name",
-            "Status",
-            "Category",
-            "UoM",
-            "On hand",
-            "Allocated",
-            "Reorder pt",
-            "Price",
-            "Currency",
-            "Shelf-life (days)"
-        ];
+    const toCSV = (data) => {
+        const headers = ["ID", "Product name", "Status", "Category", "UoM"];
         const escape = (v) => {
             const s = String(v ?? "");
             if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
             return s;
         };
         const lines = [headers.join(",")];
-        rows.forEach((r) => {
-            lines.push(
-                [
-                    escape(r.id),
-                    escape(r.name),
-                    escape(r.status),
-                    escape(r.category),
-                    escape(r.uom),
-                    r.onHand,
-                    r.allocated,
-                    r.reorder,
-                    r.price, // numeric
-                    escape(r.currency),
-                    r.shelfLifeDays
-                ].join(",")
-            );
+        data.forEach((r) => {
+            lines.push([escape(r.id), escape(r.name), escape(r.status), escape(r.category), escape(r.uom)].join(","));
         });
         return lines.join("\n");
     };
@@ -279,23 +125,20 @@ export const ItemsPage = () => {
 
     const handleExportCSV = () => {
         const csv = toCSV(rowsForExport());
-        downloadBlob(
-            new Blob(["\ufeff" + csv], {type: "text/csv;charset=utf-8;"}),
-            `items_${new Date().toISOString().slice(0, 10)}.csv`
-        );
+        downloadBlob(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" }), `items_${new Date()
+            .toISOString()
+            .slice(0, 10)}.csv`);
     };
 
-    // Excel-friendly (CSV). Most users open CSV in Excel; set .xlsx-like mime not needed here.
     const handleExportExcel = () => {
         const csv = toCSV(rowsForExport());
-        downloadBlob(
-            new Blob(["\ufeff" + csv], {type: "text/csv;charset=utf-8;"}),
-            `items_${new Date().toISOString().slice(0, 10)}.xls`
-        );
+        downloadBlob(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" }), `items_${new Date()
+            .toISOString()
+            .slice(0, 10)}.xls`);
     };
 
     const handlePrint = () => {
-        const rows = rowsForExport();
+        const data = rowsForExport();
         const html = `<!doctype html>
 <html lang="en">
 <head>
@@ -303,26 +146,27 @@ export const ItemsPage = () => {
 <title>Items Export</title>
 <style>
   @media print { @page { size: A4 landscape; margin: 12mm; } }
-  body{ font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; color:#0f172a; }
+  body{ font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; color:#0f172a; }
   h1{ font-size:20px; margin:0 0 12px; }
   .meta{ font-size:12px; color:#475569; margin-bottom:12px; }
   table{ width:100%; border-collapse:collapse; font-size:12px; }
   th,td{ border:1px solid #cbd5e1; padding:6px 8px; text-align:left; }
   th{ background:#f1f5f9; }
-  td.num{ text-align:right; }
 </style>
 </head>
 <body>
 <h1>Items</h1>
-<div class="meta">Exported ${new Date().toLocaleString()} • ${rows.length} rows ${selectedCount ? "(selection)" : "(filtered)"}</div>
+<div class="meta">Exported ${new Date().toLocaleString()} • ${data.length} rows ${
+            selectedCount ? "(selection)" : "(filtered)"
+        }</div>
 <table>
   <thead>
     <tr>
-      <th>ID</th><th>Product name</th><th>Status</th><th>Category</th><th>UoM</th><th>On hand</th><th>Allocated</th><th>Reorder pt</th><th>Price</th><th>Shelf-life (days)</th>
+      <th>ID</th><th>Product name</th><th>Status</th><th>Category</th><th>UoM</th>
     </tr>
   </thead>
   <tbody>
-    ${rows
+    ${data
             .map(
                 (r) => `<tr>
           <td>${r.id}</td>
@@ -330,15 +174,6 @@ export const ItemsPage = () => {
           <td>${r.status}</td>
           <td>${r.category}</td>
           <td>${r.uom}</td>
-          <td class="num">${r.onHand}</td>
-          <td class="num">${r.allocated}</td>
-          <td class="num">${r.reorder}</td>
-          <td class="num">${new Intl.NumberFormat(undefined, {
-                    style: 'currency',
-                    currency: r.currency,
-                    maximumFractionDigits: 2
-                }).format(r.price)}</td>
-          <td class="num">${r.shelfLifeDays}</td>
         </tr>`
             )
             .join("")}
@@ -347,7 +182,6 @@ export const ItemsPage = () => {
 <script>window.onload = () => { window.print(); setTimeout(() => window.close(), 250); };</script>
 </body>
 </html>`;
-
         const w = window.open("", "_blank");
         if (!w) return;
         w.document.open();
@@ -355,9 +189,48 @@ export const ItemsPage = () => {
         w.document.close();
     };
 
+    const th = (label, key, alignRight = false) => (
+        <th
+            onClick={() => setSort((s) => ({ key, dir: s.key === key && s.dir === "asc" ? "desc" : "asc" }))}
+            className={`px-4 py-3 font-semibold text-gray-300 select-none cursor-pointer ${
+                alignRight ? "text-right" : "text-left"
+            }`}
+        >
+      <span className="inline-flex items-center gap-1">
+        {label}
+          {sort.key === key && <span className="text-gray-500">{sort.dir === "asc" ? "▲" : "▼"}</span>}
+      </span>
+        </th>
+    );
+
+    // Delete
+    const openDeleteModal = () => {
+        if (!selectedCount) return;
+        setShowDeleteModal(true);
+    };
+
+    const confirmDelete = () => {
+        if (!selectedCount) {
+            setShowDeleteModal(false);
+            return;
+        }
+        const keep = rows.filter((r) => !selectedIds.includes(r.id));
+        setRows(keep);
+        setSelected({});
+        // ensure page index within range after deletion
+        const newTotal = Math.max(1, Math.ceil(Math.max(0, keep.length) / pageSize));
+        setPage((p) => Math.min(p, newTotal));
+        setShowDeleteModal(false);
+    };
+
+    // Navigate to row edit
+    const goToEdit = (id) => navigate(`/items/${encodeURIComponent(id)}/edit`);
+
+    // Utility to stop row navigation when interacting with controls
+    const stopRowNav = (e) => e.stopPropagation();
+
     return (
-        <div
-            className="bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
+        <div className="bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
             {/* Header */}
             <header className="mx-auto max-w-6xl px-4 pt-10 pb-6">
                 <div className="flex items-end justify-between gap-4 flex-wrap">
@@ -372,8 +245,7 @@ export const ItemsPage = () => {
                         >
                             + New Item
                         </button>
-                        <button
-                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">
+                        <button className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">
                             Import CSV
                         </button>
                     </div>
@@ -465,8 +337,10 @@ export const ItemsPage = () => {
                                 Print / PDF
                             </button>
                             <button
+                                onClick={openDeleteModal}
                                 disabled={!selectedCount}
-                                className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm disabled:opacity-40"
+                                className="px-3 py-2 rounded-lg bg-red-600/80 hover:bg-red-600 text-white text-sm disabled:opacity-40"
+                                title={selectedCount ? `Delete ${selectedCount} selected` : "Select rows to delete"}
                             >
                                 Delete
                             </button>
@@ -482,28 +356,30 @@ export const ItemsPage = () => {
                         <thead className="bg-gray-900/80">
                         <tr>
                             <th className="px-4 py-3">
-                                <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll}/>
+                                <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll} onClick={stopRowNav} />
                             </th>
                             {th("ID", "id")}
                             {th("Product name", "name")}
                             {th("Status", "status")}
                             {th("Category", "category")}
                             {th("UoM", "uom")}
-                            {th("On hand", "onHand", true)}
-                            {th("Allocated", "allocated", true)}
-                            {th("Reorder pt", "reorder", true)}
-                            {th("Price", "price", true)}
-                            {th("Shelf-life (days)", "shelfLifeDays", true)}
+                            <th className="px-4 py-3 font-semibold text-gray-300 text-right">Actions</th>
                         </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-800">
                         {paged.map((item) => (
-                            <tr key={item.id} className="hover:bg-gray-800/40 transition">
-                                <td className="px-4 py-3">
-                                    <input type="checkbox" checked={!!selected[item.id]}
-                                           onChange={() => toggleOne(item.id)}/>
+                            <tr
+                                key={item.id}
+                                className="hover:bg-gray-800/40 transition cursor-pointer"
+                                onClick={() => goToEdit(item.id)}
+                                title="Open Edit"
+                            >
+                                <td className="px-4 py-3" onClick={stopRowNav}>
+                                    <input type="checkbox" checked={!!selected[item.id]} onChange={() => toggleOne(item.id)} />
                                 </td>
-                                <td className="px-4 py-3 font-mono text-white">{item.id}</td>
+                                <td className="px-4 py-3 font-mono text-white">
+                                    <span className="underline decoration-dotted">{item.id}</span>
+                                </td>
                                 <td className="px-4 py-3 text-gray-200">{item.name}</td>
                                 <td className="px-4 py-3">
                     <span
@@ -520,23 +396,39 @@ export const ItemsPage = () => {
                                 </td>
                                 <td className="px-4 py-3 text-gray-400">{item.category}</td>
                                 <td className="px-4 py-3 text-gray-400">{item.uom}</td>
-                                <td className="px-4 py-3 text-right text-gray-200">{item.onHand}</td>
-                                <td className="px-4 py-3 text-right text-gray-200">{item.allocated}</td>
-                                <td className="px-4 py-3 text-right text-gray-200">{item.reorder}</td>
-                                {/* Price shown as formatted currency (sorting uses numeric price field) */}
-                                <td className="px-4 py-3 text-right text-gray-200">
-                                    {formatMoney(item.price, item.currency)}
+                                <td className="px-4 py-3 text-right" onClick={stopRowNav}>
+                                    <div className="flex justify-end gap-2">
+                                        <button
+                                            onClick={() => navigate(`/inventory?query=${encodeURIComponent(item.id)}`)}
+                                            className="px-2 py-1 rounded bg-gray-800 border border-white/10 hover:bg-gray-700"
+                                            title="Search this item in Inventory"
+                                        >
+                                            Search in Inventory
+                                        </button>
+                                        <button
+                                            onClick={() => navigate(`/purchasing?query=${encodeURIComponent(item.id)}`)}
+                                            className="px-2 py-1 rounded bg-gray-800 border border-white/10 hover:bg-gray-700"
+                                            title="Search this item in Purchase Orders"
+                                        >
+                                            Search in PO
+                                        </button>
+                                    </div>
                                 </td>
-                                <td className="px-4 py-3 text-right text-gray-200">{item.shelfLifeDays}</td>
                             </tr>
                         ))}
+                        {paged.length === 0 && (
+                            <tr>
+                                <td className="px-4 py-6 text-center text-gray-400" colSpan={7}>
+                                    No items found.
+                                </td>
+                            </tr>
+                        )}
                         </tbody>
                     </table>
                 </div>
 
                 {/* Footer / Pagination */}
-                <div
-                    className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-gray-400">
+                <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-gray-400">
                     <div className="flex items-center gap-2">
                         <span>Rows per page</span>
                         <select
@@ -581,6 +473,34 @@ export const ItemsPage = () => {
                     </div>
                 </div>
             </section>
+
+            {/* Deletion Confirmation Modal */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => setShowDeleteModal(false)} />
+                    <div className="relative z-10 w-[90%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
+                        <h2 className="text-lg font-semibold text-white">Confirm deletion</h2>
+                        <p className="mt-2 text-sm text-gray-300">
+                            You are about to delete <span className="font-medium text-white">{selectedCount}</span>{" "}
+                            {selectedCount === 1 ? "item" : "items"}. This action cannot be undone.
+                        </p>
+                        <div className="mt-4 flex justify-end gap-2">
+                            <button
+                                onClick={() => setShowDeleteModal(false)}
+                                className="px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
