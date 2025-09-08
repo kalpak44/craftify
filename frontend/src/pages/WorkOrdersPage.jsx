@@ -1,18 +1,108 @@
-import React, { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, {useMemo, useState} from "react";
+import {useNavigate} from "react-router-dom";
 
 export const WorkOrdersPage = () => {
     const initialData = [
-        { id: "WO-1001", product: "Front Assembly", itemId: "ITM-006", assignee: "Alice Chen", status: "Open",       priority: "High",   due: "2025-02-25", updated: "2025-02-18" },
-        { id: "WO-1002", product: "Large Widget",   itemId: "ITM-002", assignee: "Bob Martin",  status: "In Progress", priority: "Rush",   due: "2025-02-22", updated: "2025-02-19" },
-        { id: "WO-1003", product: "Plastic Case",   itemId: "ITM-003", assignee: "Carla Diaz",  status: "Completed",   priority: "Low",    due: "2025-02-10", updated: "2025-02-11" },
-        { id: "WO-1004", product: "Chain Bracket",  itemId: "ITM-005", assignee: "Deepak Rao",  status: "Open",        priority: "Medium", due: "2025-03-01", updated: "2025-02-17" },
-        { id: "WO-1005", product: "Lion Bracket",   itemId: "ITM-004", assignee: "Alice Chen",  status: "Hold",        priority: "High",   due: "2025-02-28", updated: "2025-02-18" },
-        { id: "WO-1006", product: "Screws M3×8",    itemId: "ITM-009", assignee: "Bob Martin",  status: "Cancelled",   priority: "Low",    due: "2025-02-20", updated: "2025-02-12" },
-        { id: "WO-1007", product: "Steel Frame",    itemId: "ITM-007", assignee: "Carla Diaz",  status: "In Progress", priority: "High",   due: "2025-02-26", updated: "2025-02-19" },
-        { id: "WO-1008", product: "Blue Paint Pack",itemId: "ITM-008", assignee: "Deepak Rao",  status: "Open",        priority: "Medium", due: "2025-02-24", updated: "2025-02-18" },
-        { id: "WO-1009", product: "Assembly Kit 10",itemId: "ITM-010", assignee: "Alice Chen",  status: "Completed",   priority: "Low",    due: "2024-12-05", updated: "2024-12-06" },
-        { id: "WO-1010", product: "Warm Yellow LED",itemId: "ITM-001", assignee: "Bob Martin",  status: "Open",        priority: "Rush",   due: "2025-02-21", updated: "2025-02-19" }
+        {
+            id: "WO-1001",
+            product: "Front Assembly",
+            itemId: "ITM-006",
+            assignee: "Alice Chen",
+            status: "Open",
+            priority: "High",
+            due: "2025-02-25",
+            updated: "2025-02-18"
+        },
+        {
+            id: "WO-1002",
+            product: "Large Widget",
+            itemId: "ITM-002",
+            assignee: "Bob Martin",
+            status: "In Progress",
+            priority: "Rush",
+            due: "2025-02-22",
+            updated: "2025-02-19"
+        },
+        {
+            id: "WO-1003",
+            product: "Plastic Case",
+            itemId: "ITM-003",
+            assignee: "Carla Diaz",
+            status: "Completed",
+            priority: "Low",
+            due: "2025-02-10",
+            updated: "2025-02-11"
+        },
+        {
+            id: "WO-1004",
+            product: "Chain Bracket",
+            itemId: "ITM-005",
+            assignee: "Deepak Rao",
+            status: "Open",
+            priority: "Medium",
+            due: "2025-03-01",
+            updated: "2025-02-17"
+        },
+        {
+            id: "WO-1005",
+            product: "Lion Bracket",
+            itemId: "ITM-004",
+            assignee: "Alice Chen",
+            status: "Hold",
+            priority: "High",
+            due: "2025-02-28",
+            updated: "2025-02-18"
+        },
+        {
+            id: "WO-1006",
+            product: "Screws M3×8",
+            itemId: "ITM-009",
+            assignee: "Bob Martin",
+            status: "Cancelled",
+            priority: "Low",
+            due: "2025-02-20",
+            updated: "2025-02-12"
+        },
+        {
+            id: "WO-1007",
+            product: "Steel Frame",
+            itemId: "ITM-007",
+            assignee: "Carla Diaz",
+            status: "In Progress",
+            priority: "High",
+            due: "2025-02-26",
+            updated: "2025-02-19"
+        },
+        {
+            id: "WO-1008",
+            product: "Blue Paint Pack",
+            itemId: "ITM-008",
+            assignee: "Deepak Rao",
+            status: "Open",
+            priority: "Medium",
+            due: "2025-02-24",
+            updated: "2025-02-18"
+        },
+        {
+            id: "WO-1009",
+            product: "Assembly Kit 10",
+            itemId: "ITM-010",
+            assignee: "Alice Chen",
+            status: "Completed",
+            priority: "Low",
+            due: "2024-12-05",
+            updated: "2024-12-06"
+        },
+        {
+            id: "WO-1010",
+            product: "Warm Yellow LED",
+            itemId: "ITM-001",
+            assignee: "Bob Martin",
+            status: "Open",
+            priority: "Rush",
+            due: "2025-02-21",
+            updated: "2025-02-19"
+        }
     ];
 
     const STATUSES = ["Open", "In Progress", "Hold", "Completed", "Cancelled"];
@@ -26,7 +116,7 @@ export const WorkOrdersPage = () => {
     const [status, setStatus] = useState("all");
     const [assignee, setAssignee] = useState("all");
     const [priority, setPriority] = useState("all");
-    const [sort, setSort] = useState({ key: "id", dir: "asc" });
+    const [sort, setSort] = useState({key: "id", dir: "asc"});
     const [selected, setSelected] = useState({});
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(8);
@@ -48,11 +138,11 @@ export const WorkOrdersPage = () => {
         if (assignee !== "all") data = data.filter((r) => r.assignee === assignee);
         if (priority !== "all") data = data.filter((r) => r.priority === priority);
 
-        const { key, dir } = sort;
+        const {key, dir} = sort;
         data = [...data].sort((a, b) => {
             const av = a[key];
             const bv = b[key];
-            const cmp = String(av).localeCompare(String(bv), undefined, { numeric: true });
+            const cmp = String(av).localeCompare(String(bv), undefined, {numeric: true});
             return dir === "asc" ? cmp : -cmp;
         });
 
@@ -63,10 +153,10 @@ export const WorkOrdersPage = () => {
     const pageStart = (page - 1) * pageSize;
     const paged = filtered.slice(pageStart, pageStart + pageSize);
 
-    const toggleOne = (id) => setSelected((s) => ({ ...s, [id]: !s[id] }));
+    const toggleOne = (id) => setSelected((s) => ({...s, [id]: !s[id]}));
     const allOnPageSelected = paged.length > 0 && paged.every((r) => selected[r.id]);
     const toggleAll = () => {
-        const next = { ...selected };
+        const next = {...selected};
         if (allOnPageSelected) paged.forEach((r) => delete next[r.id]);
         else paged.forEach((r) => (next[r.id] = true));
         setSelected(next);
@@ -92,7 +182,8 @@ export const WorkOrdersPage = () => {
     );
 
     const pill = (value, map) => (
-        <span className={`px-2 py-1 text-xs rounded-full ${map[value] || "bg-gray-600/30 text-gray-300"}`}>{value}</span>
+        <span
+            className={`px-2 py-1 text-xs rounded-full ${map[value] || "bg-gray-600/30 text-gray-300"}`}>{value}</span>
     );
 
     const STATUS_CLS = {
@@ -132,9 +223,10 @@ export const WorkOrdersPage = () => {
     };
 
     return (
-        <div className="min-h-[calc(100vh-140px)] bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
+        <div
+            className="min-h-[calc(100vh-140px)] bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
             {/* Header */}
-            <header className="mx-auto max-w-6xl px-4 pt-10 pb-6">
+            <header className="mx-auto px-4 pt-10 pb-6">
                 <div className="flex items-end justify-between gap-4 flex-wrap">
                     <div>
                         <h1 className="text-3xl font-bold text-white">Work Orders</h1>
@@ -147,7 +239,8 @@ export const WorkOrdersPage = () => {
                         >
                             + New Work Order
                         </button>
-                        <button className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">
+                        <button
+                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">
                             Import CSV
                         </button>
                     </div>
@@ -155,7 +248,7 @@ export const WorkOrdersPage = () => {
             </header>
 
             {/* Toolbar with filters */}
-            <div className="mx-auto max-w-6xl px-4 pb-4">
+            <div className="mx-auto px-4 pb-4">
                 <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
                     <div className="flex flex-col md:flex-row md:items-center gap-3">
                         <select
@@ -220,10 +313,12 @@ export const WorkOrdersPage = () => {
                         </div>
 
                         <div className="flex items-center gap-2 ml-auto">
-                            <button className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm hover:bg-gray-700">
+                            <button
+                                className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm hover:bg-gray-700">
                                 Export CSV
                             </button>
-                            <button className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm hover:bg-gray-700">
+                            <button
+                                className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm hover:bg-gray-700">
                                 Print / PDF
                             </button>
                             <button
@@ -240,13 +335,13 @@ export const WorkOrdersPage = () => {
             </div>
 
             {/* Table */}
-            <section className="mx-auto max-w-6xl px-4 pb-12">
+            <section className="mx-auto px-4 pb-12">
                 <div className="overflow-x-auto border border-white/10 rounded-xl bg-gray-900/60">
                     <table className="min-w-full divide-y divide-gray-800 text-sm">
                         <thead className="bg-gray-900/80">
                         <tr>
                             <th className="px-4 py-3">
-                                <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll} />
+                                <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll}/>
                             </th>
                             {th("WO ID", "id")}
                             {th("Product", "product")}
@@ -281,7 +376,8 @@ export const WorkOrdersPage = () => {
                                     />
                                 </td>
                                 <td className="px-4 py-3 font-mono text-white underline" onClick={stop}>
-                                    <button className="hover:text-blue-300" onClick={() => navigate(`/work-orders/${wo.id}/edit`)}>
+                                    <button className="hover:text-blue-300"
+                                            onClick={() => navigate(`/work-orders/${wo.id}/edit`)}>
                                         {wo.id}
                                     </button>
                                 </td>
@@ -314,7 +410,8 @@ export const WorkOrdersPage = () => {
                 </div>
 
                 {/* Pagination */}
-                <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-gray-400">
+                <div
+                    className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-gray-400">
                     <div className="flex items-center gap-2">
                         <span>Rows per page</span>
                         <select
@@ -361,8 +458,9 @@ export const WorkOrdersPage = () => {
             {/* Deletion Confirmation Modal (aligned styling) */}
             {showDeleteModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
-                    <div className="absolute inset-0 bg-black/60" onClick={() => setShowDeleteModal(false)} />
-                    <div className="relative z-10 w-[90%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => setShowDeleteModal(false)}/>
+                    <div
+                        className="relative z-10 w-[90%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
                         <h2 className="text-lg font-semibold text-white">Confirm deletion</h2>
                         <p className="mt-2 text-sm text-gray-300">
                             You are about to delete <span className="font-medium text-white">{selectedCount}</span>{" "}
@@ -375,7 +473,8 @@ export const WorkOrdersPage = () => {
                             >
                                 Cancel
                             </button>
-                            <button onClick={confirmDelete} className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm">
+                            <button onClick={confirmDelete}
+                                    className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm">
                                 Delete
                             </button>
                         </div>

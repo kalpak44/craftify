@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, {useMemo, useState} from "react";
 
 /**
  * CalendarPage — ERP-aligned (Tailwind-only, raw JS)
@@ -18,9 +18,11 @@ export default function CalendarPage() {
             d.getMinutes()
         )}`;
     }
+
     function parseLocal(s) {
         return s ? new Date(s) : new Date();
     }
+
     function getEmptyDraft(d) {
         const start = new Date(d);
         start.setMinutes(0, 0, 0);
@@ -162,7 +164,7 @@ export default function CalendarPage() {
         a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
     const weekdayLabels = useMemo(() => ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], []);
-    const monthLabel = (d) => d.toLocaleDateString(undefined, { year: "numeric", month: "long" });
+    const monthLabel = (d) => d.toLocaleDateString(undefined, {year: "numeric", month: "long"});
 
     // Events
     const overlaps = (evStart, evEnd, winStart, winEnd) => {
@@ -235,7 +237,7 @@ export default function CalendarPage() {
                 <div className="grid grid-cols-[64px_1fr]">
                     {/* hour gutter */}
                     <div className="bg-gray-900/70 border-r border-white/10">
-                        {Array.from({ length: 24 }, (_, h) => (
+                        {Array.from({length: 24}, (_, h) => (
                             <div key={h} className="h-12 px-2 text-xs text-gray-400 flex items-start justify-end pt-1">
                                 {String(h).padStart(2, "0")}:00
                             </div>
@@ -243,9 +245,10 @@ export default function CalendarPage() {
                     </div>
 
                     {/* time grid */}
-                    <div className="relative" style={{ height: containerHeight }} onClick={handleGridClick}>
-                        {Array.from({ length: 24 }, (_, h) => (
-                            <div key={h} className="absolute left-0 right-0 border-t border-white/5" style={{ top: h * HOUR_HEIGHT }} />
+                    <div className="relative" style={{height: containerHeight}} onClick={handleGridClick}>
+                        {Array.from({length: 24}, (_, h) => (
+                            <div key={h} className="absolute left-0 right-0 border-t border-white/5"
+                                 style={{top: h * HOUR_HEIGHT}}/>
                         ))}
 
                         {/* events */}
@@ -260,9 +263,10 @@ export default function CalendarPage() {
                                 <div
                                     key={ev.id}
                                     className="absolute left-2 right-2 rounded-lg shadow-sm text-xs text-white p-2"
-                                    style={{ top: `${top}%`, height: `${height}%` }}
+                                    style={{top: `${top}%`, height: `${height}%`}}
                                 >
-                                    <div className={`w-full h-full rounded-md ${COLORS[ev.color] || COLORS.slate} opacity-90 p-2`}>
+                                    <div
+                                        className={`w-full h-full rounded-md ${COLORS[ev.color] || COLORS.slate} opacity-90 p-2`}>
                                         <div className="font-semibold truncate">{ev.title}</div>
                                         <div className="opacity-90 truncate">
                                             {formatTime(s)}–{formatTime(e)} • {ev.calendar}
@@ -279,7 +283,7 @@ export default function CalendarPage() {
 
     function WeekView() {
         const weekStart = startOfWeek(anchor);
-        const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+        const days = Array.from({length: 7}, (_, i) => addDays(weekStart, i));
         const containerHeight = 24 * HOUR_HEIGHT;
 
         const handleDayGridClick = (e, dayDate) => {
@@ -297,10 +301,12 @@ export default function CalendarPage() {
             <div className="border border-white/10 rounded-2xl overflow-hidden bg-gray-900/60">
                 {/* header row with weekdays */}
                 <div className="grid grid-cols-[64px_repeat(7,minmax(0,1fr))] bg-gray-900/70 border-b border-white/10">
-                    <div className="h-10" />
+                    <div className="h-10"/>
                     {days.map((d) => (
-                        <div key={d.toISOString()} className="h-10 flex items-center justify-center text-xs sm:text-sm text-gray-300">
-                            <div className={`flex items-baseline gap-2 ${isSameDay(d, new Date()) ? "text-white font-semibold" : ""}`}>
+                        <div key={d.toISOString()}
+                             className="h-10 flex items-center justify-center text-xs sm:text-sm text-gray-300">
+                            <div
+                                className={`flex items-baseline gap-2 ${isSameDay(d, new Date()) ? "text-white font-semibold" : ""}`}>
                                 <span>{weekdayLabels[(d.getDay() + 6) % 7]}</span>
                                 <span className="text-gray-400">{d.getDate()}</span>
                             </div>
@@ -311,7 +317,7 @@ export default function CalendarPage() {
                 <div className="grid grid-cols-[64px_repeat(7,minmax(0,1fr))]">
                     {/* hour gutter */}
                     <div className="bg-gray-900/70 border-r border-white/10">
-                        {Array.from({ length: 24 }, (_, h) => (
+                        {Array.from({length: 24}, (_, h) => (
                             <div key={h} className="h-12 px-2 text-xs text-gray-400 flex items-start justify-end pt-1">
                                 {String(h).padStart(2, "0")}:00
                             </div>
@@ -327,11 +333,12 @@ export default function CalendarPage() {
                             <div
                                 key={day.toISOString()}
                                 className="relative border-l border-white/10"
-                                style={{ height: containerHeight }}
+                                style={{height: containerHeight}}
                                 onClick={(e) => handleDayGridClick(e, day)}
                             >
-                                {Array.from({ length: 24 }, (_, h) => (
-                                    <div key={h} className="absolute left-0 right-0 border-t border-white/5" style={{ top: h * HOUR_HEIGHT }} />
+                                {Array.from({length: 24}, (_, h) => (
+                                    <div key={h} className="absolute left-0 right-0 border-t border-white/5"
+                                         style={{top: h * HOUR_HEIGHT}}/>
                                 ))}
                                 {dayEvents.map((ev) => {
                                     const s = new Date(ev.start);
@@ -344,9 +351,10 @@ export default function CalendarPage() {
                                         <div
                                             key={ev.id}
                                             className="absolute left-1 right-1 rounded-md shadow-sm text-[11px] text-white p-1.5"
-                                            style={{ top: `${top}%`, height: `${height}%` }}
+                                            style={{top: `${top}%`, height: `${height}%`}}
                                         >
-                                            <div className={`w-full h-full rounded ${COLORS[ev.color] || COLORS.slate} opacity-90 p-1.5`}>
+                                            <div
+                                                className={`w-full h-full rounded ${COLORS[ev.color] || COLORS.slate} opacity-90 p-1.5`}>
                                                 <div className="font-semibold truncate">{ev.title}</div>
                                                 <div className="opacity-90 truncate">
                                                     {formatTime(s)}–{formatTime(e)}
@@ -366,7 +374,7 @@ export default function CalendarPage() {
     function MonthView() {
         const firstOfMonth = startOfMonth(anchor);
         const firstGridDay = startOfWeek(firstOfMonth);
-        const days = Array.from({ length: 42 }, (_, i) => addDays(firstGridDay, i)); // 6 weeks
+        const days = Array.from({length: 42}, (_, i) => addDays(firstGridDay, i)); // 6 weeks
         const isOutside = (d) => d.getMonth() !== anchor.getMonth();
 
         const onDayDoubleClick = (d) => {
@@ -402,11 +410,13 @@ export default function CalendarPage() {
                                 <div className="mt-1 space-y-1">
                                     {evs.slice(0, 3).map((ev) => (
                                         <div key={ev.id} className="flex items-center gap-1">
-                                            <span className={`inline-block w-2 h-2 rounded ${COLORS[ev.color] || COLORS.slate}`} />
+                                            <span
+                                                className={`inline-block w-2 h-2 rounded ${COLORS[ev.color] || COLORS.slate}`}/>
                                             <span className="truncate text-xs text-gray-200">{ev.title}</span>
                                         </div>
                                     ))}
-                                    {evs.length > 3 && <div className="text-[11px] text-gray-400">+{evs.length - 3} more</div>}
+                                    {evs.length > 3 &&
+                                        <div className="text-[11px] text-gray-400">+{evs.length - 3} more</div>}
                                 </div>
                             </div>
                         );
@@ -417,24 +427,25 @@ export default function CalendarPage() {
     }
 
     function YearView() {
-        const months = Array.from({ length: 12 }, (_, i) => new Date(anchor.getFullYear(), i, 1));
+        const months = Array.from({length: 12}, (_, i) => new Date(anchor.getFullYear(), i, 1));
         return (
             <div className="grid md:grid-cols-3 gap-4">
                 {months.map((m) => (
-                    <MiniMonth key={m.getMonth()} monthDate={m} onPickDay={(d) => setAnchor(d) || setView("month")} />
+                    <MiniMonth key={m.getMonth()} monthDate={m} onPickDay={(d) => setAnchor(d) || setView("month")}/>
                 ))}
             </div>
         );
     }
 
-    function MiniMonth({ monthDate, onPickDay }) {
+    function MiniMonth({monthDate, onPickDay}) {
         const firstGridDay = startOfWeek(startOfMonth(monthDate));
-        const days = Array.from({ length: 42 }, (_, i) => addDays(firstGridDay, i));
-        const label = monthDate.toLocaleDateString(undefined, { month: "long" });
+        const days = Array.from({length: 42}, (_, i) => addDays(firstGridDay, i));
+        const label = monthDate.toLocaleDateString(undefined, {month: "long"});
 
         return (
             <div className="border border-white/10 rounded-xl overflow-hidden bg-gray-900/60">
-                <div className="px-3 py-2 bg-gray-900/70 border-b border-white/10 text-sm font-semibold text-white">{label}</div>
+                <div
+                    className="px-3 py-2 bg-gray-900/70 border-b border-white/10 text-sm font-semibold text-white">{label}</div>
                 <div className="grid grid-cols-7 text-[11px] text-gray-400 bg-gray-900/40">
                     {weekdayLabels.map((w) => (
                         <div key={w} className="px-2 py-1 text-center">
@@ -463,15 +474,23 @@ export default function CalendarPage() {
     // ---------- Header label ----------
     const labelByView = useMemo(() => {
         if (view === "day")
-            return anchor.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+            return anchor.toLocaleDateString(undefined, {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+            });
         if (view === "week") {
             const s = startOfWeek(anchor);
             const e = endOfWeek(anchor);
             const sameMonth = s.getMonth() === e.getMonth();
             const monthPart = sameMonth
-                ? s.toLocaleDateString(undefined, { month: "long" })
-                : `${s.toLocaleDateString(undefined, { month: "long" })}–${e.toLocaleDateString(undefined, { month: "long" })}`;
-            return `${monthPart} ${s.getFullYear()} (week of ${s.toLocaleDateString(undefined, { month: "short", day: "numeric" })})`;
+                ? s.toLocaleDateString(undefined, {month: "long"})
+                : `${s.toLocaleDateString(undefined, {month: "long"})}–${e.toLocaleDateString(undefined, {month: "long"})}`;
+            return `${monthPart} ${s.getFullYear()} (week of ${s.toLocaleDateString(undefined, {
+                month: "short",
+                day: "numeric"
+            })})`;
         }
         if (view === "month") return monthLabel(anchor);
         return anchor.getFullYear();
@@ -488,7 +507,7 @@ export default function CalendarPage() {
                         <p className="mt-2 text-gray-400">Plan, schedule, and track your events.</p>
                     </div>
                     <div className="flex gap-2 items-center">
-                        <ViewToggle view={view} setView={setView} />
+                        <ViewToggle view={view} setView={setView}/>
                         <button
                             onClick={() => {
                                 setDraft(getEmptyDraft(anchor));
@@ -545,9 +564,12 @@ export default function CalendarPage() {
                                         upcoming.map((e) => {
                                             const ds = new Date(e.start);
                                             return (
-                                                <li key={e.id} className="flex items-center gap-2" title={`${e.title} · ${formatDateTime(ds)}`}>
-                                                    <span className={`inline-block w-2.5 h-2.5 rounded-full ${COLORS[e.color] || COLORS.slate}`} />
-                                                    <span className="text-sm text-gray-200 truncate max-w-[10rem]">{e.title}</span>
+                                                <li key={e.id} className="flex items-center gap-2"
+                                                    title={`${e.title} · ${formatDateTime(ds)}`}>
+                                                    <span
+                                                        className={`inline-block w-2.5 h-2.5 rounded-full ${COLORS[e.color] || COLORS.slate}`}/>
+                                                    <span
+                                                        className="text-sm text-gray-200 truncate max-w-[10rem]">{e.title}</span>
                                                     <span className="text-xs text-gray-400">{formatDateTime(ds)}</span>
                                                 </li>
                                             );
@@ -564,17 +586,18 @@ export default function CalendarPage() {
 
             {/* Main content */}
             <main className="mx-auto max-w-6xl px-4 pb-12 space-y-4">
-                {view === "day" && <DayView />}
-                {view === "week" && <WeekView />}
-                {view === "month" && <MonthView />}
-                {view === "year" && <YearView />}
+                {view === "day" && <DayView/>}
+                {view === "week" && <WeekView/>}
+                {view === "month" && <MonthView/>}
+                {view === "year" && <YearView/>}
             </main>
 
             {/* Add Event Modal (aligned) */}
             {showAdd && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
-                    <div className="absolute inset-0 bg-black/60" onClick={() => setShowAdd(false)} />
-                    <div className="relative z-10 w-[95%] max-w-xl rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => setShowAdd(false)}/>
+                    <div
+                        className="relative z-10 w-[95%] max-w-xl rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
                         <h2 className="text-lg font-semibold text-white">Create event</h2>
                         <form
                             className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3"
@@ -588,7 +611,7 @@ export default function CalendarPage() {
                                 if (en <= s) errors.push("End time must be after start time.");
 
                                 if (errors.length) {
-                                    setMsg({ title: "Validation error", message: errors.join(" ") });
+                                    setMsg({title: "Validation error", message: errors.join(" ")});
                                     return;
                                 }
 
@@ -611,7 +634,7 @@ export default function CalendarPage() {
                                 <input
                                     className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
                                     value={draft.title}
-                                    onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
+                                    onChange={(e) => setDraft((d) => ({...d, title: e.target.value}))}
                                     placeholder="Event name"
                                 />
                             </div>
@@ -622,7 +645,7 @@ export default function CalendarPage() {
                                     type="datetime-local"
                                     className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
                                     value={draft.start}
-                                    onChange={(e) => setDraft((d) => ({ ...d, start: e.target.value }))}
+                                    onChange={(e) => setDraft((d) => ({...d, start: e.target.value}))}
                                 />
                             </div>
                             <div>
@@ -631,7 +654,7 @@ export default function CalendarPage() {
                                     type="datetime-local"
                                     className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
                                     value={draft.end}
-                                    onChange={(e) => setDraft((d) => ({ ...d, end: e.target.value }))}
+                                    onChange={(e) => setDraft((d) => ({...d, end: e.target.value}))}
                                 />
                             </div>
 
@@ -641,7 +664,7 @@ export default function CalendarPage() {
                                     className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
                                     placeholder="e.g., Production, Team"
                                     value={draft.calendar}
-                                    onChange={(e) => setDraft((d) => ({ ...d, calendar: e.target.value }))}
+                                    onChange={(e) => setDraft((d) => ({...d, calendar: e.target.value}))}
                                 />
                             </div>
 
@@ -650,7 +673,7 @@ export default function CalendarPage() {
                                 <select
                                     className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
                                     value={draft.color}
-                                    onChange={(e) => setDraft((d) => ({ ...d, color: e.target.value }))}
+                                    onChange={(e) => setDraft((d) => ({...d, color: e.target.value}))}
                                 >
                                     {Object.keys(COLORS).map((c) => (
                                         <option key={c} value={c}>
@@ -665,7 +688,7 @@ export default function CalendarPage() {
                                 <input
                                     className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
                                     value={draft.location}
-                                    onChange={(e) => setDraft((d) => ({ ...d, location: e.target.value }))}
+                                    onChange={(e) => setDraft((d) => ({...d, location: e.target.value}))}
                                 />
                             </div>
 
@@ -675,7 +698,7 @@ export default function CalendarPage() {
                                     rows={3}
                                     className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
                                     value={draft.description}
-                                    onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
+                                    onChange={(e) => setDraft((d) => ({...d, description: e.target.value}))}
                                 />
                             </div>
 
@@ -687,7 +710,8 @@ export default function CalendarPage() {
                                 >
                                     Cancel
                                 </button>
-                                <button type="submit" className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm">
+                                <button type="submit"
+                                        className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm">
                                     Save
                                 </button>
                             </div>
@@ -699,8 +723,9 @@ export default function CalendarPage() {
             {/* Validation/Info Modal (aligned, replacing alerts) */}
             {msg && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
-                    <div className="absolute inset-0 bg-black/60" onClick={() => setMsg(null)} />
-                    <div className="relative z-10 w-[90%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => setMsg(null)}/>
+                    <div
+                        className="relative z-10 w-[90%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
                         <h2 className="text-lg font-semibold text-white">{msg.title}</h2>
                         <p className="mt-2 text-sm text-gray-300">{msg.message}</p>
                         <div className="mt-4 flex justify-end gap-2">
@@ -718,7 +743,7 @@ export default function CalendarPage() {
     );
 
     // ---------- Local subcomponents ----------
-    function ViewToggle({ view, setView }) {
+    function ViewToggle({view, setView}) {
         const btn = (v, label) => (
             <button
                 onClick={() => setView(v)}
@@ -740,9 +765,16 @@ export default function CalendarPage() {
     }
 
     function formatTime(d) {
-        return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        return d.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
     }
+
     function formatDateTime(d) {
-        return d.toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+        return d.toLocaleString([], {
+            weekday: "short",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        });
     }
 }

@@ -212,7 +212,7 @@ export default function InventoryAdjustPage() {
     return (
         <div className="bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
             {/* Header */}
-            <header className="mx-auto max-w-6xl px-4 pt-10 pb-6">
+            <header className="mx-auto px-4 pt-10 pb-6">
                 <div className="flex items-end justify-between gap-4 flex-wrap">
                     <div>
                         <h1 className="text-3xl font-bold text-white">Inventory Adjustment</h1>
@@ -255,7 +255,7 @@ export default function InventoryAdjustPage() {
             </header>
 
             {/* Content */}
-            <section className="mx-auto max-w-6xl px-4 pb-16 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            <section className="mx-auto px-4 pb-16 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                 {/* Left column */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* Details */}

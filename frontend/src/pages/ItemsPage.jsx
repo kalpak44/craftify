@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, {useMemo, useState} from "react";
+import {useNavigate} from "react-router-dom";
 
 /**
  * ItemsPage
@@ -20,16 +20,16 @@ import { useNavigate } from "react-router-dom";
 export const ItemsPage = () => {
     // Mocked data (simplified)
     const initialData = [
-        { id: "ITM-001", name: "Warm Yellow LED", status: "Active", category: "Component", uom: "pcs" },
-        { id: "ITM-002", name: "Large Widget", status: "Active", category: "Assembly", uom: "pcs" },
-        { id: "ITM-003", name: "Plastic Case", status: "Active", category: "Component", uom: "pcs" },
-        { id: "ITM-004", name: "Lion Bracket", status: "Active", category: "Fabrication", uom: "pcs" },
-        { id: "ITM-005", name: "Chain Bracket", status: "Active", category: "Component", uom: "pcs" },
-        { id: "ITM-006", name: "Front Assembly", status: "Active", category: "Finished Good", uom: "ea" },
-        { id: "ITM-007", name: "Steel Frame", status: "Active", category: "Fabrication", uom: "pcs" },
-        { id: "ITM-008", name: "Blue Paint (RAL5010)", status: "Hold", category: "Consumable", uom: "L" },
-        { id: "ITM-009", name: "Screws M3x8", status: "Active", category: "Hardware", uom: "ea" },
-        { id: "ITM-010", name: "Assembly Kit 10", status: "Discontinued", category: "Kit", uom: "kit" }
+        {id: "ITM-001", name: "Warm Yellow LED", status: "Active", category: "Component", uom: "pcs"},
+        {id: "ITM-002", name: "Large Widget", status: "Active", category: "Assembly", uom: "pcs"},
+        {id: "ITM-003", name: "Plastic Case", status: "Active", category: "Component", uom: "pcs"},
+        {id: "ITM-004", name: "Lion Bracket", status: "Active", category: "Fabrication", uom: "pcs"},
+        {id: "ITM-005", name: "Chain Bracket", status: "Active", category: "Component", uom: "pcs"},
+        {id: "ITM-006", name: "Front Assembly", status: "Active", category: "Finished Good", uom: "ea"},
+        {id: "ITM-007", name: "Steel Frame", status: "Active", category: "Fabrication", uom: "pcs"},
+        {id: "ITM-008", name: "Blue Paint (RAL5010)", status: "Hold", category: "Consumable", uom: "L"},
+        {id: "ITM-009", name: "Screws M3x8", status: "Active", category: "Hardware", uom: "ea"},
+        {id: "ITM-010", name: "Assembly Kit 10", status: "Discontinued", category: "Kit", uom: "kit"}
     ];
 
     // State
@@ -38,7 +38,7 @@ export const ItemsPage = () => {
     const [status, setStatus] = useState("all");
     const [category, setCategory] = useState("all");
     const [uom, setUom] = useState("all");
-    const [sort, setSort] = useState({ key: "name", dir: "asc" });
+    const [sort, setSort] = useState({key: "name", dir: "asc"});
     const [selected, setSelected] = useState({});
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(8);
@@ -61,14 +61,14 @@ export const ItemsPage = () => {
         if (category !== "all") data = data.filter((r) => r.category === category);
         if (uom !== "all") data = data.filter((r) => r.uom === uom);
 
-        const { key, dir } = sort;
+        const {key, dir} = sort;
         data = [...data].sort((a, b) => {
             const av = a[key];
             const bv = b[key];
             const cmp =
                 typeof av === "number" && typeof bv === "number"
                     ? av - bv
-                    : String(av).localeCompare(String(bv), undefined, { numeric: true, sensitivity: "base" });
+                    : String(av).localeCompare(String(bv), undefined, {numeric: true, sensitivity: "base"});
             return dir === "asc" ? cmp : -cmp;
         });
         return data;
@@ -85,7 +85,7 @@ export const ItemsPage = () => {
 
     const allOnPageSelected = paged.length > 0 && paged.every((r) => selected[r.id]);
     const toggleAll = () => {
-        const next = { ...selected };
+        const next = {...selected};
         if (allOnPageSelected) {
             paged.forEach((r) => delete next[r.id]);
         } else {
@@ -93,7 +93,7 @@ export const ItemsPage = () => {
         }
         setSelected(next);
     };
-    const toggleOne = (id) => setSelected((s) => ({ ...s, [id]: !s[id] }));
+    const toggleOne = (id) => setSelected((s) => ({...s, [id]: !s[id]}));
 
     // ---------- Export helpers ----------
     const rowsForExport = () => (selectedCount ? filtered.filter((r) => selectedIds.includes(r.id)) : filtered);
@@ -125,7 +125,7 @@ export const ItemsPage = () => {
 
     const handleExportCSV = () => {
         const csv = toCSV(rowsForExport());
-        downloadBlob(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" }), `items_${new Date()
+        downloadBlob(new Blob(["\ufeff" + csv], {type: "text/csv;charset=utf-8;"}), `items_${new Date()
             .toISOString()
             .slice(0, 10)}.csv`);
     };
@@ -184,7 +184,7 @@ export const ItemsPage = () => {
 
     const th = (label, key, alignRight = false) => (
         <th
-            onClick={() => setSort((s) => ({ key, dir: s.key === key && s.dir === "asc" ? "desc" : "asc" }))}
+            onClick={() => setSort((s) => ({key, dir: s.key === key && s.dir === "asc" ? "desc" : "asc"}))}
             className={`px-4 py-3 font-semibold text-gray-300 select-none cursor-pointer ${
                 alignRight ? "text-right" : "text-left"
             }`}
@@ -223,9 +223,10 @@ export const ItemsPage = () => {
     const stopRowNav = (e) => e.stopPropagation();
 
     return (
-        <div className="min-h-[calc(100vh-140px)] bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
+        <div
+            className="min-h-[calc(100vh-140px)] bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
             {/* Header */}
-            <header className="mx-auto max-w-6xl px-4 pt-10 pb-6">
+            <header className="mx-auto px-4 pt-10 pb-6">
                 <div className="flex items-end justify-between gap-4 flex-wrap">
                     <div>
                         <h1 className="text-3xl font-bold text-white">Items</h1>
@@ -238,7 +239,8 @@ export const ItemsPage = () => {
                         >
                             + New Item
                         </button>
-                        <button className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">
+                        <button
+                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">
                             Import CSV
                         </button>
                     </div>
@@ -246,7 +248,7 @@ export const ItemsPage = () => {
             </header>
 
             {/* Filters / Toolbar */}
-            <div className="mx-auto max-w-6xl px-4 pb-4">
+            <div className="mx-auto px-4 pb-4">
                 <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
                     <div className="flex flex-col md:flex-row md:items-center gap-3">
                         <select
@@ -336,13 +338,14 @@ export const ItemsPage = () => {
             </div>
 
             {/* Table */}
-            <section className="mx-auto max-w-6xl px-4 pb-12">
+            <section className="mx-auto px-4 pb-12">
                 <div className="overflow-x-auto border border-white/10 rounded-xl bg-gray-900/60">
                     <table className="min-w-full divide-y divide-gray-800 text-sm">
                         <thead className="bg-gray-900/80">
                         <tr>
                             <th className="px-4 py-3">
-                                <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll} onClick={stopRowNav} />
+                                <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll}
+                                       onClick={stopRowNav}/>
                             </th>
                             {th("ID", "id")}
                             {th("Product name", "name")}
@@ -361,7 +364,8 @@ export const ItemsPage = () => {
                                 title="Open Edit"
                             >
                                 <td className="px-4 py-3" onClick={stopRowNav}>
-                                    <input type="checkbox" checked={!!selected[item.id]} onChange={() => toggleOne(item.id)} />
+                                    <input type="checkbox" checked={!!selected[item.id]}
+                                           onChange={() => toggleOne(item.id)}/>
                                 </td>
                                 <td className="px-4 py-3 font-mono text-white">
                                     <span className="underline decoration-dotted">{item.id}</span>
@@ -414,7 +418,8 @@ export const ItemsPage = () => {
                 </div>
 
                 {/* Footer / Pagination */}
-                <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-gray-400">
+                <div
+                    className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-gray-400">
                     <div className="flex items-center gap-2">
                         <span>Rows per page</span>
                         <select
@@ -463,8 +468,9 @@ export const ItemsPage = () => {
             {/* Deletion Confirmation Modal */}
             {showDeleteModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
-                    <div className="absolute inset-0 bg-black/60" onClick={() => setShowDeleteModal(false)} />
-                    <div className="relative z-10 w-[90%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => setShowDeleteModal(false)}/>
+                    <div
+                        className="relative z-10 w-[90%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
                         <h2 className="text-lg font-semibold text-white">Confirm deletion</h2>
                         <p className="mt-2 text-sm text-gray-300">
                             You are about to delete <span className="font-medium text-white">{selectedCount}</span>{" "}

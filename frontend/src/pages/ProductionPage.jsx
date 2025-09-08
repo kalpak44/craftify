@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, {useMemo, useState} from "react";
 
 /**
  * ProductionPage — shop-floor execution (RAW JS)
@@ -13,9 +13,9 @@ import React, { useMemo, useState } from "react";
 export default function ProductionPage() {
     // ----- Mock masters -----
     const WORK_CENTERS = [
-        { id: "WC-ASM", name: "Assembly Line A" },
-        { id: "WC-PAI", name: "Paint Booth 1" },
-        { id: "WC-QA",  name: "QA Station" },
+        {id: "WC-ASM", name: "Assembly Line A"},
+        {id: "WC-PAI", name: "Paint Booth 1"},
+        {id: "WC-QA", name: "QA Station"},
     ];
     const SHIFTS = ["All", "A (06–14)", "B (14–22)", "C (22–06)"];
 
@@ -38,8 +38,8 @@ export default function ProductionPage() {
             runtimeEstMin: 180,
             assignee: "—",
             materials: [
-                { itemId: "ITM-007", item: "Steel Frame", req: 200, issued: 150, uom: "pcs" },
-                { itemId: "ITM-009", item: "Screws M3x8", req: 1000, issued: 800, uom: "ea" },
+                {itemId: "ITM-007", item: "Steel Frame", req: 200, issued: 150, uom: "pcs"},
+                {itemId: "ITM-009", item: "Screws M3x8", req: 1000, issued: 800, uom: "ea"},
             ],
         },
         {
@@ -59,8 +59,8 @@ export default function ProductionPage() {
             runtimeEstMin: 240,
             assignee: "K. Adams",
             materials: [
-                { itemId: "ITM-003", item: "Plastic Case", req: 120, issued: 90, uom: "pcs" },
-                { itemId: "ITM-009", item: "Screws M3x8", req: 600, issued: 540, uom: "ea" },
+                {itemId: "ITM-003", item: "Plastic Case", req: 120, issued: 90, uom: "pcs"},
+                {itemId: "ITM-009", item: "Screws M3x8", req: 600, issued: 540, uom: "ea"},
             ],
         },
         {
@@ -80,7 +80,7 @@ export default function ProductionPage() {
             runtimeEstMin: 90,
             assignee: "—",
             materials: [
-                { itemId: "ITM-008", item: "Blue Paint (RAL5010)", req: 18, issued: 10, uom: "L" },
+                {itemId: "ITM-008", item: "Blue Paint (RAL5010)", req: 18, issued: 10, uom: "L"},
             ],
         },
         {
@@ -110,16 +110,16 @@ export default function ProductionPage() {
     const [shift, setShift] = useState("All");
     const [status, setStatus] = useState("all");
     const [query, setQuery] = useState("");
-    const [sort, setSort] = useState({ key: "dueTime", dir: "asc" });
+    const [sort, setSort] = useState({key: "dueTime", dir: "asc"});
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(8);
 
     const STATUSES = ["Queued", "Running", "Paused", "Done"];
     const STATUS_CLS = {
-        Queued:  "bg-gray-600/30 text-gray-300",
+        Queued: "bg-gray-600/30 text-gray-300",
         Running: "bg-green-600/30 text-green-300",
-        Paused:  "bg-yellow-600/30 text-yellow-300",
-        Done:    "bg-indigo-600/30 text-indigo-300",
+        Paused: "bg-yellow-600/30 text-yellow-300",
+        Done: "bg-indigo-600/30 text-indigo-300",
     };
 
     // ----- Derived -----
@@ -138,13 +138,13 @@ export default function ProductionPage() {
                 x.productId.toLowerCase().includes(q)
             );
         }
-        const { key, dir } = sort;
-        r.sort((a,b) => {
+        const {key, dir} = sort;
+        r.sort((a, b) => {
             const av = a[key], bv = b[key];
             let cmp = 0;
             if (key === "dueTime") cmp = new Date(av).getTime() - new Date(bv).getTime();
             else if (typeof av === "number" && typeof bv === "number") cmp = av - bv;
-            else cmp = String(av).localeCompare(String(bv), undefined, { numeric: true });
+            else cmp = String(av).localeCompare(String(bv), undefined, {numeric: true});
             return dir === "asc" ? cmp : -cmp;
         });
         return r;
@@ -166,9 +166,9 @@ export default function ProductionPage() {
     }, [filtered, center]);
 
     // ----- Helpers -----
-    const th = (label, key, right=false) => (
+    const th = (label, key, right = false) => (
         <th
-            onClick={() => key && setSort(s => ({ key, dir: s.key === key && s.dir === "asc" ? "desc" : "asc" }))}
+            onClick={() => key && setSort(s => ({key, dir: s.key === key && s.dir === "asc" ? "desc" : "asc"}))}
             className={`px-4 py-3 font-semibold text-gray-300 select-none ${key ? "cursor-pointer" : ""} ${right ? "text-right" : "text-left"}`}
         >
       <span className="inline-flex items-center gap-1">
@@ -178,28 +178,29 @@ export default function ProductionPage() {
         </th>
     );
 
-    const toggleExpand = (id) => setExpanded(s => ({ ...s, [id]: !s[id] }));
-    const setRow = (id, patch) => setRows(rs => rs.map(r => r.id === id ? { ...r, ...patch } : r));
+    const toggleExpand = (id) => setExpanded(s => ({...s, [id]: !s[id]}));
+    const setRow = (id, patch) => setRows(rs => rs.map(r => r.id === id ? {...r, ...patch} : r));
 
     const handleStart = (r) => {
         if (r.status === "Done") return;
-        setRow(r.id, { status: "Running", assignee: r.assignee === "—" ? "Operator 1" : r.assignee });
+        setRow(r.id, {status: "Running", assignee: r.assignee === "—" ? "Operator 1" : r.assignee});
     };
     const handlePause = (r) => {
         if (r.status !== "Running") return;
-        setRow(r.id, { status: "Paused" });
+        setRow(r.id, {status: "Paused"});
     };
     const handleComplete = (r, good, scrap) => {
         const qtyGood = Math.max(0, Math.min(r.qtyPlanned, (r.qtyGood || 0) + Number(good || 0)));
         const qtyScrap = Math.max(0, (r.qtyScrap || 0) + Number(scrap || 0));
-        setRow(r.id, { qtyGood, qtyScrap, status: qtyGood >= r.qtyPlanned ? "Done" : r.status });
+        setRow(r.id, {qtyGood, qtyScrap, status: qtyGood >= r.qtyPlanned ? "Done" : r.status});
     };
 
     // ----- Render -----
     return (
-        <div className="min-h-[calc(100vh-140px)] bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
+        <div
+            className="min-h-[calc(100vh-140px)] bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
             {/* Header + KPIs */}
-            <header className="mx-auto max-w-7xl px-4 pt-10 pb-6">
+            <header className="mx-auto px-4 pt-10 pb-6">
                 <div className="flex items-end justify-between gap-4 flex-wrap">
                     <div>
                         <h1 className="text-3xl font-bold text-white">Production</h1>
@@ -216,7 +217,7 @@ export default function ProductionPage() {
                         <div className="text-xs text-gray-400">Utilization (mock)</div>
                         <div className="text-2xl font-semibold text-gray-100">{util}%</div>
                         <div className="mt-2 h-2 rounded bg-gray-800">
-                            <div className="h-2 rounded bg-green-600/70" style={{ width: `${util}%` }} />
+                            <div className="h-2 rounded bg-green-600/70" style={{width: `${util}%`}}/>
                         </div>
                     </div>
                     <div className="rounded-xl bg-gray-900/60 border border-white/10 p-4">
@@ -227,12 +228,15 @@ export default function ProductionPage() {
             </header>
 
             {/* Filters */}
-            <div className="mx-auto max-w-7xl px-4 pb-4">
+            <div className="mx-auto px-4 pb-4">
                 <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
                     <div className="flex flex-col md:flex-row md:items-center gap-3">
                         <select
                             value={center}
-                            onChange={(e) => { setCenter(e.target.value); setPage(1); }}
+                            onChange={(e) => {
+                                setCenter(e.target.value);
+                                setPage(1);
+                            }}
                             className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm min-w-[200px]"
                         >
                             <option value="all">All Work Centers</option>
@@ -241,7 +245,10 @@ export default function ProductionPage() {
 
                         <select
                             value={shift}
-                            onChange={(e) => { setShift(e.target.value); setPage(1); }}
+                            onChange={(e) => {
+                                setShift(e.target.value);
+                                setPage(1);
+                            }}
                             className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm min-w-[160px]"
                         >
                             {SHIFTS.map(s => <option key={s} value={s}>{s}</option>)}
@@ -249,7 +256,10 @@ export default function ProductionPage() {
 
                         <select
                             value={status}
-                            onChange={(e) => { setStatus(e.target.value); setPage(1); }}
+                            onChange={(e) => {
+                                setStatus(e.target.value);
+                                setPage(1);
+                            }}
                             className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm min-w-[160px]"
                         >
                             <option value="all">All Statuses</option>
@@ -260,7 +270,10 @@ export default function ProductionPage() {
                             <input
                                 placeholder="Search OP/MO/Operation/Product…"
                                 value={query}
-                                onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+                                onChange={(e) => {
+                                    setQuery(e.target.value);
+                                    setPage(1);
+                                }}
                                 className="w-full rounded-lg bg-gray-800 border border-white/10 pl-3 pr-10 py-2 text-sm"
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">⌕</span>
@@ -270,7 +283,7 @@ export default function ProductionPage() {
             </div>
 
             {/* Dispatch Table */}
-            <section className="mx-auto max-w-7xl px-4 pb-12">
+            <section className="mx-auto px-4 pb-12">
                 <div className="overflow-x-auto border border-white/10 rounded-xl bg-gray-900/60">
                     <table className="min-w-full divide-y divide-gray-800 text-sm">
                         <thead className="bg-gray-900/80">
@@ -303,16 +316,21 @@ export default function ProductionPage() {
                                         <td className="px-4 py-3">{r.moId}</td>
                                         <td className="px-4 py-3 text-right text-gray-200">{r.seq}</td>
                                         <td className="px-4 py-3 text-gray-200">{r.operation}</td>
-                                        <td className="px-4 py-3 text-gray-200">{r.product} <span className="text-gray-500">({r.productId})</span></td>
+                                        <td className="px-4 py-3 text-gray-200">{r.product} <span
+                                            className="text-gray-500">({r.productId})</span></td>
                                         <td className="px-4 py-3 text-gray-300">{r.workCenter}</td>
                                         <td className="px-4 py-3 text-gray-300">{r.shift}</td>
-                                        <td className="px-4 py-3"><span className={`px-2 py-1 text-xs rounded-full ${STATUS_CLS[r.status]}`}>{r.status}</span></td>
+                                        <td className="px-4 py-3"><span
+                                            className={`px-2 py-1 text-xs rounded-full ${STATUS_CLS[r.status]}`}>{r.status}</span>
+                                        </td>
                                         <td className="px-4 py-3 text-right text-gray-200">{r.qtyGood}</td>
                                         <td className="px-4 py-3 text-right text-gray-200">{r.qtyPlanned}</td>
                                         <td className="px-4 py-3">
-                                            <span className={`text-gray-400 ${overdue ? "text-red-300" : ""}`}>{r.dueTime}</span>
+                                            <span
+                                                className={`text-gray-400 ${overdue ? "text-red-300" : ""}`}>{r.dueTime}</span>
                                             <div className="mt-1 h-1.5 rounded bg-gray-800">
-                                                <div className="h-1.5 rounded bg-green-600/70" style={{ width: `${p}%` }} />
+                                                <div className="h-1.5 rounded bg-green-600/70"
+                                                     style={{width: `${p}%`}}/>
                                             </div>
                                         </td>
                                     </tr>
@@ -322,58 +340,82 @@ export default function ProductionPage() {
                                             <td colSpan={11} className="px-6 py-4">
                                                 {/* Operator panel + Materials (div grid, keeps borders intact) */}
                                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                                                    <div className="rounded-xl border border-white/10 bg-gray-900/60 p-4">
-                                                        <div className="text-sm font-semibold text-white mb-2">Action</div>
+                                                    <div
+                                                        className="rounded-xl border border-white/10 bg-gray-900/60 p-4">
+                                                        <div className="text-sm font-semibold text-white mb-2">Action
+                                                        </div>
                                                         <div className="flex gap-2 flex-wrap">
                                                             <button
-                                                                onClick={(e)=>{e.stopPropagation();handleStart(r);}}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleStart(r);
+                                                                }}
                                                                 className="px-3 py-2 rounded-lg bg-green-600/20 hover:bg-green-600/30 text-green-300 border border-green-500/30 text-sm"
                                                                 disabled={r.status === "Running" || r.status === "Done"}
                                                             >
                                                                 Start
                                                             </button>
                                                             <button
-                                                                onClick={(e)=>{e.stopPropagation();handlePause(r);}}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handlePause(r);
+                                                                }}
                                                                 className="px-3 py-2 rounded-lg bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-300 border border-yellow-500/30 text-sm"
                                                                 disabled={r.status !== "Running"}
                                                             >
                                                                 Pause
                                                             </button>
-                                                            <CompleteForm row={r} onComplete={handleComplete} />
+                                                            <CompleteForm row={r} onComplete={handleComplete}/>
                                                         </div>
                                                         <div className="mt-3 text-xs text-gray-400">
-                                                            Est. runtime: <span className="text-gray-200">{r.runtimeEstMin} min</span> • Assignee: <span className="text-gray-200">{r.assignee}</span>
+                                                            Est. runtime: <span
+                                                            className="text-gray-200">{r.runtimeEstMin} min</span> •
+                                                            Assignee: <span
+                                                            className="text-gray-200">{r.assignee}</span>
                                                         </div>
                                                     </div>
 
-                                                    <div className="rounded-xl border border-white/10 bg-gray-900/60 p-4 lg:col-span-2">
-                                                        <div className="text-sm font-semibold text-white mb-2">Materials</div>
-                                                        <div className="rounded-lg border border-gray-700 overflow-hidden">
-                                                            <div className="grid grid-cols-6 bg-gray-800/60 text-gray-400 text-xs font-medium">
+                                                    <div
+                                                        className="rounded-xl border border-white/10 bg-gray-900/60 p-4 lg:col-span-2">
+                                                        <div
+                                                            className="text-sm font-semibold text-white mb-2">Materials
+                                                        </div>
+                                                        <div
+                                                            className="rounded-lg border border-gray-700 overflow-hidden">
+                                                            <div
+                                                                className="grid grid-cols-6 bg-gray-800/60 text-gray-400 text-xs font-medium">
                                                                 <div className="px-2 py-1 col-span-3">Component</div>
                                                                 <div className="px-2 py-1 text-right">Req.</div>
                                                                 <div className="px-2 py-1 text-right">Issued</div>
                                                                 <div className="px-2 py-1 text-right">UoM</div>
                                                             </div>
-                                                            {(r.materials || []).map((m,i) => {
-                                                                const short = (m.req||0) - (m.issued||0);
+                                                            {(r.materials || []).map((m, i) => {
+                                                                const short = (m.req || 0) - (m.issued || 0);
                                                                 return (
-                                                                    <div key={i} className="grid grid-cols-6 text-sm hover:bg-gray-800/40">
+                                                                    <div key={i}
+                                                                         className="grid grid-cols-6 text-sm hover:bg-gray-800/40">
                                                                         <div className="px-2 py-1 col-span-3">
-                                                                            <div className="text-gray-200">{m.item}</div>
-                                                                            <div className="text-xs text-gray-500 font-mono">{m.itemId}</div>
+                                                                            <div
+                                                                                className="text-gray-200">{m.item}</div>
+                                                                            <div
+                                                                                className="text-xs text-gray-500 font-mono">{m.itemId}</div>
                                                                         </div>
-                                                                        <div className="px-2 py-1 text-right">{m.req}</div>
-                                                                        <div className="px-2 py-1 text-right">{m.issued}</div>
-                                                                        <div className="px-2 py-1 text-right text-gray-400">
+                                                                        <div
+                                                                            className="px-2 py-1 text-right">{m.req}</div>
+                                                                        <div
+                                                                            className="px-2 py-1 text-right">{m.issued}</div>
+                                                                        <div
+                                                                            className="px-2 py-1 text-right text-gray-400">
                                                                             {m.uom}
-                                                                            {short > 0 && <span className="ml-2 px-1.5 py-0.5 text-[10px] rounded bg-red-600/30 text-red-300">-{short}</span>}
+                                                                            {short > 0 && <span
+                                                                                className="ml-2 px-1.5 py-0.5 text-[10px] rounded bg-red-600/30 text-red-300">-{short}</span>}
                                                                         </div>
                                                                     </div>
                                                                 );
                                                             })}
                                                             {(!r.materials || r.materials.length === 0) && (
-                                                                <div className="px-2 py-2 text-sm text-gray-400">No materials required.</div>
+                                                                <div className="px-2 py-2 text-sm text-gray-400">No
+                                                                    materials required.</div>
                                                             )}
                                                         </div>
                                                     </div>
@@ -389,23 +431,31 @@ export default function ProductionPage() {
                 </div>
 
                 {/* Pagination */}
-                <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-gray-400">
+                <div
+                    className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-gray-400">
                     <div className="flex items-center gap-2">
                         <span>Rows per page</span>
                         <select
                             value={pageSize}
-                            onChange={(e)=>{setPageSize(Number(e.target.value)); setPage(1);}}
+                            onChange={(e) => {
+                                setPageSize(Number(e.target.value));
+                                setPage(1);
+                            }}
                             className="rounded bg-gray-800 border border-white/10 px-2 py-1"
                         >
-                            {[8,16,24].map(n=><option key={n} value={n}>{n}</option>)}
+                            {[8, 16, 24].map(n => <option key={n} value={n}>{n}</option>)}
                         </select>
                         <span className="hidden sm:inline">•</span>
-                        <span>Showing {filtered.length===0?0:pageStart+1}–{Math.min(filtered.length, pageStart+pageSize)} of {filtered.length}</span>
+                        <span>Showing {filtered.length === 0 ? 0 : pageStart + 1}–{Math.min(filtered.length, pageStart + pageSize)} of {filtered.length}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <button disabled={page===1} onClick={()=>setPage(p=>Math.max(1,p-1))} className="px-3 py-1 rounded bg-gray-800 border border-white/10 disabled:opacity-40">Prev</button>
+                        <button disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}
+                                className="px-3 py-1 rounded bg-gray-800 border border-white/10 disabled:opacity-40">Prev
+                        </button>
                         <span className="px-2">{page} / {totalPages}</span>
-                        <button disabled={page===totalPages} onClick={()=>setPage(p=>Math.min(totalPages,p+1))} className="px-3 py-1 rounded bg-gray-800 border border-white/10 disabled:opacity-40">Next</button>
+                        <button disabled={page === totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                className="px-3 py-1 rounded bg-gray-800 border border-white/10 disabled:opacity-40">Next
+                        </button>
                     </div>
                 </div>
             </section>
@@ -414,7 +464,7 @@ export default function ProductionPage() {
 }
 
 /** Inline form (raw JS) for completing Good/Scrap */
-function CompleteForm({ row, onComplete }) {
+function CompleteForm({row, onComplete}) {
     const [good, setGood] = useState("");
     const [scrap, setScrap] = useState("");
     const remaining = Math.max(0, (row.qtyPlanned || 0) - (row.qtyGood || 0));
@@ -426,20 +476,25 @@ function CompleteForm({ row, onComplete }) {
         <div className="flex items-center gap-2">
             <input
                 value={good}
-                onChange={(e)=>setGood(e.target.value.replace(/[^\d]/g,""))}
+                onChange={(e) => setGood(e.target.value.replace(/[^\d]/g, ""))}
                 placeholder="Good"
                 className="w-24 rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
                 inputMode="numeric"
             />
             <input
                 value={scrap}
-                onChange={(e)=>setScrap(e.target.value.replace(/[^\d]/g,""))}
+                onChange={(e) => setScrap(e.target.value.replace(/[^\d]/g, ""))}
                 placeholder="Scrap"
                 className="w-24 rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
                 inputMode="numeric"
             />
             <button
-                onClick={(e)=>{e.stopPropagation(); onComplete(row, goodNum, scrapNum); setGood(""); setScrap("");}}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onComplete(row, goodNum, scrapNum);
+                    setGood("");
+                    setScrap("");
+                }}
                 disabled={disable}
                 className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm disabled:opacity-40"
                 title={disable ? `Remaining ${remaining}` : "Complete quantity"}

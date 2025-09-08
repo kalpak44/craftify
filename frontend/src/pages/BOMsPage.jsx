@@ -199,7 +199,7 @@ export const BOMsPage = () => {
         <div
             className="min-h-[calc(100vh-140px)] bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
             {/* Header */}
-            <header className="mx-auto max-w-6xl px-4 pt-10 pb-6">
+            <header className="mx-auto  px-4 pt-10 pb-6">
                 <div className="flex items-end justify-between gap-4 flex-wrap">
                     <div>
                         <h1 className="text-3xl font-bold text-white">BOMs</h1>
@@ -221,7 +221,7 @@ export const BOMsPage = () => {
             </header>
 
             {/* Toolbar */}
-            <div className="mx-auto max-w-6xl px-4 pb-4">
+            <div className="mx-auto  px-4 pb-4">
                 <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
                     <div className="flex flex-col md:flex-row md:items-center gap-3">
                         <select
@@ -275,7 +275,7 @@ export const BOMsPage = () => {
             </div>
 
             {/* Table */}
-            <section className="mx-auto max-w-6xl px-4 pb-12">
+            <section className="mx-auto  px-4 pb-12">
                 <div className="overflow-x-auto border border-white/10 rounded-xl bg-gray-900/60">
                     <table className="min-w-full divide-y divide-gray-800 text-sm">
                         <thead className="bg-gray-900/80">

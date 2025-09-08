@@ -1,6 +1,6 @@
 // WorkOrderOperationsPage.jsx
-import React, { useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import React, {useMemo, useState} from "react";
+import {useNavigate, useParams} from "react-router-dom";
 
 const STATUS_LIST = ["Open", "In Progress", "Hold", "Completed"];
 const PRIORITY_CLS = {
@@ -33,7 +33,7 @@ const pill = (value, map) => (
 );
 
 const WorkOrderOperationsPage = () => {
-    const { id: woId } = useParams();
+    const {id: woId} = useParams();
     const navigate = useNavigate();
 
     // --- Example operations (6-7+)
@@ -161,10 +161,10 @@ const WorkOrderOperationsPage = () => {
     };
 
     // --- Inline edit
-    const startEdit = (id, field) => setEditing({ id, field });
+    const startEdit = (id, field) => setEditing({id, field});
     const commitEdit = (id, field, value) => {
         setOps((prev) =>
-            prev.map((o) => (o.id === id ? { ...o, [field]: value, updated: new Date().toISOString().slice(0, 10) } : o))
+            prev.map((o) => (o.id === id ? {...o, [field]: value, updated: new Date().toISOString().slice(0, 10)} : o))
         );
         setEditing(null);
     };
@@ -175,7 +175,7 @@ const WorkOrderOperationsPage = () => {
     const gotoEdit = (opId) => navigate(`/work-orders/${woId}/operations/${opId}/edit`);
 
     // --- Column
-    const Column = ({ title, items }) => (
+    const Column = ({title, items}) => (
         <div
             className={`flex flex-col rounded-xl border border-white/10 bg-gray-900/60 min-h-[520px] ${
                 dragOverCol === title ? "ring-2 ring-blue-500/60" : ""
@@ -245,7 +245,8 @@ const WorkOrderOperationsPage = () => {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className={`h-2 w-2 rounded-full ${PRIORITY_DOT[op.priority]}`} title={`Priority: ${op.priority}`} />
+                                        <span className={`h-2 w-2 rounded-full ${PRIORITY_DOT[op.priority]}`}
+                                              title={`Priority: ${op.priority}`}/>
                                         {pill(op.priority, PRIORITY_CLS)}
                                     </div>
                                 </div>
@@ -338,11 +339,12 @@ const WorkOrderOperationsPage = () => {
     return (
         <div className="bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200 min-h-screen">
             {/* Header */}
-            <header className="mx-auto max-w-6xl px-4 pt-10 pb-6">
+            <header className="mx-auto px-4 pt-10 pb-6">
                 <div className="flex items-end justify-between gap-4 flex-wrap">
                     <div>
                         <h1 className="text-3xl font-bold text-white">Operations • {woId}</h1>
-                        <p className="mt-2 text-gray-400">Manage operations on a Kanban board. Drag to change status.</p>
+                        <p className="mt-2 text-gray-400">Manage operations on a Kanban board. Drag to change
+                            status.</p>
                     </div>
                     <div className="flex gap-3 items-center">
                         <button
@@ -369,7 +371,7 @@ const WorkOrderOperationsPage = () => {
             </header>
 
             {/* Toolbar */}
-            <div className="mx-auto max-w-6xl px-4 pb-4">
+            <div className="mx-auto px-4 pb-4">
                 <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
                     <div className="flex flex-col md:flex-row md:items-center gap-3">
                         <div className="relative flex-1">
@@ -415,12 +417,14 @@ const WorkOrderOperationsPage = () => {
             <section className="mx-auto w-full px-4 pb-12">
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                     {STATUS_LIST.map((s) => (
-                        <Column key={s} title={s} items={filtered.filter((o) => o.status === s)} />
+                        <Column key={s} title={s} items={filtered.filter((o) => o.status === s)}/>
                     ))}
                 </div>
-                <div className="mt-4 text-xs text-gray-500 mx-auto max-w-6xl px-4">
-                    Tip: Double-click the <span className="text-gray-300">title</span>, <span className="text-gray-300">assignee</span>, or{" "}
-                    <span className="text-gray-300">estimation</span> to edit. Drag cards between columns to change status.
+                <div className="mt-4 text-xs text-gray-500 mx-auto px-4">
+                    Tip: Double-click the <span className="text-gray-300">title</span>, <span
+                    className="text-gray-300">assignee</span>, or{" "}
+                    <span className="text-gray-300">estimation</span> to edit. Drag cards between columns to change
+                    status.
                 </div>
             </section>
         </div>

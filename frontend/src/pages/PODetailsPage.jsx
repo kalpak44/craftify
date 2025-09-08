@@ -1,6 +1,6 @@
 // POCreationPage.jsx
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, {useEffect, useMemo, useRef, useState} from "react";
+import {useNavigate} from "react-router-dom";
 
 /**
  * POCreationPage — lightweight ERP-style "New Purchase Order"
@@ -19,20 +19,20 @@ import { useNavigate } from "react-router-dom";
 
 // ---- Mock masters ----
 const SUPPLIERS = [
-    { id: "SUP-001", name: "Acme Components", currency: "€", terms: "Net 30", status: "Active" },
-    { id: "SUP-002", name: "NordFab Metals", currency: "€", terms: "Net 15", status: "Active" },
-    { id: "SUP-003", name: "BrightChem", currency: "€", terms: "Prepaid", status: "Active" },
+    {id: "SUP-001", name: "Acme Components", currency: "€", terms: "Net 30", status: "Active"},
+    {id: "SUP-002", name: "NordFab Metals", currency: "€", terms: "Net 15", status: "Active"},
+    {id: "SUP-003", name: "BrightChem", currency: "€", terms: "Prepaid", status: "Active"},
 ];
 
 const ITEMS = [
-    { id: "ITM-001", name: "Warm Yellow LED", uom: "pcs", price: 0.12 },
-    { id: "ITM-002", name: "Large Widget", uom: "pcs", price: 9.5 },
-    { id: "ITM-003", name: "Plastic Case", uom: "pcs", price: 1.2 },
-    { id: "ITM-004", name: "Lion Bracket", uom: "pcs", price: 2.1 },
-    { id: "ITM-005", name: "Chain Bracket", uom: "pcs", price: 1.85 },
-    { id: "ITM-007", name: "Steel Frame", uom: "pcs", price: 7.2 },
-    { id: "ITM-008", name: "Blue Paint (RAL5010)", uom: "L", price: 14.0 },
-    { id: "ITM-009", name: "Screws M3x8", uom: "ea", price: 0.03 },
+    {id: "ITM-001", name: "Warm Yellow LED", uom: "pcs", price: 0.12},
+    {id: "ITM-002", name: "Large Widget", uom: "pcs", price: 9.5},
+    {id: "ITM-003", name: "Plastic Case", uom: "pcs", price: 1.2},
+    {id: "ITM-004", name: "Lion Bracket", uom: "pcs", price: 2.1},
+    {id: "ITM-005", name: "Chain Bracket", uom: "pcs", price: 1.85},
+    {id: "ITM-007", name: "Steel Frame", uom: "pcs", price: 7.2},
+    {id: "ITM-008", name: "Blue Paint (RAL5010)", uom: "L", price: 14.0},
+    {id: "ITM-009", name: "Screws M3x8", uom: "ea", price: 0.03},
 ];
 
 const nextPO = (() => {
@@ -139,7 +139,7 @@ export default function PODetailsPage() {
         });
         const other = Number(otherCharges || 0);
         const grand = sub + tax + other;
-        return { sub, tax, other, grand };
+        return {sub, tax, other, grand};
     }, [validLines, otherCharges]);
 
     // ---------- Validation ----------
@@ -160,11 +160,11 @@ export default function PODetailsPage() {
         setLines((ls) => {
             const idx = ls.findIndex((l) => l.key === key);
             if (idx === -1) return ls;
-            const n = { ...ls[idx], key: uid() };
+            const n = {...ls[idx], key: uid()};
             return [...ls.slice(0, idx + 1), n, ...ls.slice(idx + 1)];
         });
     const updateLine = (key, patch) =>
-        setLines((ls) => ls.map((l) => (l.key === key ? { ...l, ...patch } : l)));
+        setLines((ls) => ls.map((l) => (l.key === key ? {...l, ...patch} : l)));
 
     // keyboard shortcuts on table (Enter add, Ctrl/⌘+D clone focused, Delete remove)
     useEffect(() => {
@@ -220,11 +220,12 @@ export default function PODetailsPage() {
     return (
         <div className="bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
             {/* Header */}
-            <header className="mx-auto max-w-6xl px-4 pt-10 pb-6">
+            <header className="mx-auto px-4 pt-10 pb-6">
                 <div className="flex items-end justify-between gap-4 flex-wrap">
                     <div>
                         <h1 className="text-3xl font-bold text-white">New Purchase Order</h1>
-                        <p className="mt-2 text-gray-400">Create a PO — start in Draft and submit for approval when ready.</p>
+                        <p className="mt-2 text-gray-400">Create a PO — start in Draft and submit for approval when
+                            ready.</p>
                     </div>
                     <div className="flex gap-3">
                         <button
@@ -250,8 +251,9 @@ export default function PODetailsPage() {
                 </div>
 
                 {/* Autosave banner */}
-                <div className="mt-4 rounded-xl border border-white/10 bg-gray-900/60 px-4 py-3 text-sm flex items-center gap-3">
-                    <span className={`inline-flex h-2 w-2 rounded-full ${dirty ? "bg-yellow-400" : "bg-green-400"}`} />
+                <div
+                    className="mt-4 rounded-xl border border-white/10 bg-gray-900/60 px-4 py-3 text-sm flex items-center gap-3">
+                    <span className={`inline-flex h-2 w-2 rounded-full ${dirty ? "bg-yellow-400" : "bg-green-400"}`}/>
                     <span className="text-gray-300">
             {dirty ? "Saving draft…" : lastSavedAt ? `Last saved ${lastSavedAt.toLocaleTimeString()}` : "No changes yet"}
           </span>
@@ -262,7 +264,7 @@ export default function PODetailsPage() {
             </header>
 
             {/* Content */}
-            <section className="mx-auto max-w-6xl px-4 pb-16 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            <section className="mx-auto px-4 pb-16 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                 {/* Left */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* General */}
@@ -469,7 +471,7 @@ export default function PODetailsPage() {
                                                 <input
                                                     data-rowkey={l.key}
                                                     value={l.desc}
-                                                    onChange={(e) => updateLine(l.key, { desc: e.target.value })}
+                                                    onChange={(e) => updateLine(l.key, {desc: e.target.value})}
                                                     placeholder="Description"
                                                     className="w-64 rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
                                                 />
@@ -479,7 +481,7 @@ export default function PODetailsPage() {
                                                 <input
                                                     data-rowkey={l.key}
                                                     value={l.uom}
-                                                    onChange={(e) => updateLine(l.key, { uom: e.target.value })}
+                                                    onChange={(e) => updateLine(l.key, {uom: e.target.value})}
                                                     placeholder={item ? item.uom : "pcs"}
                                                     className="w-24 rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
                                                 />
@@ -490,7 +492,7 @@ export default function PODetailsPage() {
                                                     data-rowkey={l.key}
                                                     inputMode="decimal"
                                                     value={l.qty}
-                                                    onChange={(e) => updateLine(l.key, { qty: e.target.value })}
+                                                    onChange={(e) => updateLine(l.key, {qty: e.target.value})}
                                                     placeholder="0"
                                                     className={`w-24 rounded-lg bg-gray-800 border ${
                                                         rowErrors.qty ? "border-red-500/60" : "border-white/10"
@@ -503,7 +505,7 @@ export default function PODetailsPage() {
                                                     data-rowkey={l.key}
                                                     inputMode="decimal"
                                                     value={l.price}
-                                                    onChange={(e) => updateLine(l.key, { price: e.target.value })}
+                                                    onChange={(e) => updateLine(l.key, {price: e.target.value})}
                                                     placeholder="0.00"
                                                     className={`w-28 rounded-lg bg-gray-800 border ${
                                                         rowErrors.price ? "border-red-500/60" : "border-white/10"
@@ -516,7 +518,7 @@ export default function PODetailsPage() {
                                                     data-rowkey={l.key}
                                                     inputMode="decimal"
                                                     value={l.taxPct}
-                                                    onChange={(e) => updateLine(l.key, { taxPct: e.target.value })}
+                                                    onChange={(e) => updateLine(l.key, {taxPct: e.target.value})}
                                                     placeholder="0"
                                                     className="w-24 rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
                                                 />
@@ -527,7 +529,7 @@ export default function PODetailsPage() {
                                                     data-rowkey={l.key}
                                                     inputMode="decimal"
                                                     value={l.discountPct}
-                                                    onChange={(e) => updateLine(l.key, { discountPct: e.target.value })}
+                                                    onChange={(e) => updateLine(l.key, {discountPct: e.target.value})}
                                                     placeholder="0"
                                                     className="w-24 rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
                                                 />
@@ -537,7 +539,7 @@ export default function PODetailsPage() {
                                                 <input
                                                     data-rowkey={l.key}
                                                     value={l.notes}
-                                                    onChange={(e) => updateLine(l.key, { notes: e.target.value })}
+                                                    onChange={(e) => updateLine(l.key, {notes: e.target.value})}
                                                     placeholder="Optional"
                                                     className="w-56 rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
                                                 />
@@ -595,13 +597,16 @@ export default function PODetailsPage() {
                     {/* Attachments (placeholder) */}
                     <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
                         <h2 className="text-lg font-semibold text-white mb-1">Attachments</h2>
-                        <div className="text-sm text-gray-400">Upload supplier quotes or drawings here in the future. (Placeholder)</div>
+                        <div className="text-sm text-gray-400">Upload supplier quotes or drawings here in the future.
+                            (Placeholder)
+                        </div>
                     </div>
 
                     {/* Error summary */}
                     {errors.length > 0 && (
                         <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm">
-                            <div className="font-semibold text-red-300 mb-1">Please fix the following before submit:</div>
+                            <div className="font-semibold text-red-300 mb-1">Please fix the following before submit:
+                            </div>
                             <ul className="list-disc pl-5 space-y-1 text-red-200">
                                 {errors.map((e, i) => (
                                     <li key={i}>{e}</li>
@@ -619,7 +624,8 @@ export default function PODetailsPage() {
                             <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
                                 <div className="text-xs text-gray-400">Supplier</div>
                                 <div className="text-sm text-gray-200 min-h-[20px]">
-                                    {supplier ? `${supplier.id} — ${supplier.name}` : <span className="text-gray-500">(not set)</span>}
+                                    {supplier ? `${supplier.id} — ${supplier.name}` :
+                                        <span className="text-gray-500">(not set)</span>}
                                 </div>
                             </div>
                             <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
@@ -660,7 +666,8 @@ export default function PODetailsPage() {
                                 </div>
                             </div>
 
-                            <div className="rounded-2xl bg-gray-900/60 p-4 text-xs text-gray-400 border border-white/10">
+                            <div
+                                className="rounded-2xl bg-gray-900/60 p-4 text-xs text-gray-400 border border-white/10">
                                 <div className="font-semibold text-gray-300 mb-2">Status</div>
                                 <span
                                     className={`px-2 py-1 text-xs rounded-full ${
@@ -675,7 +682,8 @@ export default function PODetailsPage() {
                 </span>
                             </div>
 
-                            <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4 text-xs text-gray-400">
+                            <div
+                                className="rounded-2xl border border-white/10 bg-gray-900/60 p-4 text-xs text-gray-400">
                                 <div className="font-semibold text-gray-300 mb-2">Tips</div>
                                 <ul className="list-disc pl-5 space-y-1">
                                     <li>Start in Draft; submit for approval when validated.</li>
@@ -691,4 +699,4 @@ export default function PODetailsPage() {
     );
 }
 
-export { PODetailsPage };
+export {PODetailsPage};
