@@ -14,7 +14,7 @@ export async function listDataStores(authFetch, page = 0, size = 10) {
 
     const res = await authFetch(url, {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
     });
 
     if (!res.ok) {
@@ -33,7 +33,7 @@ export async function createDataStores(authFetch, dataStore) {
     const url = new URL(DATA_STORE_API_URL);
     const res = await authFetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify(dataStore),
     });
 
@@ -59,7 +59,7 @@ export async function listDataStoresRecords(authFetch, dataStoreId, page = 0, si
 
     const res = await authFetch(url, {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
     });
 
     if (!res.ok) {
@@ -80,7 +80,7 @@ export async function getDataRecordById(authFetch, dataStoreId, recordId) {
 
     const res = await authFetch(url, {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
     });
 
     if (!res.ok) {
@@ -102,8 +102,8 @@ export async function updateDataRecord(authFetch, dataStoreId, recordId, updated
 
     const res = await authFetch(url, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recordData: updatedData }),
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({recordData: updatedData}),
     });
 
     if (!res.ok) {
@@ -126,8 +126,8 @@ export async function createDataRecord(authFetch, dataStoreId, name, record) {
 
     const res = await authFetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, record }),
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({name, record}),
     });
 
     if (!res.ok) {
@@ -152,7 +152,7 @@ export async function deleteDataRecord(authFetch, dataStoreId, recordId) {
 
     const res = await authFetch(url, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
     });
 
     if (!res.ok) {
