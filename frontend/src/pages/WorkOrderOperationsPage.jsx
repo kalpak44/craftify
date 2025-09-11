@@ -127,7 +127,7 @@ const WorkOrderOperationsPage = () => {
     // Action modals
     const [holdModal, setHoldModal] = useState({open: false, opId: null, reason: "", viewOnly: false});
     const [completeModal, setCompleteModal] = useState({open: false, opId: null, draftRows: [], produced: 0, calc: 0, varianceNote: "", viewOnly: false, targetStatus: "Completed"});
-    const [releaseModal, setReleaseModal] = useState({open:false, title:"", body:null, canProceed:false});
+    const [releaseModal, setReleaseModal] = useState({open:false, title:"", body:null, proceedLabel:"", variant:"info"});
 
     // --- Derived
     const assignees = useMemo(
@@ -186,7 +186,6 @@ const WorkOrderOperationsPage = () => {
         const op = ops.find(o => o.id === opId);
         if (!op) return;
 
-        // If already completed, block any move
         if (op.status === "Completed") {
             setDragOverCol(null);
             return;
@@ -206,7 +205,6 @@ const WorkOrderOperationsPage = () => {
             return;
         }
 
-        // Normal status change
         setOps((old) =>
             old.map((o) =>
                 o.id === opId
@@ -231,36 +229,44 @@ const WorkOrderOperationsPage = () => {
     const gotoNew = () => navigate(`/work-orders/${woId}/operations/new`);
     const gotoEdit = (opId) => navigate(`/work-orders/${woId}/operations/${opId}/edit`);
 
-    // Release logic
+    // Release logic (now allows proceed with warning)
     const handleRelease = () => {
-        const pending = ops.filter(o => o.status !== "Completed").map(o => o.id);
+        const pending = ops.filter(o => o.status !== "Completed");
         if (pending.length > 0) {
             setReleaseModal({
                 open:true,
-                title: "Cannot Release — Operations Pending",
-                canProceed:false,
+                title: "Release with Pending Operations?",
+                variant: "warn",
+                proceedLabel: "Proceed Anyway",
                 body: (
                     <div className="space-y-3">
                         <div className="text-sm text-amber-200">
-                            Not all operations are completed. Complete the remaining operations before releasing this Work Order.
+                            Not all operations are completed. You can still release, but review what’s pending:
                         </div>
                         <div className="rounded-xl bg-gray-900/40 border border-white/10 overflow-hidden">
                             <table className="min-w-full divide-y divide-gray-800 text-sm">
                                 <thead className="bg-gray-900/80">
                                 <tr>
                                     <th className="px-4 py-2 text-left">Operation</th>
+                                    <th className="px-4 py-2 text-left">Title</th>
                                     <th className="px-4 py-2 text-left">Status</th>
+                                    <th className="px-4 py-2 text-left">Assignee</th>
                                 </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-800">
-                                {ops.filter(o => o.status !== "Completed").map(o => (
+                                {pending.map(o => (
                                     <tr key={o.id}>
                                         <td className="px-4 py-2 font-mono">{o.id}</td>
+                                        <td className="px-4 py-2">{o.title}</td>
                                         <td className="px-4 py-2">{o.status}</td>
+                                        <td className="px-4 py-2">{o.assignee}</td>
                                     </tr>
                                 ))}
                                 </tbody>
                             </table>
+                        </div>
+                        <div className="text-xs text-gray-400">
+                            This action will submit the Work Order even with pending work.
                         </div>
                     </div>
                 )
@@ -269,7 +275,8 @@ const WorkOrderOperationsPage = () => {
             setReleaseModal({
                 open:true,
                 title: "Ready to Release",
-                canProceed:true,
+                variant: "ok",
+                proceedLabel: "Confirm Release",
                 body: (
                     <div className="space-y-2">
                         <div className="text-sm text-emerald-200 flex items-center gap-2">
@@ -361,7 +368,6 @@ const WorkOrderOperationsPage = () => {
 
                                 {/* Meta row */}
                                 <div className="grid grid-cols-3 gap-2 text-xs text-gray-400">
-                                    {/* Assignee editable */}
                                     <div className="flex items-center gap-1">
                                         <span className="text-gray-500">Assignee:</span>
                                         {editing && editing.id === op.id && editing.field === "assignee" ? (
@@ -386,7 +392,6 @@ const WorkOrderOperationsPage = () => {
                                         )}
                                     </div>
 
-                                    {/* Estimate editable */}
                                     <div className="flex items-center gap-1">
                                         <span className="text-gray-500">Est:</span>
                                         {editing && editing.id === op.id && editing.field === "estimate" ? (
@@ -425,7 +430,6 @@ const WorkOrderOperationsPage = () => {
                                             Details
                                         </button>
 
-                                        {/* When on Hold: show "why" icon to read reason/history */}
                                         {op.status === "Hold" && (
                                             <button
                                                 className="px-2.5 py-1 rounded bg-gray-900/60 border border-white/10 text-xs hover:bg-gray-800 flex items-center gap-1"
@@ -436,7 +440,6 @@ const WorkOrderOperationsPage = () => {
                                             </button>
                                         )}
 
-                                        {/* When completed: view output modal (read-only) */}
                                         {op.status === "Completed" && (
                                             <button
                                                 className="px-2.5 py-1 rounded bg-gray-900/60 border border-white/10 text-xs hover:bg-gray-800 flex items-center gap-1"
@@ -451,13 +454,17 @@ const WorkOrderOperationsPage = () => {
                                             </button>
                                         )}
                                     </div>
-                                    <button
-                                        className="px-2.5 py-1 rounded bg-gray-900/60 border border-white/10 text-xs hover:bg-gray-800 text-red-300 flex items-center gap-1"
-                                        onClick={() => removeOp(op.id)}
-                                        title="Remove operation"
-                                    >
-                                        <IconTrash className="h-3.5 w-3.5"/><span>Remove</span>
-                                    </button>
+
+                                    {/* HIDE Remove for Completed */}
+                                    {op.status !== "Completed" && (
+                                        <button
+                                            className="px-2.5 py-1 rounded bg-gray-900/60 border border-white/10 text-xs hover:bg-gray-800 text-red-300 flex items-center gap-1"
+                                            onClick={() => removeOp(op.id)}
+                                            title="Remove operation"
+                                        >
+                                            <IconTrash className="h-3.5 w-3.5"/><span>Remove</span>
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -521,6 +528,12 @@ const WorkOrderOperationsPage = () => {
             };
         }));
         setCompleteModal({open:false, opId:null, draftRows:[], produced:0, calc:0, varianceNote:"", viewOnly:false, targetStatus:"Completed"});
+    };
+
+    // ---- Release modal proceed
+    const proceedRelease = () => {
+        // Mock submit. In real app, fire API and then navigate or show toast.
+        setReleaseModal({open:false, title:"", body:null, proceedLabel:"", variant:"info"});
     };
 
     return (
@@ -895,38 +908,26 @@ const WorkOrderOperationsPage = () => {
                 </div>
             </Modal>
 
-            {/* Release Modal */}
+            {/* Release Modal (warning allows proceed) */}
             <Modal
                 open={releaseModal.open}
                 title={releaseModal.title}
-                onClose={() => setReleaseModal({open:false, title:"", body:null, canProceed:false})}
+                onClose={() => setReleaseModal({open:false, title:"", body:null, proceedLabel:"", variant:"info"})}
                 footer={
-                    releaseModal.canProceed ? (
-                        <>
-                            <button
-                                onClick={() => setReleaseModal({open:false, title:"", body:null, canProceed:false})}
-                                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={() => {
-                                    // Mock: after release, navigate back or stay; here we just close.
-                                    setReleaseModal({open:false, title:"", body:null, canProceed:false});
-                                }}
-                                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm"
-                            >
-                                Confirm Release
-                            </button>
-                        </>
-                    ) : (
+                    <>
                         <button
-                            onClick={() => setReleaseModal({open:false, title:"", body:null, canProceed:false})}
+                            onClick={() => setReleaseModal({open:false, title:"", body:null, proceedLabel:"", variant:"info"})}
                             className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
                         >
-                            Close
+                            Cancel
                         </button>
-                    )
+                        <button
+                            onClick={proceedRelease}
+                            className={`px-4 py-2 rounded-lg text-sm ${releaseModal.variant === "warn" ? "bg-amber-600 hover:bg-amber-700 text-white" : "bg-emerald-600 hover:bg-emerald-700 text-white"}`}
+                        >
+                            {releaseModal.proceedLabel || "Confirm"}
+                        </button>
+                    </>
                 }
             >
                 {releaseModal.body}

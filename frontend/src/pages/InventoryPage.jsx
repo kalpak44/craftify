@@ -4,44 +4,37 @@ import {useNavigate} from "react-router-dom";
 export default function InventoryPage() {
     const navigate = useNavigate();
 
-    // Mock data (one row per item)
+    // Mock data (one row per item) — includes category
     const data = [
-        {item: "Assembly Kit 10", itemId: "ITM-010", uom: "kit", onHand: 5, allocated: 1, reorderPt: 0, hold: false},
-        {item: "Blue Paint (RAL5010)", itemId: "ITM-008", uom: "L", onHand: 12, allocated: 2, reorderPt: 8, hold: true},
-        {
-            item: "Chain Bracket",
-            itemId: "ITM-005",
-            uom: "pcs",
-            onHand: 1320,
-            allocated: 800,
-            reorderPt: 100,
-            hold: false
-        },
-        {item: "Front Assembly", itemId: "ITM-006", uom: "ea", onHand: 208, allocated: 230, reorderPt: 30, hold: false},
-        {item: "Large Widget", itemId: "ITM-002", uom: "pcs", onHand: 310, allocated: 600, reorderPt: 150, hold: false},
-        {item: "Lion Bracket", itemId: "ITM-004", uom: "pcs", onHand: 350, allocated: 200, reorderPt: 100, hold: false},
-        {
-            item: "Plastic Case",
-            itemId: "ITM-003",
-            uom: "pcs",
-            onHand: 1350,
-            allocated: 330,
-            reorderPt: 200,
-            hold: false
-        },
-        {item: "Screws M3×8", itemId: "ITM-009", uom: "ea", onHand: 1500, allocated: 300, reorderPt: 1000, hold: false},
+        {item: "Assembly Kit 10", itemId: "ITM-010", category: "Assemblies", uom: "kit", onHand: 5, allocated: 1, reorderPt: 0, hold: false},
+        {item: "Blue Paint (RAL5010)", itemId: "ITM-008", category: "Paints", uom: "L", onHand: 12, allocated: 2, reorderPt: 8, hold: true},
+        {item: "Chain Bracket", itemId: "ITM-005", category: "Hardware", uom: "pcs", onHand: 1320, allocated: 800, reorderPt: 100, hold: false},
+        {item: "Front Assembly", itemId: "ITM-006", category: "Assemblies", uom: "ea", onHand: 208, allocated: 230, reorderPt: 30, hold: false},
+        {item: "Large Widget", itemId: "ITM-002", category: "Components", uom: "pcs", onHand: 310, allocated: 600, reorderPt: 150, hold: false},
+        {item: "Lion Bracket", itemId: "ITM-004", category: "Hardware", uom: "pcs", onHand: 350, allocated: 200, reorderPt: 100, hold: false},
+        {item: "Plastic Case", itemId: "ITM-003", category: "Components", uom: "pcs", onHand: 1350, allocated: 330, reorderPt: 200, hold: false},
+        {item: "Screws M3×8", itemId: "ITM-009", category: "Fasteners", uom: "ea", onHand: 1500, allocated: 300, reorderPt: 1000, hold: false},
     ];
 
     // State
     const [query, setQuery] = useState("");
+    const [categoryFilter, setCategoryFilter] = useState("all");
+    const [uomFilter, setUomFilter] = useState("all");
     const [sort, setSort] = useState({key: "itemId", dir: "asc"});
     const [selected, setSelected] = useState({});
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(8);
 
+    // Options for filters (aligned with ItemsPage style)
+    const categories = useMemo(() => ["all", ...Array.from(new Set(data.map(d => d.category))).sort((a,b)=>a.localeCompare(b))], [data]);
+    const uoms = useMemo(() => ["all", ...Array.from(new Set(data.map(d => d.uom))).sort((a,b)=>a.localeCompare(b))], [data]);
+
     // Derived rows
     const filtered = useMemo(() => {
         let rows = data.map((r) => ({...r, available: r.onHand - r.allocated}));
+
+        if (categoryFilter !== "all") rows = rows.filter(r => r.category === categoryFilter);
+        if (uomFilter !== "all") rows = rows.filter(r => r.uom === uomFilter);
 
         if (query) {
             const q = query.toLowerCase();
@@ -58,7 +51,7 @@ export default function InventoryPage() {
         });
 
         return rows;
-    }, [data, query, sort]);
+    }, [data, query, categoryFilter, uomFilter, sort]);
 
     // Paging
     const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -78,15 +71,15 @@ export default function InventoryPage() {
         setSelected(next);
     };
 
-    // Navigation helpers (align with ItemsPage pattern)
+    // Navigation helpers
     const goToDetails = (id) => navigate(`/inventory/${encodeURIComponent(id)}`);
     const stopRowNav = (e) => e.stopPropagation();
 
-    // ---------- Export helpers (aligned with ItemsPage) ----------
+    // ---------- Export helpers ----------
     const rowsForExport = () => (selectedCount ? filtered.filter((r) => selectedIds.includes(r.itemId)) : filtered);
 
     const toCSV = (dataRows) => {
-        const headers = ["Item ID", "Item", "UoM", "On hand", "Allocated", "Available", "Reorder pt"];
+        const headers = ["Item ID", "Item", "Category", "UoM", "On hand", "Allocated", "Available", "Reorder pt"];
         const escape = (v) => {
             const s = String(v ?? "");
             return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
@@ -97,6 +90,7 @@ export default function InventoryPage() {
                 [
                     escape(r.itemId),
                     escape(r.item),
+                    escape(r.category),
                     escape(r.uom),
                     escape(r.onHand),
                     escape(r.allocated),
@@ -148,13 +142,11 @@ export default function InventoryPage() {
 </head>
 <body>
 <h1>Inventory</h1>
-<div class="meta">Exported ${new Date().toLocaleString()} • ${dataRows.length} rows ${
-            selectedCount ? "(selection)" : "(filtered)"
-        }</div>
+<div class="meta">Exported ${new Date().toLocaleString()} • ${dataRows.length} rows ${selectedCount ? "(selection)" : "(filtered)"}</div>
 <table>
   <thead>
     <tr>
-      <th>Item ID</th><th>Item</th><th>UoM</th><th>On hand</th><th>Allocated</th><th>Available</th><th>Reorder pt</th>
+      <th>Item ID</th><th>Item</th><th>Category</th><th>UoM</th><th>On hand</th><th>Allocated</th><th>Available</th><th>Reorder pt</th>
     </tr>
   </thead>
   <tbody>
@@ -163,6 +155,7 @@ export default function InventoryPage() {
                 (r) => `<tr>
           <td class="mono">${r.itemId}</td>
           <td>${r.item}</td>
+          <td>${r.category ?? ""}</td>
           <td>${r.uom}</td>
           <td class="num">${r.onHand}</td>
           <td class="num">${r.allocated}</td>
@@ -186,10 +179,11 @@ export default function InventoryPage() {
     // Table header cell (sortable)
     const th = (label, key, right = false) => (
         <th
-            onClick={() => setSort((s) => ({key, dir: s.key === key && s.dir === "asc" ? "desc" : "asc"}))}
-            className={`px-4 py-3 font-semibold text-gray-300 select-none cursor-pointer ${
-                right ? "text-right" : "text-left"
-            }`}
+            onClick={() => {
+                setSort((s) => ({key, dir: s.key === key && s.dir === "asc" ? "desc" : "asc"}));
+                setPage(1);
+            }}
+            className={`px-4 py-3 font-semibold text-gray-300 select-none cursor-pointer ${right ? "text-right" : "text-left"}`}
         >
       <span className="inline-flex items-center gap-1">
         {label}
@@ -199,8 +193,7 @@ export default function InventoryPage() {
     );
 
     return (
-        <div
-            className="min-h-[calc(100vh-140px)] bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
+        <div className="min-h-[calc(100vh-140px)] bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
             {/* Header */}
             <header className="mx-auto px-4 pt-10 pb-6">
                 <div className="flex items-end justify-between gap-4 flex-wrap">
@@ -235,23 +228,50 @@ export default function InventoryPage() {
                 </div>
             </header>
 
-            {/* Toolbar */}
+            {/* Filters / Toolbar (aligned like ItemsPage: category, UoM on the left) */}
             <div className="mx-auto px-4 pb-4">
                 <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
                     <div className="flex flex-col md:flex-row md:items-center gap-3">
+                        {/* Category */}
+                        <select
+                            value={categoryFilter}
+                            onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
+                            className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                            title="Filter by category"
+                        >
+                            {categories.map((c) => (
+                                <option key={c} value={c}>
+                                    {c === "all" ? "All Categories" : c}
+                                </option>
+                            ))}
+                        </select>
+
+                        {/* UoM */}
+                        <select
+                            value={uomFilter}
+                            onChange={(e) => { setUomFilter(e.target.value); setPage(1); }}
+                            className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                            title="Filter by unit of measure"
+                        >
+                            {uoms.map((u) => (
+                                <option key={u} value={u}>
+                                    {u === "all" ? "All UoM" : u}
+                                </option>
+                            ))}
+                        </select>
+
+                        {/* Search */}
                         <div className="relative flex-1">
                             <input
                                 placeholder="Search Item or Item ID…"
                                 value={query}
-                                onChange={(e) => {
-                                    setQuery(e.target.value);
-                                    setPage(1);
-                                }}
+                                onChange={(e) => { setQuery(e.target.value); setPage(1); }}
                                 className="w-full rounded-lg bg-gray-800 border border-white/10 pl-3 pr-10 py-2 text-sm"
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">⌕</span>
                         </div>
 
+                        {/* Bulk actions */}
                         <div className="flex items-center gap-2 ml-auto">
                             <button
                                 onClick={handleExportCSV}
@@ -286,11 +306,11 @@ export default function InventoryPage() {
                         <thead className="bg-gray-900/80">
                         <tr>
                             <th className="px-4 py-3">
-                                <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll}
-                                       onClick={stopRowNav}/>
+                                <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll} onClick={stopRowNav}/>
                             </th>
                             {th("Item ID", "itemId")}
                             {th("Item", "item")}
+                            {th("Category", "category")}
                             {th("UoM", "uom")}
                             {th("On hand", "onHand", true)}
                             {th("Allocated", "allocated", true)}
@@ -321,6 +341,7 @@ export default function InventoryPage() {
                                         <span className="underline decoration-dotted">{r.itemId}</span>
                                     </td>
                                     <td className="px-4 py-3 text-gray-200">{r.item}</td>
+                                    <td className="px-4 py-3 text-gray-400">{r.category}</td>
                                     <td className="px-4 py-3 text-gray-400">{r.uom}</td>
                                     <td className="px-4 py-3 text-right text-gray-200">{r.onHand}</td>
                                     <td className="px-4 py-3 text-right text-gray-200">{r.allocated}</td>
@@ -331,7 +352,7 @@ export default function InventoryPage() {
                         })}
                         {paged.length === 0 && (
                             <tr>
-                                <td className="px-4 py-6 text-center text-gray-400" colSpan={8}>
+                                <td className="px-4 py-6 text-center text-gray-400" colSpan={9}>
                                     No inventory items found.
                                 </td>
                             </tr>
@@ -341,22 +362,16 @@ export default function InventoryPage() {
                 </div>
 
                 {/* Pagination */}
-                <div
-                    className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-gray-400">
+                <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-gray-400">
                     <div className="flex items-center gap-2">
                         <span>Rows per page</span>
                         <select
                             value={pageSize}
-                            onChange={(e) => {
-                                setPageSize(Number(e.target.value));
-                                setPage(1);
-                            }}
+                            onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
                             className="rounded bg-gray-800 border border-white/10 px-2 py-1"
                         >
                             {[8, 16, 24].map((n) => (
-                                <option key={n} value={n}>
-                                    {n}
-                                </option>
+                                <option key={n} value={n}>{n}</option>
                             ))}
                         </select>
                         <span className="hidden sm:inline">•</span>
