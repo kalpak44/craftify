@@ -386,24 +386,23 @@ export const ItemsPage = () => {
                                 </td>
                                 <td className="px-4 py-3 text-gray-400">{item.category}</td>
                                 <td className="px-4 py-3 text-gray-400">{item.uom}</td>
-                                <td className="px-4 py-3 text-right" onClick={stopRowNav}>
-                                    <div className="flex justify-end gap-2">
-                                        <button
-                                            onClick={() => navigate(`/inventory?query=${encodeURIComponent(item.id)}`)}
-                                            className="px-2 py-1 rounded bg-gray-800 border border-white/10 hover:bg-gray-700"
-                                            title="Search this item in Inventory"
-                                        >
-                                            Search in Inventory
-                                        </button>
-                                        <button
-                                            onClick={() => navigate(`/purchasing?query=${encodeURIComponent(item.id)}`)}
-                                            className="px-2 py-1 rounded bg-gray-800 border border-white/10 hover:bg-gray-700"
-                                            title="Search this item in Purchase Orders"
-                                        >
-                                            Search in PO
-                                        </button>
-                                    </div>
+                                <td className="px-4 py-3 text-right space-x-2" onClick={stopRowNav}>
+                                    <button
+                                        onClick={() => navigate(`/inventory?query=${encodeURIComponent(item.id)}`)}
+                                        className="px-3 py-1.5 rounded-lg bg-blue-600/20 text-blue-300 border border-blue-600/40 text-xs hover:bg-blue-600/30 hover:text-blue-200 transition"
+                                        title="Search this item in Inventory"
+                                    >
+                                        Search in Inventory
+                                    </button>
+                                    <button
+                                        onClick={() => navigate(`/purchasing?query=${encodeURIComponent(item.id)}`)}
+                                        className="px-3 py-1.5 rounded-lg bg-indigo-600/20 text-indigo-300 border border-indigo-600/40 text-xs hover:bg-indigo-600/30 hover:text-indigo-200 transition"
+                                        title="Search this item in Purchase Orders"
+                                    >
+                                        Search in PO
+                                    </button>
                                 </td>
+
                             </tr>
                         ))}
                         {paged.length === 0 && (

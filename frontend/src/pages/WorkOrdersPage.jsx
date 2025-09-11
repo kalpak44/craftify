@@ -388,12 +388,24 @@ export const WorkOrdersPage = () => {
                                 <td className="px-4 py-3">{pill(wo.priority, PRIORITY_CLS)}</td>
                                 <td className="px-4 py-3 text-gray-400">{wo.due}</td>
                                 <td className="px-4 py-3 text-gray-400">{wo.updated}</td>
-                                <td className="px-4 py-3 text-right" onClick={stop}>
+                                <td className="px-4 py-3 text-right space-x-2" onClick={stop}>
                                     <button
-                                        className="px-2.5 py-1.5 rounded bg-gray-800 border border-white/10 text-xs hover:bg-gray-700"
+                                        className="px-3 py-1.5 rounded-lg bg-blue-600/20 text-blue-300 border border-blue-600/40 text-xs hover:bg-blue-600/30 hover:text-blue-200 transition"
+                                        onClick={() => navigate(`/work-orders/${wo.id}/edit`)}
+                                    >
+                                        Details
+                                    </button>
+                                    <button
+                                        className="px-3 py-1.5 rounded-lg bg-indigo-600/20 text-indigo-300 border border-indigo-600/40 text-xs hover:bg-indigo-600/30 hover:text-indigo-200 transition"
                                         onClick={() => navigate(`/work-orders/${wo.id}/operations`)}
                                     >
                                         Operations
+                                    </button>
+                                    <button
+                                        className="px-3 py-1.5 rounded-lg bg-green-600/20 text-green-300 border border-green-600/40 text-xs hover:bg-green-600/30 hover:text-green-200 transition"
+                                        onClick={() => navigate(`/work-orders/${wo.id}/production`)}
+                                    >
+                                        Production
                                     </button>
                                 </td>
                             </tr>
