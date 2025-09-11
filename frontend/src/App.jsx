@@ -21,7 +21,6 @@ import InventoryReceivePage from "./pages/InventoryReceivePage.jsx";
 import PurchasingPage from "./pages/PurchasingPage.jsx";
 import {PODetailsPage} from "./pages/PODetailsPage.jsx";
 import ItemDetailsPage from "./pages/ItemDetailsPage.jsx";
-import ProductionPage from "./pages/ProductionPage.jsx";
 import WorkOrderOperationsPage from "./pages/WorkOrderOperationsPage.jsx";
 import {WorkOrderOperationsDetailsPage} from "./pages/WorkOrderOperationsDetailsPage.jsx";
 import CalendarPage from "./pages/CalendarPage.jsx";
@@ -151,11 +150,6 @@ export default function App() {
             <Route path="/purchasing/new" element={
                 <AuthenticationGuard>
                     <FullWidthLayout><PODetailsPage/></FullWidthLayout>
-                </AuthenticationGuard>
-            }/>
-            <Route path="/production" element={
-                <AuthenticationGuard>
-                    <FullWidthLayout><ProductionPage/></FullWidthLayout>
                 </AuthenticationGuard>
             }/>
             <Route

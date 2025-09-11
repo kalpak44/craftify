@@ -23,84 +23,97 @@ const PRIORITY_DOT = {
 };
 
 const pill = (value, map) => (
-    <span
-        className={`px-2 py-1 text-xs rounded-full ${
-            map[value] || "bg-gray-600/30 text-gray-300"
-        }`}
-    >
-    {value}
-  </span>
+    <span className={`px-2 py-1 text-xs rounded-full ${map[value] || "bg-gray-600/30 text-gray-300"}`}>{value}</span>
 );
+
+// Tiny icons
+const IconInfo = (props) => (
+    <svg viewBox="0 0 24 24" className={props.className || "h-4 w-4"} fill="none" stroke="currentColor">
+        <circle cx="12" cy="12" r="9" strokeWidth="1.5"/><path d="M12 8h.01M11 12h1v4h1" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+);
+const IconCheck = (props) => (
+    <svg viewBox="0 0 24 24" className={props.className || "h-4 w-4"} fill="none" stroke="currentColor">
+        <path d="M20 6L9 17l-5-5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+);
+const IconTrash = (props) => (
+    <svg viewBox="0 0 24 24" className={props.className || "h-4 w-4"} fill="none" stroke="currentColor">
+        <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10L18 6" strokeWidth="1.4" strokeLinecap="round"/>
+    </svg>
+);
+
+// Minimal modal shell
+function Modal({open, title, onClose, children, footer}) {
+    if (!open) return null;
+    return (
+        <div className="fixed inset-0 z-50">
+            <div className="absolute inset-0 bg-black/60" onClick={onClose}/>
+            <div className="absolute inset-0 flex items-center justify-center p-4">
+                <div className="w-full max-w-3xl rounded-2xl border border-white/10 bg-gray-900 text-gray-200 shadow-2xl">
+                    <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
+                        <h3 className="text-lg font-semibold">{title}</h3>
+                        <button onClick={onClose} className="text-gray-400 hover:text-gray-200">&times;</button>
+                    </div>
+                    <div className="p-5 max-h-[65vh] overflow-y-auto">{children}</div>
+                    <div className="px-5 py-4 border-t border-white/10 bg-gray-900/60 flex items-center justify-end gap-2">
+                        {footer}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// Compute produced from consumption vs BOM per-qty: min floor(consumed/per)
+const calcProducedFromConsumption = (rows) => {
+    if (!rows || rows.length === 0) return 0;
+    let minKits = Infinity;
+    for (const r of rows) {
+        const per = Number(r.per || 0);
+        const consumed = Number(r.consumed || 0);
+        if (per <= 0) continue;
+        const kits = Math.floor(consumed / per);
+        if (kits < minKits) minKits = kits;
+    }
+    return Number.isFinite(minKits) ? Math.max(0, minKits) : 0;
+};
 
 const WorkOrderOperationsPage = () => {
     const {id: woId} = useParams();
     const navigate = useNavigate();
 
-    // --- Example operations (6-7+)
+    // ---- Work Order Plan (mocked here; hydrate from WO details in real app)
+    const [woPlan] = useState(() => ({
+        startDate: "2025-02-18",
+        dueDate: "2025-02-25",
+        itemId: "ITM-002",
+        itemName: "Large Widget",
+        expectedQty: 10
+    }));
+
+    // Seed example BOM & op-local tracking fields
+    const seedBom = (mult = 1) => ([
+        {itemId: "ITM-003", name: "Plastic Case", per: 1 * mult, consumed: 0, scrap: 0},
+        {itemId: "ITM-009", name: "Screws M3×8", per: 6 * mult, consumed: 0, scrap: 0},
+        {itemId: "ITM-007", name: "Steel Frame", per: 1 * mult, consumed: 0, scrap: 0},
+    ]);
+
     const initialOps = [
-        {
-            id: "OP-0001",
-            title: "Cut raw sheets",
-            status: "Open",
-            priority: "High",
-            estimate: "6h",
-            assignee: "Alice Chen",
-            updated: "2025-02-18",
-        },
-        {
-            id: "OP-0002",
-            title: "CNC milling",
-            status: "In Progress",
-            priority: "Rush",
-            estimate: "10h",
-            assignee: "Bob Martin",
-            updated: "2025-02-19",
-        },
-        {
-            id: "OP-0003",
-            title: "Anodize frame",
-            status: "Hold",
-            priority: "Medium",
-            estimate: "2d",
-            assignee: "Carla Diaz",
-            updated: "2025-02-17",
-        },
-        {
-            id: "OP-0004",
-            title: "Sub-assembly QA",
-            status: "Open",
-            priority: "Low",
-            estimate: "3h",
-            assignee: "Deepak Rao",
-            updated: "2025-02-18",
-        },
-        {
-            id: "OP-0005",
-            title: "Final assembly",
-            status: "In Progress",
-            priority: "High",
-            estimate: "1d",
-            assignee: "Alice Chen",
-            updated: "2025-02-19",
-        },
-        {
-            id: "OP-0006",
-            title: "Packaging",
-            status: "Completed",
-            priority: "Low",
-            estimate: "4h",
-            assignee: "Bob Martin",
-            updated: "2025-02-16",
-        },
-        {
-            id: "OP-0007",
-            title: "Labeling & docs",
-            status: "Open",
-            priority: "Medium",
-            estimate: "5h",
-            assignee: "Carla Diaz",
-            updated: "2025-02-18",
-        },
+        { id: "OP-0001", title: "Cut raw sheets", status: "Open",        priority: "High",  estimate: "6h",  assignee: "Alice Chen", updated: "2025-02-18",
+            bom: seedBom(1), producedQty: null, varianceNote: "", holdReason: null, holdHistory: [] },
+        { id: "OP-0002", title: "CNC milling",   status: "In Progress",  priority: "Rush",  estimate: "10h", assignee: "Bob Martin",  updated: "2025-02-19",
+            bom: seedBom(1), producedQty: null, varianceNote: "", holdReason: null, holdHistory: [] },
+        { id: "OP-0003", title: "Anodize frame", status: "Hold",         priority: "Medium",estimate: "2d",  assignee: "Carla Diaz",  updated: "2025-02-17",
+            bom: seedBom(1), producedQty: null, varianceNote: "", holdReason: "Awaiting line availability", holdHistory: [{reason:"Awaiting line availability", at:"2025-02-17"}] },
+        { id: "OP-0004", title: "Sub-assembly QA", status: "Open",       priority: "Low",   estimate: "3h",  assignee: "Deepak Rao",  updated: "2025-02-18",
+            bom: seedBom(1), producedQty: null, varianceNote: "", holdReason: null, holdHistory: [] },
+        { id: "OP-0005", title: "Final assembly",  status: "In Progress",priority: "High",  estimate: "1d",  assignee: "Alice Chen",  updated: "2025-02-19",
+            bom: seedBom(2), producedQty: null, varianceNote: "", holdReason: null, holdHistory: [] },
+        { id: "OP-0006", title: "Packaging",       status: "Completed",  priority: "Low",   estimate: "4h",  assignee: "Bob Martin",  updated: "2025-02-16",
+            bom: seedBom(1).map(r => ({...r, consumed: r.per, scrap: 0})), producedQty: 1, varianceNote: "", holdReason: null, holdHistory: [] },
+        { id: "OP-0007", title: "Labeling & docs", status: "Open",       priority: "Medium",estimate: "5h",  assignee: "Carla Diaz",  updated: "2025-02-18",
+            bom: seedBom(1), producedQty: null, varianceNote: "", holdReason: null, holdHistory: [] },
     ];
 
     // --- State
@@ -110,6 +123,11 @@ const WorkOrderOperationsPage = () => {
     const [query, setQuery] = useState("");
     const [priorityFilter, setPriorityFilter] = useState("all");
     const [assigneeFilter, setAssigneeFilter] = useState("all");
+
+    // Action modals
+    const [holdModal, setHoldModal] = useState({open: false, opId: null, reason: "", viewOnly: false});
+    const [completeModal, setCompleteModal] = useState({open: false, opId: null, draftRows: [], produced: 0, calc: 0, varianceNote: "", viewOnly: false, targetStatus: "Completed"});
+    const [releaseModal, setReleaseModal] = useState({open:false, title:"", body:null, canProceed:false});
 
     // --- Derived
     const assignees = useMemo(
@@ -132,8 +150,26 @@ const WorkOrderOperationsPage = () => {
         return data;
     }, [ops, query, priorityFilter, assigneeFilter]);
 
+    const totals = useMemo(() => {
+        const by = STATUS_LIST.reduce((acc, s) => ({...acc, [s]: filtered.filter(o => o.status === s).length}), {});
+        const all = filtered.length;
+        const done = by["Completed"] || 0;
+        const pct = all ? Math.round((done / all) * 100) : 0;
+        return {by, all, done, pct};
+    }, [filtered]);
+
+    // Output progress vs expected
+    const producedSoFar = useMemo(
+        () => ops.filter(o => o.status === "Completed").reduce((s,o) => s + (Number(o.producedQty || 0)), 0),
+        [ops]
+    );
+    const expectedQty = Number(woPlan.expectedQty || 0);
+    const outputPct = expectedQty > 0 ? Math.min(100, Math.round((producedSoFar / expectedQty) * 100)) : 0;
+
     // --- DnD (raw JS)
     const onDragStart = (e, opId) => {
+        const op = ops.find(o => o.id === opId);
+        if (op?.status === "Completed") { e.preventDefault(); return; }
         e.dataTransfer.setData("text/plain", opId);
         e.dataTransfer.effectAllowed = "move";
     };
@@ -143,17 +179,38 @@ const WorkOrderOperationsPage = () => {
         if (dragOverCol !== col) setDragOverCol(col);
     };
     const onDragLeave = () => setDragOverCol(null);
+
     const onDrop = (e, newStatus) => {
         e.preventDefault();
         const opId = e.dataTransfer.getData("text/plain");
+        const op = ops.find(o => o.id === opId);
+        if (!op) return;
+
+        // If already completed, block any move
+        if (op.status === "Completed") {
+            setDragOverCol(null);
+            return;
+        }
+
+        if (newStatus === "Hold") {
+            setHoldModal({open: true, opId, reason: "", viewOnly: false});
+            setDragOverCol(null);
+            return;
+        }
+
+        if (newStatus === "Completed") {
+            const rows = (op.bom || []).map(r => ({...r}));
+            const calc = calcProducedFromConsumption(rows);
+            setCompleteModal({open: true, opId, draftRows: rows, produced: calc, calc, varianceNote: "", viewOnly: false, targetStatus: "Completed"});
+            setDragOverCol(null);
+            return;
+        }
+
+        // Normal status change
         setOps((old) =>
             old.map((o) =>
                 o.id === opId
-                    ? {
-                        ...o,
-                        status: newStatus,
-                        updated: new Date().toISOString().slice(0, 10),
-                    }
+                    ? { ...o, status: newStatus, updated: new Date().toISOString().slice(0, 10) }
                     : o
             )
         );
@@ -174,6 +231,59 @@ const WorkOrderOperationsPage = () => {
     const gotoNew = () => navigate(`/work-orders/${woId}/operations/new`);
     const gotoEdit = (opId) => navigate(`/work-orders/${woId}/operations/${opId}/edit`);
 
+    // Release logic
+    const handleRelease = () => {
+        const pending = ops.filter(o => o.status !== "Completed").map(o => o.id);
+        if (pending.length > 0) {
+            setReleaseModal({
+                open:true,
+                title: "Cannot Release — Operations Pending",
+                canProceed:false,
+                body: (
+                    <div className="space-y-3">
+                        <div className="text-sm text-amber-200">
+                            Not all operations are completed. Complete the remaining operations before releasing this Work Order.
+                        </div>
+                        <div className="rounded-xl bg-gray-900/40 border border-white/10 overflow-hidden">
+                            <table className="min-w-full divide-y divide-gray-800 text-sm">
+                                <thead className="bg-gray-900/80">
+                                <tr>
+                                    <th className="px-4 py-2 text-left">Operation</th>
+                                    <th className="px-4 py-2 text-left">Status</th>
+                                </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-800">
+                                {ops.filter(o => o.status !== "Completed").map(o => (
+                                    <tr key={o.id}>
+                                        <td className="px-4 py-2 font-mono">{o.id}</td>
+                                        <td className="px-4 py-2">{o.status}</td>
+                                    </tr>
+                                ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )
+            });
+        } else {
+            setReleaseModal({
+                open:true,
+                title: "Ready to Release",
+                canProceed:true,
+                body: (
+                    <div className="space-y-2">
+                        <div className="text-sm text-emerald-200 flex items-center gap-2">
+                            <IconCheck className="h-4 w-4 text-emerald-300"/>All operations are completed.
+                        </div>
+                        <div className="text-xs text-gray-400">
+                            Confirm to mark Work Order {woId} as Released (mock action).
+                        </div>
+                    </div>
+                )
+            });
+        }
+    };
+
     // --- Column
     const Column = ({title, items}) => (
         <div
@@ -190,12 +300,9 @@ const WorkOrderOperationsPage = () => {
                 <div className="flex items-center gap-2">
           <span
               className={`h-2.5 w-2.5 rounded-full ${
-                  title === "Open"
-                      ? "bg-blue-400"
-                      : title === "In Progress"
-                          ? "bg-indigo-400"
-                          : title === "Completed"
-                              ? "bg-green-400"
+                  title === "Open" ? "bg-blue-400"
+                      : title === "In Progress" ? "bg-indigo-400"
+                          : title === "Completed" ? "bg-green-400"
                               : "bg-yellow-400"
               }`}
           />
@@ -208,10 +315,12 @@ const WorkOrderOperationsPage = () => {
                 {items.map((op) => (
                     <div
                         key={op.id}
-                        draggable
+                        draggable={op.status !== "Completed"}
                         onDragStart={(e) => onDragStart(e, op.id)}
                         className={`group border-l-4 ${PRIORITY_BORDER[op.priority]} rounded-lg bg-gray-800/70 border border-gray-800/80 hover:bg-gray-800 transition shadow-sm`}
                         role="listitem"
+                        aria-label={`${op.id} card`}
+                        title={op.status === "Completed" ? "Completed operations cannot be moved" : "Drag to change status"}
                     >
                         <div className="flex items-start gap-3 p-3">
                             <div className="flex-1 space-y-2">
@@ -245,8 +354,7 @@ const WorkOrderOperationsPage = () => {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className={`h-2 w-2 rounded-full ${PRIORITY_DOT[op.priority]}`}
-                                              title={`Priority: ${op.priority}`}/>
+                                        <span className={`h-2 w-2 rounded-full ${PRIORITY_DOT[op.priority]}`} title={`Priority: ${op.priority}`}/>
                                         {pill(op.priority, PRIORITY_CLS)}
                                     </div>
                                 </div>
@@ -316,13 +424,39 @@ const WorkOrderOperationsPage = () => {
                                         >
                                             Details
                                         </button>
+
+                                        {/* When on Hold: show "why" icon to read reason/history */}
+                                        {op.status === "Hold" && (
+                                            <button
+                                                className="px-2.5 py-1 rounded bg-gray-900/60 border border-white/10 text-xs hover:bg-gray-800 flex items-center gap-1"
+                                                title="View Hold reason/history"
+                                                onClick={() => setHoldModal({open: true, opId: op.id, reason: op.holdReason || "", viewOnly: true})}
+                                            >
+                                                <IconInfo className="h-3.5 w-3.5 text-yellow-300"/><span>Why?</span>
+                                            </button>
+                                        )}
+
+                                        {/* When completed: view output modal (read-only) */}
+                                        {op.status === "Completed" && (
+                                            <button
+                                                className="px-2.5 py-1 rounded bg-gray-900/60 border border-white/10 text-xs hover:bg-gray-800 flex items-center gap-1"
+                                                title="View production & materials"
+                                                onClick={() => {
+                                                    const rows = (op.bom || []).map(r => ({...r}));
+                                                    const calc = calcProducedFromConsumption(rows);
+                                                    setCompleteModal({open: true, opId: op.id, draftRows: rows, produced: op.producedQty ?? calc, calc, varianceNote: op.varianceNote || "", viewOnly: true, targetStatus: "Completed"});
+                                                }}
+                                            >
+                                                <IconCheck className="h-3.5 w-3.5 text-emerald-300"/><span>Output</span>
+                                            </button>
+                                        )}
                                     </div>
                                     <button
-                                        className="px-2.5 py-1 rounded bg-gray-900/60 border border-white/10 text-xs hover:bg-gray-800 text-red-300"
+                                        className="px-2.5 py-1 rounded bg-gray-900/60 border border-white/10 text-xs hover:bg-gray-800 text-red-300 flex items-center gap-1"
                                         onClick={() => removeOp(op.id)}
                                         title="Remove operation"
                                     >
-                                        Remove
+                                        <IconTrash className="h-3.5 w-3.5"/><span>Remove</span>
                                     </button>
                                 </div>
                             </div>
@@ -336,6 +470,59 @@ const WorkOrderOperationsPage = () => {
         </div>
     );
 
+    // ---- Hold modal handlers
+    const saveHold = () => {
+        const {opId, reason} = holdModal;
+        if (!reason.trim()) return;
+        setOps(prev => prev.map(o => {
+            if (o.id !== opId) return o;
+            const at = new Date().toISOString().slice(0,10);
+            const hist = Array.isArray(o.holdHistory) ? [...o.holdHistory] : [];
+            hist.push({reason: reason.trim(), at});
+            return {
+                ...o,
+                status: "Hold",
+                updated: at,
+                holdReason: reason.trim(),
+                holdHistory: hist
+            };
+        }));
+        setHoldModal({open:false, opId:null, reason:"", viewOnly:false});
+    };
+
+    // ---- Complete modal handlers
+    const updateRow = (idx, field, value) => {
+        setCompleteModal(m => {
+            const rows = m.draftRows.slice();
+            const n = Number(value || 0);
+            rows[idx] = {...rows[idx], [field]: isNaN(n) ? 0 : n};
+            const calc = calcProducedFromConsumption(rows);
+            let produced = m.produced;
+            const userOverrode = Number(m.produced) !== Number(m.calc);
+            produced = userOverrode ? m.produced : calc;
+            return {...m, draftRows: rows, calc, produced};
+        });
+    };
+
+    const saveComplete = () => {
+        const {opId, draftRows, produced, calc, varianceNote} = completeModal;
+        const needsNote = Number(produced) !== Number(calc);
+        if (needsNote && !String(varianceNote || "").trim()) return;
+        const at = new Date().toISOString().slice(0,10);
+        setOps(prev => prev.map(o => {
+            if (o.id !== opId) return o;
+            return {
+                ...o,
+                status: "Completed",
+                updated: at,
+                bom: draftRows.map(r => ({...r, consumed: Number(r.consumed||0), scrap: Number(r.scrap||0)})),
+                producedQty: Number(produced||0),
+                varianceNote: String(varianceNote||"")
+            };
+        }));
+        setCompleteModal({open:false, opId:null, draftRows:[], produced:0, calc:0, varianceNote:"", viewOnly:false, targetStatus:"Completed"});
+    };
+
     return (
         <div className="bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200 min-h-screen">
             {/* Header */}
@@ -343,10 +530,17 @@ const WorkOrderOperationsPage = () => {
                 <div className="flex items-end justify-between gap-4 flex-wrap">
                     <div>
                         <h1 className="text-3xl font-bold text-white">Operations • {woId}</h1>
-                        <p className="mt-2 text-gray-400">Manage operations on a Kanban board. Drag to change
-                            status.</p>
+                        <p className="mt-2 text-gray-400">Manage operations on a Kanban board. Drag to change status.</p>
                     </div>
                     <div className="flex gap-3 items-center">
+                        {/* Release button */}
+                        <button
+                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm"
+                            onClick={handleRelease}
+                            title="Release Work Order"
+                        >
+                            Release
+                        </button>
                         <button
                             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
                             onClick={gotoNew}
@@ -370,6 +564,59 @@ const WorkOrderOperationsPage = () => {
                 </div>
             </header>
 
+            {/* Work Order Plan */}
+            <div className="mx-auto px-4 pb-4">
+                <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4 space-y-4">
+                    {/* Top badges: dates & item */}
+                    <div className="flex flex-wrap items-center gap-2 text-xs">
+                        <span className="px-2 py-1 rounded bg-gray-800 border border-white/10">Start: <span className="text-gray-200">{woPlan.startDate}</span></span>
+                        <span className="px-2 py-1 rounded bg-gray-800 border border-white/10">Due: <span className="text-gray-200">{woPlan.dueDate}</span></span>
+                        <span className="px-2 py-1 rounded bg-gray-800 border border-white/10">
+              Item: <span className="font-mono text-gray-100">{woPlan.itemId}</span> — <span className="text-gray-200">{woPlan.itemName}</span>
+            </span>
+                        <span className="px-2 py-1 rounded bg-gray-800 border border-white/10">
+              Expected Qty: <span className="text-gray-200">{expectedQty}</span>
+            </span>
+                        <span className="px-2 py-1 rounded bg-gray-800 border border-white/10">
+              Produced: <span className="text-gray-200">{producedSoFar}</span>
+            </span>
+                    </div>
+
+                    {/* Row 1: Operations progress */}
+                    <div className="flex items-center justify-between">
+                        <div className="text-sm text-gray-300 flex items-center gap-3">
+                            <span className="px-2 py-1 rounded bg-blue-500/20 text-blue-200">Open {totals.by["Open"] || 0}</span>
+                            <span className="px-2 py-1 rounded bg-indigo-500/20 text-indigo-200">In Progress {totals.by["In Progress"] || 0}</span>
+                            <span className="px-2 py-1 rounded bg-yellow-500/20 text-yellow-200">Hold {totals.by["Hold"] || 0}</span>
+                            <span className="px-2 py-1 rounded bg-emerald-500/20 text-emerald-200">Completed {totals.by["Completed"] || 0}</span>
+                        </div>
+                        <div className="text-xs text-gray-400">Total: {totals.all} • Done: {totals.done}</div>
+                    </div>
+                    <div className="w-full h-2 rounded-full bg-gray-800 border border-white/10 overflow-hidden">
+                        <div
+                            className="h-full bg-emerald-500/80"
+                            style={{width: `${totals.pct}%`}}
+                            title={`${totals.pct}% operations complete`}
+                        />
+                    </div>
+
+                    {/* Row 2: Output progress */}
+                    <div className="flex items-center justify-between">
+                        <div className="text-sm text-gray-300">
+                            Output Progress: <span className="text-gray-100 font-semibold">{producedSoFar}</span> / {expectedQty}
+                        </div>
+                        <div className="text-xs text-gray-400">{outputPct}% of expected output</div>
+                    </div>
+                    <div className="w-full h-2 rounded-full bg-gray-800 border border-white/10 overflow-hidden">
+                        <div
+                            className="h-full bg-sky-500/80"
+                            style={{width: `${outputPct}%`}}
+                            title={`${outputPct}% of expected quantity`}
+                        />
+                    </div>
+                </div>
+            </div>
+
             {/* Toolbar */}
             <div className="mx-auto px-4 pb-4">
                 <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
@@ -391,9 +638,7 @@ const WorkOrderOperationsPage = () => {
                         >
                             <option value="all">All Priorities</option>
                             {["Low", "Medium", "High", "Rush"].map((p) => (
-                                <option key={p} value={p}>
-                                    {p}
-                                </option>
+                                <option key={p} value={p}>{p}</option>
                             ))}
                         </select>
 
@@ -404,9 +649,7 @@ const WorkOrderOperationsPage = () => {
                         >
                             <option value="all">All Assignees</option>
                             {assignees.map((a) => (
-                                <option key={a} value={a}>
-                                    {a}
-                                </option>
+                                <option key={a} value={a}>{a}</option>
                             ))}
                         </select>
                     </div>
@@ -421,12 +664,273 @@ const WorkOrderOperationsPage = () => {
                     ))}
                 </div>
                 <div className="mt-4 text-xs text-gray-500 mx-auto px-4">
-                    Tip: Double-click the <span className="text-gray-300">title</span>, <span
-                    className="text-gray-300">assignee</span>, or{" "}
-                    <span className="text-gray-300">estimation</span> to edit. Drag cards between columns to change
-                    status.
+                    Tip: Double-click the <span className="text-gray-300">title</span>, <span className="text-gray-300">assignee</span>, or{" "}
+                    <span className="text-gray-300">estimation</span> to edit. Drag cards between columns to change status.
+                    <span className="ml-2 text-gray-400">Moving to <span className="text-yellow-200">Hold</span> asks for a reason. Moving to <span className="text-emerald-200">Completed</span> confirms output & materials. Completed cards are locked.</span>
                 </div>
             </section>
+
+            {/* Hold Modal */}
+            <Modal
+                open={holdModal.open}
+                title={holdModal.viewOnly ? "Hold Reason" : "Move to Hold — Reason required"}
+                onClose={() => setHoldModal({open:false, opId:null, reason:"", viewOnly:false})}
+                footer={
+                    holdModal.viewOnly ? (
+                        <button
+                            onClick={() => setHoldModal({open:false, opId:null, reason:"", viewOnly:false})}
+                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                        >
+                            Close
+                        </button>
+                    ) : (
+                        <>
+                            <button
+                                onClick={() => setHoldModal({open:false, opId:null, reason:"", viewOnly:false})}
+                                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={saveHold}
+                                disabled={!holdModal.reason.trim()}
+                                className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-sm disabled:opacity-50"
+                            >
+                                Save & Hold
+                            </button>
+                        </>
+                    )
+                }
+            >
+                {holdModal.viewOnly ? (
+                    <div className="space-y-3">
+                        <div className="text-sm">
+                            <div className="text-gray-400 mb-1">Current reason</div>
+                            <div className="px-3 py-2 rounded-lg bg-gray-800/60 border border-white/10 text-gray-200">
+                                {holdModal.reason || <span className="text-gray-500">No reason stored.</span>}
+                            </div>
+                        </div>
+                        <div>
+                            <div className="text-xs text-gray-400 mb-1">History</div>
+                            <div className="rounded-xl bg-gray-900/40 border border-white/10 overflow-hidden">
+                                <table className="min-w-full divide-y divide-gray-800 text-sm">
+                                    <thead className="bg-gray-900/80">
+                                    <tr>
+                                        <th className="px-4 py-2 text-left">When</th>
+                                        <th className="px-4 py-2 text-left">Reason</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-800">
+                                    {(ops.find(o => o.id === holdModal.opId)?.holdHistory || []).slice().reverse().map((h, i) => (
+                                        <tr key={i}>
+                                            <td className="px-4 py-2">{h.at}</td>
+                                            <td className="px-4 py-2">{h.reason}</td>
+                                        </tr>
+                                    ))}
+                                    {(ops.find(o => o.id === holdModal.opId)?.holdHistory || []).length === 0 && (
+                                        <tr><td className="px-4 py-3 text-gray-500" colSpan={2}>No history.</td></tr>
+                                    )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="space-y-2">
+                        <label className="block text-xs text-gray-400">Reason</label>
+                        <textarea
+                            rows={4}
+                            autoFocus
+                            value={holdModal.reason}
+                            onChange={(e) => setHoldModal(h => ({...h, reason: e.target.value}))}
+                            placeholder="Explain why this operation must be on hold…"
+                            className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                        />
+                        <div className="text-xs text-gray-500">This reason will be stored and visible in history.</div>
+                    </div>
+                )}
+            </Modal>
+
+            {/* Complete / Materials Modal */}
+            <Modal
+                open={completeModal.open}
+                title={completeModal.viewOnly ? "Production & Materials" : "Complete Operation — Confirm Output & Materials"}
+                onClose={() => setCompleteModal({open:false, opId:null, draftRows:[], produced:0, calc:0, varianceNote:"", viewOnly:false, targetStatus:"Completed"})}
+                footer={
+                    completeModal.viewOnly ? (
+                        <button
+                            onClick={() => setCompleteModal({open:false, opId:null, draftRows:[], produced:0, calc:0, varianceNote:"", viewOnly:false, targetStatus:"Completed"})}
+                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                        >
+                            Close
+                        </button>
+                    ) : (
+                        <>
+                            <button
+                                onClick={() => setCompleteModal({open:false, opId:null, draftRows:[], produced:0, calc:0, varianceNote:"", viewOnly:false, targetStatus:"Completed"})}
+                                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={saveComplete}
+                                disabled={
+                                    Number(completeModal.produced) < 0 ||
+                                    (Number(completeModal.produced) !== Number(completeModal.calc) && !String(completeModal.varianceNote||"").trim())
+                                }
+                                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm disabled:opacity-50"
+                            >
+                                Save & Complete
+                            </button>
+                        </>
+                    )
+                }
+            >
+                <div className="grid grid-cols-1 gap-4">
+                    {/* Materials table */}
+                    <div className="rounded-xl bg-gray-900/40 border border-white/10 overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-800 text-sm">
+                            <thead className="bg-gray-900/80">
+                            <tr>
+                                <th className="px-3 py-2 text-left">Component</th>
+                                <th className="px-3 py-2 text-left">Per FG</th>
+                                <th className="px-3 py-2 text-left">Consumed</th>
+                                <th className="px-3 py-2 text-left">Scrap</th>
+                            </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-800">
+                            {completeModal.draftRows.map((r, idx) => (
+                                <tr key={r.itemId}>
+                                    <td className="px-3 py-2">
+                                        <div className="font-mono">{r.itemId}</div>
+                                        <div className="text-[11px] text-gray-400">{r.name || ""}</div>
+                                    </td>
+                                    <td className="px-3 py-2">{r.per}</td>
+                                    <td className="px-3 py-2">
+                                        {completeModal.viewOnly ? (
+                                            <span>{r.consumed || 0}</span>
+                                        ) : (
+                                            <input
+                                                inputMode="decimal"
+                                                className="w-28 rounded bg-gray-800 border border-white/10 px-2 py-1"
+                                                value={r.consumed ?? 0}
+                                                onChange={(e) => updateRow(idx, "consumed", e.target.value)}
+                                            />
+                                        )}
+                                    </td>
+                                    <td className="px-3 py-2">
+                                        {completeModal.viewOnly ? (
+                                            <span>{r.scrap || 0}</span>
+                                        ) : (
+                                            <input
+                                                inputMode="decimal"
+                                                className="w-28 rounded bg-gray-800 border border-white/10 px-2 py-1"
+                                                value={r.scrap ?? 0}
+                                                onChange={(e) => updateRow(idx, "scrap", e.target.value)}
+                                            />
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Output confirmation */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                        <div>
+                            <label className="block text-xs text-gray-400 mb-1">Calculated Produced</label>
+                            <div className="px-3 py-2 rounded-lg bg-gray-800/60 border border-white/10 text-gray-100">
+                                {completeModal.calc}
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-xs text-gray-400 mb-1">Confirm Produced (editable)</label>
+                            {completeModal.viewOnly ? (
+                                <div className="px-3 py-2 rounded-lg bg-gray-800/60 border border-white/10 text-gray-100">
+                                    {completeModal.produced}
+                                </div>
+                            ) : (
+                                <input
+                                    inputMode="decimal"
+                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    value={completeModal.produced}
+                                    onChange={(e) => setCompleteModal(m => ({...m, produced: Number(e.target.value || 0)}))}
+                                />
+                            )}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                            {Number(completeModal.produced) !== Number(completeModal.calc) ? (
+                                <span className="px-2 py-1 rounded bg-amber-600/20 text-amber-200 inline-block">
+                  Variance detected — note required
+                </span>
+                            ) : (
+                                <span className="px-2 py-1 rounded bg-emerald-600/20 text-emerald-200 inline-block">
+                  Matches calculation
+                </span>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Variance notes */}
+                    <div>
+                        <label className="block text-xs text-gray-400 mb-1">Variance / Notes</label>
+                        {completeModal.viewOnly ? (
+                            <div className="px-3 py-2 rounded-lg bg-gray-800/60 border border-white/10 text-gray-200 min-h-[38px]">
+                                {completeModal.varianceNote || <span className="text-gray-500">—</span>}
+                            </div>
+                        ) : (
+                            <textarea
+                                rows={3}
+                                value={completeModal.varianceNote}
+                                onChange={(e) => setCompleteModal(m => ({...m, varianceNote: e.target.value}))}
+                                placeholder={Number(completeModal.produced) !== Number(completeModal.calc) ? "Explain why confirmed qty differs…" : "Optional notes"}
+                                className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                            />
+                        )}
+                        {!completeModal.viewOnly && Number(completeModal.produced) !== Number(completeModal.calc) && !String(completeModal.varianceNote||"").trim() && (
+                            <div className="text-xs text-red-300 mt-1">Variance note is required when quantities differ.</div>
+                        )}
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Release Modal */}
+            <Modal
+                open={releaseModal.open}
+                title={releaseModal.title}
+                onClose={() => setReleaseModal({open:false, title:"", body:null, canProceed:false})}
+                footer={
+                    releaseModal.canProceed ? (
+                        <>
+                            <button
+                                onClick={() => setReleaseModal({open:false, title:"", body:null, canProceed:false})}
+                                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => {
+                                    // Mock: after release, navigate back or stay; here we just close.
+                                    setReleaseModal({open:false, title:"", body:null, canProceed:false});
+                                }}
+                                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm"
+                            >
+                                Confirm Release
+                            </button>
+                        </>
+                    ) : (
+                        <button
+                            onClick={() => setReleaseModal({open:false, title:"", body:null, canProceed:false})}
+                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                        >
+                            Close
+                        </button>
+                    )
+                }
+            >
+                {releaseModal.body}
+            </Modal>
         </div>
     );
 };

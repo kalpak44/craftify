@@ -401,12 +401,6 @@ export const WorkOrdersPage = () => {
                                     >
                                         Operations
                                     </button>
-                                    <button
-                                        className="px-3 py-1.5 rounded-lg bg-green-600/20 text-green-300 border border-green-600/40 text-xs hover:bg-green-600/30 hover:text-green-200 transition"
-                                        onClick={() => navigate(`/work-orders/${wo.id}/production`)}
-                                    >
-                                        Production
-                                    </button>
                                 </td>
                             </tr>
                         ))}

@@ -154,7 +154,7 @@ export default function WorkOrderOperationsDetailsPage() {
                                     : "bg-blue-600/50 text-white/70 cursor-not-allowed"
                             }`}
                         >
-                            Create Operation
+                            Save
                         </button>
                         <button
                             onClick={handleCancel}
