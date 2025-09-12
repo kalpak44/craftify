@@ -47,8 +47,5 @@ This repository deploys the frontend to GitHub Pages.
 - Trigger: push to `main` or `master`, or manual dispatch
 - Build directory: `frontend/`
 - Output: `frontend/dist` uploaded to Pages
-- Live URL: root of your Pages site (e.g., https://kalpak44.github.io/ or your custom domain if configured).
-
-Notes:
-- Vite base path is configured via the `BASE_PATH` env during CI. It now defaults to `/` (root). If you need a subpath (e.g., project pages), set repository variable `PAGES_BASE_PATH` to that subpath such as `/craftify/`.
-- SPA fallback is enabled by copying `index.html` to `404.html` so React Router works on direct deep links.
+- Live URL: https://kalpak44.github.io/craftify/
+allback is enabled by copying `index.html` to `404.html` so React Router works on direct deep links.
