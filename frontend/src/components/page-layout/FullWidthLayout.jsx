@@ -15,14 +15,14 @@ import {Loader as Spinner} from "../common/Loader";
  */
 export const FullWidthLayout = ({children}) => {
     const {isAuthenticated, user, logout, loginWithRedirect, isLoading} = useAuth0();
-
+    const path = import.meta.env.VITE_APP_ROOT_PATH;
     const [showProfile, setShowProfile] = useState(false);
     const profileMenuRef = useRef(null);
 
     const [mobileOpen, setMobileOpen] = useState(false);
     const mobileFirstLinkRef = useRef(null);
 
-    // Close profile on outside click + Esc for both profile and mobile
+    // Close profile on the outside click + Esc for both profile and mobile
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) {
@@ -43,7 +43,7 @@ export const FullWidthLayout = ({children}) => {
         };
     }, []);
 
-    // Lock body scroll when mobile menu is open and focus first item
+    // Lock body scroll when a mobile menu is open and focus the first item
     useEffect(() => {
         if (mobileOpen) {
             document.body.style.overflow = "hidden";
@@ -55,7 +55,7 @@ export const FullWidthLayout = ({children}) => {
 
     const handleSignUp = () => {
         loginWithRedirect({
-            appState: {returnTo: "/callback"},
+            appState: {returnTo: `${path}/callback`},
             authorizationParams: {prompt: "login", screen_hint: "signup"}
         });
     };
