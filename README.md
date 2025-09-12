@@ -19,19 +19,35 @@ Production-like local test (no Docker):
 - npm run build
 - npm run preview
 
-This serves the built app locally (defaults to http://localhost:4173).
+This serves the built app locally (defaults to http://localhost:5173).
 
-## 2) Run with Docker
+## Environment configuration
 
-- WIP
+For local development, the app reads environment variables from `frontend/.env.development`.
+Create or verify this file with the following content:
 
-## CI/CD (GitHub Actions)
+```
+VITE_AUTH0_DOMAIN=dev-f5ge1-8v.us.auth0.com
+VITE_AUTH0_CLIENT_ID=wUzgSsPGxVXW2g9rDKG9UUmYRRh7Oo6P
+VITE_AUTH0_REDIRECT_URL=http://localhost:5173/callback
+VITE_AUTH0_AUDIENCE=https://app.craftify.com/
+VITE_API_HOST=http://localhost:8080
+```
 
-- Any push to any branch that changes files under `frontend/**` will build and push the Docker image to Docker Hub.
-- Image tags pushed by CI:
-  - `kalpak44/craftify-app:sha-<shortsha>`
-  - `kalpak44/craftify-app:branch-<sanitized-branch>`
-  - `kalpak44/craftify-app:latest`
-- Make sure repository secrets are set:
-  - `DOCKERHUB_USERNAME`
-  - `DOCKERHUB_TOKEN` (Docker Hub access token)
+Notes:
+- These variables are used by the Vite dev server (`npm run dev`) and should match your local services and Auth0 application allowed callback URLs.
+- For production (GitHub Pages), variables live in `frontend/.env.production`. The redirect URL there is set to `https://my-domain.com/callback` and must also be allowed in your Auth0 app settings.
+
+## CI/CD (GitHub Pages)
+
+This repository deploys the frontend to GitHub Pages.
+
+- Workflow: `.github/workflows/deploy-pages.yml`
+- Trigger: push to `main` or `master`, or manual dispatch
+- Build directory: `frontend/`
+- Output: `frontend/dist` uploaded to Pages
+- Live URL: root of your Pages site (e.g., https://kalpak44.github.io/ or your custom domain if configured).
+
+Notes:
+- Vite base path is configured via the `BASE_PATH` env during CI. It now defaults to `/` (root). If you need a subpath (e.g., project pages), set repository variable `PAGES_BASE_PATH` to that subpath such as `/craftify/`.
+- SPA fallback is enabled by copying `index.html` to `404.html` so React Router works on direct deep links.

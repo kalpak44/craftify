@@ -37,8 +37,8 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          # Set this to your repository name for project pages (e.g., "/craftify/"). Leave "/" for user/org pages or custom domain
-          BASE_PATH: ${{ vars.PAGES_BASE_PATH || '/craftify/' }}
+          # Default to "/" to deploy to root (user/org pages or custom domain). Override via repo var PAGES_BASE_PATH if needed.
+          BASE_PATH: ${{ vars.PAGES_BASE_PATH || '/' }}
 
       - name: Add SPA fallback for GitHub Pages
         run: cp dist/index.html dist/404.html
