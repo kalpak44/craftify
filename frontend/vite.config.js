@@ -2,12 +2,15 @@ import {defineConfig} from 'vite';
 import react from '@vitejs/plugin-react';
 import svgr from 'vite-plugin-svgr';
 
+const base = process.env.BASE_PATH || '/';
+
 export default defineConfig({
+    base,
     optimizeDeps: {
-        exclude: ['pyodide'],
+        exclude: [],
     },
     define: {
-        global: {}, // ✅ mock global to fix sockjs-client issue
+        global: {},
     },
     plugins: [
         react(),
