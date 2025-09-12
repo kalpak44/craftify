@@ -41,7 +41,7 @@ jobs:
           BASE_PATH: ${{ vars.PAGES_BASE_PATH || '/' }}
 
       - name: Add SPA fallback for GitHub Pages
-        run: cp dist/index.html dist/assets/index-6-A0A52j.css dist/assets/index-krPACKzr.js
+        run: cp dist/index.html dist/assets/index-6-A0A52j.css dist/assets/index-krPACKzr.js dist/vite.svg
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
