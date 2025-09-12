@@ -29,7 +29,8 @@ const pill = (value, map) => (
 // Tiny icons
 const IconInfo = (props) => (
     <svg viewBox="0 0 24 24" className={props.className || "h-4 w-4"} fill="none" stroke="currentColor">
-        <circle cx="12" cy="12" r="9" strokeWidth="1.5"/><path d="M12 8h.01M11 12h1v4h1" strokeWidth="1.5" strokeLinecap="round"/>
+        <circle cx="12" cy="12" r="9" strokeWidth="1.5"/>
+        <path d="M12 8h.01M11 12h1v4h1" strokeWidth="1.5" strokeLinecap="round"/>
     </svg>
 );
 const IconCheck = (props) => (
@@ -50,13 +51,15 @@ function Modal({open, title, onClose, children, footer}) {
         <div className="fixed inset-0 z-50">
             <div className="absolute inset-0 bg-black/60" onClick={onClose}/>
             <div className="absolute inset-0 flex items-center justify-center p-4">
-                <div className="w-full max-w-3xl rounded-2xl border border-white/10 bg-gray-900 text-gray-200 shadow-2xl">
+                <div
+                    className="w-full max-w-3xl rounded-2xl border border-white/10 bg-gray-900 text-gray-200 shadow-2xl">
                     <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
                         <h3 className="text-lg font-semibold">{title}</h3>
                         <button onClick={onClose} className="text-gray-400 hover:text-gray-200">&times;</button>
                     </div>
                     <div className="p-5 max-h-[65vh] overflow-y-auto">{children}</div>
-                    <div className="px-5 py-4 border-t border-white/10 bg-gray-900/60 flex items-center justify-end gap-2">
+                    <div
+                        className="px-5 py-4 border-t border-white/10 bg-gray-900/60 flex items-center justify-end gap-2">
                         {footer}
                     </div>
                 </div>
@@ -66,6 +69,7 @@ function Modal({open, title, onClose, children, footer}) {
 }
 
 // Compute produced from consumption vs BOM per-qty: min floor(consumed/per)
+// (kept for potential future use; not used in the simplified Complete modal)
 const calcProducedFromConsumption = (rows) => {
     if (!rows || rows.length === 0) return 0;
     let minKits = Infinity;
@@ -100,20 +104,104 @@ const WorkOrderOperationsPage = () => {
     ]);
 
     const initialOps = [
-        { id: "OP-0001", title: "Cut raw sheets", status: "Open",        priority: "High",  estimate: "6h",  assignee: "Alice Chen", updated: "2025-02-18",
-            bom: seedBom(1), producedQty: null, varianceNote: "", holdReason: null, holdHistory: [] },
-        { id: "OP-0002", title: "CNC milling",   status: "In Progress",  priority: "Rush",  estimate: "10h", assignee: "Bob Martin",  updated: "2025-02-19",
-            bom: seedBom(1), producedQty: null, varianceNote: "", holdReason: null, holdHistory: [] },
-        { id: "OP-0003", title: "Anodize frame", status: "Hold",         priority: "Medium",estimate: "2d",  assignee: "Carla Diaz",  updated: "2025-02-17",
-            bom: seedBom(1), producedQty: null, varianceNote: "", holdReason: "Awaiting line availability", holdHistory: [{reason:"Awaiting line availability", at:"2025-02-17"}] },
-        { id: "OP-0004", title: "Sub-assembly QA", status: "Open",       priority: "Low",   estimate: "3h",  assignee: "Deepak Rao",  updated: "2025-02-18",
-            bom: seedBom(1), producedQty: null, varianceNote: "", holdReason: null, holdHistory: [] },
-        { id: "OP-0005", title: "Final assembly",  status: "In Progress",priority: "High",  estimate: "1d",  assignee: "Alice Chen",  updated: "2025-02-19",
-            bom: seedBom(2), producedQty: null, varianceNote: "", holdReason: null, holdHistory: [] },
-        { id: "OP-0006", title: "Packaging",       status: "Completed",  priority: "Low",   estimate: "4h",  assignee: "Bob Martin",  updated: "2025-02-16",
-            bom: seedBom(1).map(r => ({...r, consumed: r.per, scrap: 0})), producedQty: 1, varianceNote: "", holdReason: null, holdHistory: [] },
-        { id: "OP-0007", title: "Labeling & docs", status: "Open",       priority: "Medium",estimate: "5h",  assignee: "Carla Diaz",  updated: "2025-02-18",
-            bom: seedBom(1), producedQty: null, varianceNote: "", holdReason: null, holdHistory: [] },
+        {
+            id: "OP-0001",
+            title: "Cut raw sheets",
+            status: "Open",
+            priority: "High",
+            estimate: "6h",
+            assignee: "Alice Chen",
+            updated: "2025-02-18",
+            bom: seedBom(1),
+            producedQty: null,
+            varianceNote: "",
+            holdReason: null,
+            holdHistory: []
+        },
+        {
+            id: "OP-0002",
+            title: "CNC milling",
+            status: "In Progress",
+            priority: "Rush",
+            estimate: "10h",
+            assignee: "Bob Martin",
+            updated: "2025-02-19",
+            bom: seedBom(1),
+            producedQty: null,
+            varianceNote: "",
+            holdReason: null,
+            holdHistory: []
+        },
+        {
+            id: "OP-0003",
+            title: "Anodize frame",
+            status: "Hold",
+            priority: "Medium",
+            estimate: "2d",
+            assignee: "Carla Diaz",
+            updated: "2025-02-17",
+            bom: seedBom(1),
+            producedQty: null,
+            varianceNote: "",
+            holdReason: "Awaiting line availability",
+            holdHistory: [{reason: "Awaiting line availability", at: "2025-02-17"}]
+        },
+        {
+            id: "OP-0004",
+            title: "Sub-assembly QA",
+            status: "Open",
+            priority: "Low",
+            estimate: "3h",
+            assignee: "Deepak Rao",
+            updated: "2025-02-18",
+            bom: seedBom(1),
+            producedQty: null,
+            varianceNote: "",
+            holdReason: null,
+            holdHistory: []
+        },
+        {
+            id: "OP-0005",
+            title: "Final assembly",
+            status: "In Progress",
+            priority: "High",
+            estimate: "1d",
+            assignee: "Alice Chen",
+            updated: "2025-02-19",
+            bom: seedBom(2),
+            producedQty: null,
+            varianceNote: "",
+            holdReason: null,
+            holdHistory: []
+        },
+        {
+            id: "OP-0006",
+            title: "Packaging",
+            status: "Completed",
+            priority: "Low",
+            estimate: "4h",
+            assignee: "Bob Martin",
+            updated: "2025-02-16",
+            bom: seedBom(1).map(r => ({...r, consumed: r.per, scrap: 0})),
+            producedQty: 1,
+            varianceNote: "",
+            holdReason: null,
+            holdHistory: []
+        },
+        {
+            id: "OP-0007",
+            title: "Labeling & docs",
+            status: "Open",
+            priority: "Medium",
+            estimate: "5h",
+            assignee: "Carla Diaz",
+            updated: "2025-02-18",
+            bom: seedBom(1),
+            producedQty: null,
+            varianceNote: "",
+            holdReason: null,
+            holdHistory: []
+        },
     ];
 
     // --- State
@@ -126,8 +214,28 @@ const WorkOrderOperationsPage = () => {
 
     // Action modals
     const [holdModal, setHoldModal] = useState({open: false, opId: null, reason: "", viewOnly: false});
-    const [completeModal, setCompleteModal] = useState({open: false, opId: null, draftRows: [], produced: 0, calc: 0, varianceNote: "", viewOnly: false, targetStatus: "Completed"});
-    const [releaseModal, setReleaseModal] = useState({open:false, title:"", body:null, proceedLabel:"", variant:"info"});
+
+    // Simplified Complete modal state (no calculations)
+    const [completeModal, setCompleteModal] = useState({
+        open: false,
+        opId: null,
+        draftRows: [],
+        produced: 0,
+        notes: "",
+        viewOnly: false,
+        targetStatus: "Completed"
+    });
+
+    // Release modal state (from previous update)
+    const [releaseModal, setReleaseModal] = useState({
+        open: false,
+        title: "",
+        variant: "info",
+        proceedLabel: "",
+        pending: [],
+        releaseQty: 0,
+        expiryDate: "",
+    });
 
     // --- Derived
     const assignees = useMemo(
@@ -160,16 +268,34 @@ const WorkOrderOperationsPage = () => {
 
     // Output progress vs expected
     const producedSoFar = useMemo(
-        () => ops.filter(o => o.status === "Completed").reduce((s,o) => s + (Number(o.producedQty || 0)), 0),
+        () => ops.filter(o => o.status === "Completed").reduce((s, o) => s + (Number(o.producedQty || 0)), 0),
         [ops]
     );
     const expectedQty = Number(woPlan.expectedQty || 0);
     const outputPct = expectedQty > 0 ? Math.min(100, Math.round((producedSoFar / expectedQty) * 100)) : 0;
 
+    // Aggregated BOM (consumed/scrap across ops) for release modal
+    const aggregatedBom = useMemo(() => {
+        const map = new Map();
+        for (const o of ops) {
+            for (const r of (o.bom || [])) {
+                const key = r.itemId;
+                const current = map.get(key) || {itemId: r.itemId, name: r.name || "", consumed: 0, scrap: 0};
+                current.consumed += Number(r.consumed || 0);
+                current.scrap += Number(r.scrap || 0);
+                map.set(key, current);
+            }
+        }
+        return Array.from(map.values());
+    }, [ops]);
+
     // --- DnD (raw JS)
     const onDragStart = (e, opId) => {
         const op = ops.find(o => o.id === opId);
-        if (op?.status === "Completed") { e.preventDefault(); return; }
+        if (op?.status === "Completed") {
+            e.preventDefault();
+            return;
+        }
         e.dataTransfer.setData("text/plain", opId);
         e.dataTransfer.effectAllowed = "move";
     };
@@ -199,8 +325,16 @@ const WorkOrderOperationsPage = () => {
 
         if (newStatus === "Completed") {
             const rows = (op.bom || []).map(r => ({...r}));
-            const calc = calcProducedFromConsumption(rows);
-            setCompleteModal({open: true, opId, draftRows: rows, produced: calc, calc, varianceNote: "", viewOnly: false, targetStatus: "Completed"});
+            // Simplified: don't calculate; start with produced 0
+            setCompleteModal({
+                open: true,
+                opId,
+                draftRows: rows,
+                produced: 0,
+                notes: "",
+                viewOnly: false,
+                targetStatus: "Completed"
+            });
             setDragOverCol(null);
             return;
         }
@@ -208,7 +342,7 @@ const WorkOrderOperationsPage = () => {
         setOps((old) =>
             old.map((o) =>
                 o.id === opId
-                    ? { ...o, status: newStatus, updated: new Date().toISOString().slice(0, 10) }
+                    ? {...o, status: newStatus, updated: new Date().toISOString().slice(0, 10)}
                     : o
             )
         );
@@ -229,69 +363,96 @@ const WorkOrderOperationsPage = () => {
     const gotoNew = () => navigate(`/work-orders/${woId}/operations/new`);
     const gotoEdit = (opId) => navigate(`/work-orders/${woId}/operations/${opId}/edit`);
 
-    // Release logic (now allows proceed with warning)
+    // Release logic (unchanged from previous update)
     const handleRelease = () => {
         const pending = ops.filter(o => o.status !== "Completed");
-        if (pending.length > 0) {
-            setReleaseModal({
-                open:true,
-                title: "Release with Pending Operations?",
-                variant: "warn",
-                proceedLabel: "Proceed Anyway",
-                body: (
-                    <div className="space-y-3">
-                        <div className="text-sm text-amber-200">
-                            Not all operations are completed. You can still release, but review what’s pending:
-                        </div>
-                        <div className="rounded-xl bg-gray-900/40 border border-white/10 overflow-hidden">
-                            <table className="min-w-full divide-y divide-gray-800 text-sm">
-                                <thead className="bg-gray-900/80">
-                                <tr>
-                                    <th className="px-4 py-2 text-left">Operation</th>
-                                    <th className="px-4 py-2 text-left">Title</th>
-                                    <th className="px-4 py-2 text-left">Status</th>
-                                    <th className="px-4 py-2 text-left">Assignee</th>
-                                </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-800">
-                                {pending.map(o => (
-                                    <tr key={o.id}>
-                                        <td className="px-4 py-2 font-mono">{o.id}</td>
-                                        <td className="px-4 py-2">{o.title}</td>
-                                        <td className="px-4 py-2">{o.status}</td>
-                                        <td className="px-4 py-2">{o.assignee}</td>
-                                    </tr>
-                                ))}
-                                </tbody>
-                            </table>
-                        </div>
-                        <div className="text-xs text-gray-400">
-                            This action will submit the Work Order even with pending work.
-                        </div>
-                    </div>
-                )
-            });
-        } else {
-            setReleaseModal({
-                open:true,
-                title: "Ready to Release",
-                variant: "ok",
-                proceedLabel: "Confirm Release",
-                body: (
-                    <div className="space-y-2">
-                        <div className="text-sm text-emerald-200 flex items-center gap-2">
-                            <IconCheck className="h-4 w-4 text-emerald-300"/>All operations are completed.
-                        </div>
-                        <div className="text-xs text-gray-400">
-                            Confirm to mark Work Order {woId} as Released (mock action).
-                        </div>
-                    </div>
-                )
-            });
-        }
+        const variant = pending.length > 0 ? "warn" : "ok";
+        const title = pending.length > 0 ? "Release with Pending Operations?" : "Ready to Release";
+        const proceedLabel = pending.length > 0 ? "Proceed Anyway" : "Confirm Release";
+
+        setReleaseModal({
+            open: true,
+            title,
+            variant,
+            proceedLabel,
+            pending,
+            releaseQty: Math.max(0, producedSoFar),
+            expiryDate: ""
+        });
     };
 
-    // --- Column
+    // ---- Hold modal handlers
+    const saveHold = () => {
+        const {opId, reason} = holdModal;
+        if (!reason.trim()) return;
+        setOps(prev => prev.map(o => {
+            if (o.id !== opId) return o;
+            const at = new Date().toISOString().slice(0, 10);
+            const hist = Array.isArray(o.holdHistory) ? [...o.holdHistory] : [];
+            hist.push({reason: reason.trim(), at});
+            return {
+                ...o,
+                status: "Hold",
+                updated: at,
+                holdReason: reason.trim(),
+                holdHistory: hist
+            };
+        }));
+        setHoldModal({open: false, opId: null, reason: "", viewOnly: false});
+    };
+
+    // ---- Complete modal handlers (simplified)
+    const updateRow = (idx, field, value) => {
+        setCompleteModal(m => {
+            const rows = m.draftRows.slice();
+            const n = Number(value || 0);
+            rows[idx] = {...rows[idx], [field]: isNaN(n) ? 0 : n};
+            return {...m, draftRows: rows};
+        });
+    };
+
+    const saveComplete = () => {
+        const {opId, draftRows, produced, notes} = completeModal;
+        const at = new Date().toISOString().slice(0, 10);
+        setOps(prev => prev.map(o => {
+            if (o.id !== opId) return o;
+            return {
+                ...o,
+                status: "Completed",
+                updated: at,
+                bom: draftRows.map(r => ({...r, consumed: Number(r.consumed || 0), scrap: Number(r.scrap || 0)})),
+                producedQty: Number(produced || 0),
+                varianceNote: String(notes || "")
+            };
+        }));
+        setCompleteModal({
+            open: false,
+            opId: null,
+            draftRows: [],
+            produced: 0,
+            notes: "",
+            viewOnly: false,
+            targetStatus: "Completed"
+        });
+    };
+
+    // ---- Release modal proceed (validate expiry and qty)
+    const proceedRelease = () => {
+        if (!releaseModal.expiryDate || Number(releaseModal.releaseQty) <= 0) {
+            return;
+        }
+        setReleaseModal({
+            open: false,
+            title: "",
+            variant: "info",
+            proceedLabel: "",
+            pending: [],
+            releaseQty: 0,
+            expiryDate: ""
+        });
+    };
+
+    // ---- Column
     const Column = ({title, items}) => (
         <div
             className={`flex flex-col rounded-xl border border-white/10 bg-gray-900/60 min-h-[520px] ${
@@ -361,7 +522,8 @@ const WorkOrderOperationsPage = () => {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className={`h-2 w-2 rounded-full ${PRIORITY_DOT[op.priority]}`} title={`Priority: ${op.priority}`}/>
+                                        <span className={`h-2 w-2 rounded-full ${PRIORITY_DOT[op.priority]}`}
+                                              title={`Priority: ${op.priority}`}/>
                                         {pill(op.priority, PRIORITY_CLS)}
                                     </div>
                                 </div>
@@ -434,7 +596,12 @@ const WorkOrderOperationsPage = () => {
                                             <button
                                                 className="px-2.5 py-1 rounded bg-gray-900/60 border border-white/10 text-xs hover:bg-gray-800 flex items-center gap-1"
                                                 title="View Hold reason/history"
-                                                onClick={() => setHoldModal({open: true, opId: op.id, reason: op.holdReason || "", viewOnly: true})}
+                                                onClick={() => setHoldModal({
+                                                    open: true,
+                                                    opId: op.id,
+                                                    reason: op.holdReason || "",
+                                                    viewOnly: true
+                                                })}
                                             >
                                                 <IconInfo className="h-3.5 w-3.5 text-yellow-300"/><span>Why?</span>
                                             </button>
@@ -446,8 +613,15 @@ const WorkOrderOperationsPage = () => {
                                                 title="View production & materials"
                                                 onClick={() => {
                                                     const rows = (op.bom || []).map(r => ({...r}));
-                                                    const calc = calcProducedFromConsumption(rows);
-                                                    setCompleteModal({open: true, opId: op.id, draftRows: rows, produced: op.producedQty ?? calc, calc, varianceNote: op.varianceNote || "", viewOnly: true, targetStatus: "Completed"});
+                                                    setCompleteModal({
+                                                        open: true,
+                                                        opId: op.id,
+                                                        draftRows: rows,
+                                                        produced: op.producedQty ?? 0,
+                                                        notes: op.varianceNote || "",
+                                                        viewOnly: true,
+                                                        targetStatus: "Completed"
+                                                    });
                                                 }}
                                             >
                                                 <IconCheck className="h-3.5 w-3.5 text-emerald-300"/><span>Output</span>
@@ -477,65 +651,6 @@ const WorkOrderOperationsPage = () => {
         </div>
     );
 
-    // ---- Hold modal handlers
-    const saveHold = () => {
-        const {opId, reason} = holdModal;
-        if (!reason.trim()) return;
-        setOps(prev => prev.map(o => {
-            if (o.id !== opId) return o;
-            const at = new Date().toISOString().slice(0,10);
-            const hist = Array.isArray(o.holdHistory) ? [...o.holdHistory] : [];
-            hist.push({reason: reason.trim(), at});
-            return {
-                ...o,
-                status: "Hold",
-                updated: at,
-                holdReason: reason.trim(),
-                holdHistory: hist
-            };
-        }));
-        setHoldModal({open:false, opId:null, reason:"", viewOnly:false});
-    };
-
-    // ---- Complete modal handlers
-    const updateRow = (idx, field, value) => {
-        setCompleteModal(m => {
-            const rows = m.draftRows.slice();
-            const n = Number(value || 0);
-            rows[idx] = {...rows[idx], [field]: isNaN(n) ? 0 : n};
-            const calc = calcProducedFromConsumption(rows);
-            let produced = m.produced;
-            const userOverrode = Number(m.produced) !== Number(m.calc);
-            produced = userOverrode ? m.produced : calc;
-            return {...m, draftRows: rows, calc, produced};
-        });
-    };
-
-    const saveComplete = () => {
-        const {opId, draftRows, produced, calc, varianceNote} = completeModal;
-        const needsNote = Number(produced) !== Number(calc);
-        if (needsNote && !String(varianceNote || "").trim()) return;
-        const at = new Date().toISOString().slice(0,10);
-        setOps(prev => prev.map(o => {
-            if (o.id !== opId) return o;
-            return {
-                ...o,
-                status: "Completed",
-                updated: at,
-                bom: draftRows.map(r => ({...r, consumed: Number(r.consumed||0), scrap: Number(r.scrap||0)})),
-                producedQty: Number(produced||0),
-                varianceNote: String(varianceNote||"")
-            };
-        }));
-        setCompleteModal({open:false, opId:null, draftRows:[], produced:0, calc:0, varianceNote:"", viewOnly:false, targetStatus:"Completed"});
-    };
-
-    // ---- Release modal proceed
-    const proceedRelease = () => {
-        // Mock submit. In real app, fire API and then navigate or show toast.
-        setReleaseModal({open:false, title:"", body:null, proceedLabel:"", variant:"info"});
-    };
-
     return (
         <div className="bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200 min-h-screen">
             {/* Header */}
@@ -543,7 +658,8 @@ const WorkOrderOperationsPage = () => {
                 <div className="flex items-end justify-between gap-4 flex-wrap">
                     <div>
                         <h1 className="text-3xl font-bold text-white">Operations • {woId}</h1>
-                        <p className="mt-2 text-gray-400">Manage operations on a Kanban board. Drag to change status.</p>
+                        <p className="mt-2 text-gray-400">Manage operations on a Kanban board. Drag to change
+                            status.</p>
                     </div>
                     <div className="flex gap-3 items-center">
                         {/* Release button */}
@@ -582,10 +698,13 @@ const WorkOrderOperationsPage = () => {
                 <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4 space-y-4">
                     {/* Top badges: dates & item */}
                     <div className="flex flex-wrap items-center gap-2 text-xs">
-                        <span className="px-2 py-1 rounded bg-gray-800 border border-white/10">Start: <span className="text-gray-200">{woPlan.startDate}</span></span>
-                        <span className="px-2 py-1 rounded bg-gray-800 border border-white/10">Due: <span className="text-gray-200">{woPlan.dueDate}</span></span>
+                        <span className="px-2 py-1 rounded bg-gray-800 border border-white/10">Start: <span
+                            className="text-gray-200">{woPlan.startDate}</span></span>
+                        <span className="px-2 py-1 rounded bg-gray-800 border border-white/10">Due: <span
+                            className="text-gray-200">{woPlan.dueDate}</span></span>
                         <span className="px-2 py-1 rounded bg-gray-800 border border-white/10">
-              Item: <span className="font-mono text-gray-100">{woPlan.itemId}</span> — <span className="text-gray-200">{woPlan.itemName}</span>
+              Item: <span className="font-mono text-gray-100">{woPlan.itemId}</span> — <span
+                            className="text-gray-200">{woPlan.itemName}</span>
             </span>
                         <span className="px-2 py-1 rounded bg-gray-800 border border-white/10">
               Expected Qty: <span className="text-gray-200">{expectedQty}</span>
@@ -598,10 +717,14 @@ const WorkOrderOperationsPage = () => {
                     {/* Row 1: Operations progress */}
                     <div className="flex items-center justify-between">
                         <div className="text-sm text-gray-300 flex items-center gap-3">
-                            <span className="px-2 py-1 rounded bg-blue-500/20 text-blue-200">Open {totals.by["Open"] || 0}</span>
-                            <span className="px-2 py-1 rounded bg-indigo-500/20 text-indigo-200">In Progress {totals.by["In Progress"] || 0}</span>
-                            <span className="px-2 py-1 rounded bg-yellow-500/20 text-yellow-200">Hold {totals.by["Hold"] || 0}</span>
-                            <span className="px-2 py-1 rounded bg-emerald-500/20 text-emerald-200">Completed {totals.by["Completed"] || 0}</span>
+                            <span
+                                className="px-2 py-1 rounded bg-blue-500/20 text-blue-200">Open {totals.by["Open"] || 0}</span>
+                            <span
+                                className="px-2 py-1 rounded bg-indigo-500/20 text-indigo-200">In Progress {totals.by["In Progress"] || 0}</span>
+                            <span
+                                className="px-2 py-1 rounded bg-yellow-500/20 text-yellow-200">Hold {totals.by["Hold"] || 0}</span>
+                            <span
+                                className="px-2 py-1 rounded bg-emerald-500/20 text-emerald-200">Completed {totals.by["Completed"] || 0}</span>
                         </div>
                         <div className="text-xs text-gray-400">Total: {totals.all} • Done: {totals.done}</div>
                     </div>
@@ -616,7 +739,8 @@ const WorkOrderOperationsPage = () => {
                     {/* Row 2: Output progress */}
                     <div className="flex items-center justify-between">
                         <div className="text-sm text-gray-300">
-                            Output Progress: <span className="text-gray-100 font-semibold">{producedSoFar}</span> / {expectedQty}
+                            Output Progress: <span
+                            className="text-gray-100 font-semibold">{producedSoFar}</span> / {expectedQty}
                         </div>
                         <div className="text-xs text-gray-400">{outputPct}% of expected output</div>
                     </div>
@@ -677,9 +801,12 @@ const WorkOrderOperationsPage = () => {
                     ))}
                 </div>
                 <div className="mt-4 text-xs text-gray-500 mx-auto px-4">
-                    Tip: Double-click the <span className="text-gray-300">title</span>, <span className="text-gray-300">assignee</span>, or{" "}
-                    <span className="text-gray-300">estimation</span> to edit. Drag cards between columns to change status.
-                    <span className="ml-2 text-gray-400">Moving to <span className="text-yellow-200">Hold</span> asks for a reason. Moving to <span className="text-emerald-200">Completed</span> confirms output & materials. Completed cards are locked.</span>
+                    Tip: Double-click the <span className="text-gray-300">title</span>, <span
+                    className="text-gray-300">assignee</span>, or{" "}
+                    <span className="text-gray-300">estimation</span> to edit. Drag cards between columns to change
+                    status.
+                    <span className="ml-2 text-gray-400">Moving to <span className="text-yellow-200">Hold</span> asks for a reason. Moving to <span
+                        className="text-emerald-200">Completed</span> confirms output & materials. Completed cards are locked.</span>
                 </div>
             </section>
 
@@ -687,11 +814,11 @@ const WorkOrderOperationsPage = () => {
             <Modal
                 open={holdModal.open}
                 title={holdModal.viewOnly ? "Hold Reason" : "Move to Hold — Reason required"}
-                onClose={() => setHoldModal({open:false, opId:null, reason:"", viewOnly:false})}
+                onClose={() => setHoldModal({open: false, opId: null, reason: "", viewOnly: false})}
                 footer={
                     holdModal.viewOnly ? (
                         <button
-                            onClick={() => setHoldModal({open:false, opId:null, reason:"", viewOnly:false})}
+                            onClick={() => setHoldModal({open: false, opId: null, reason: "", viewOnly: false})}
                             className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
                         >
                             Close
@@ -699,7 +826,7 @@ const WorkOrderOperationsPage = () => {
                     ) : (
                         <>
                             <button
-                                onClick={() => setHoldModal({open:false, opId:null, reason:"", viewOnly:false})}
+                                onClick={() => setHoldModal({open: false, opId: null, reason: "", viewOnly: false})}
                                 className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
                             >
                                 Cancel
@@ -741,7 +868,9 @@ const WorkOrderOperationsPage = () => {
                                         </tr>
                                     ))}
                                     {(ops.find(o => o.id === holdModal.opId)?.holdHistory || []).length === 0 && (
-                                        <tr><td className="px-4 py-3 text-gray-500" colSpan={2}>No history.</td></tr>
+                                        <tr>
+                                            <td className="px-4 py-3 text-gray-500" colSpan={2}>No history.</td>
+                                        </tr>
                                     )}
                                     </tbody>
                                 </table>
@@ -764,15 +893,31 @@ const WorkOrderOperationsPage = () => {
                 )}
             </Modal>
 
-            {/* Complete / Materials Modal */}
+            {/* Complete / Materials Modal (simplified) */}
             <Modal
                 open={completeModal.open}
                 title={completeModal.viewOnly ? "Production & Materials" : "Complete Operation — Confirm Output & Materials"}
-                onClose={() => setCompleteModal({open:false, opId:null, draftRows:[], produced:0, calc:0, varianceNote:"", viewOnly:false, targetStatus:"Completed"})}
+                onClose={() => setCompleteModal({
+                    open: false,
+                    opId: null,
+                    draftRows: [],
+                    produced: 0,
+                    notes: "",
+                    viewOnly: false,
+                    targetStatus: "Completed"
+                })}
                 footer={
                     completeModal.viewOnly ? (
                         <button
-                            onClick={() => setCompleteModal({open:false, opId:null, draftRows:[], produced:0, calc:0, varianceNote:"", viewOnly:false, targetStatus:"Completed"})}
+                            onClick={() => setCompleteModal({
+                                open: false,
+                                opId: null,
+                                draftRows: [],
+                                produced: 0,
+                                notes: "",
+                                viewOnly: false,
+                                targetStatus: "Completed"
+                            })}
                             className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
                         >
                             Close
@@ -780,17 +925,22 @@ const WorkOrderOperationsPage = () => {
                     ) : (
                         <>
                             <button
-                                onClick={() => setCompleteModal({open:false, opId:null, draftRows:[], produced:0, calc:0, varianceNote:"", viewOnly:false, targetStatus:"Completed"})}
+                                onClick={() => setCompleteModal({
+                                    open: false,
+                                    opId: null,
+                                    draftRows: [],
+                                    produced: 0,
+                                    notes: "",
+                                    viewOnly: false,
+                                    targetStatus: "Completed"
+                                })}
                                 className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={saveComplete}
-                                disabled={
-                                    Number(completeModal.produced) < 0 ||
-                                    (Number(completeModal.produced) !== Number(completeModal.calc) && !String(completeModal.varianceNote||"").trim())
-                                }
+                                disabled={Number(completeModal.produced) < 0}
                                 className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm disabled:opacity-50"
                             >
                                 Save & Complete
@@ -849,18 +999,13 @@ const WorkOrderOperationsPage = () => {
                         </table>
                     </div>
 
-                    {/* Output confirmation */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                    {/* Output confirmation (no calculated produced) */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-end">
                         <div>
-                            <label className="block text-xs text-gray-400 mb-1">Calculated Produced</label>
-                            <div className="px-3 py-2 rounded-lg bg-gray-800/60 border border-white/10 text-gray-100">
-                                {completeModal.calc}
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-xs text-gray-400 mb-1">Confirm Produced (editable)</label>
+                            <label className="block text-xs text-gray-400 mb-1">Produced (editable)</label>
                             {completeModal.viewOnly ? (
-                                <div className="px-3 py-2 rounded-lg bg-gray-800/60 border border-white/10 text-gray-100">
+                                <div
+                                    className="px-3 py-2 rounded-lg bg-gray-800/60 border border-white/10 text-gray-100">
                                     {completeModal.produced}
                                 </div>
                             ) : (
@@ -868,69 +1013,206 @@ const WorkOrderOperationsPage = () => {
                                     inputMode="decimal"
                                     className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
                                     value={completeModal.produced}
-                                    onChange={(e) => setCompleteModal(m => ({...m, produced: Number(e.target.value || 0)}))}
+                                    onChange={(e) => setCompleteModal(m => ({
+                                        ...m,
+                                        produced: Number(e.target.value || 0)
+                                    }))}
                                 />
-                            )}
-                        </div>
-                        <div className="text-xs text-gray-400">
-                            {Number(completeModal.produced) !== Number(completeModal.calc) ? (
-                                <span className="px-2 py-1 rounded bg-amber-600/20 text-amber-200 inline-block">
-                  Variance detected — note required
-                </span>
-                            ) : (
-                                <span className="px-2 py-1 rounded bg-emerald-600/20 text-emerald-200 inline-block">
-                  Matches calculation
-                </span>
                             )}
                         </div>
                     </div>
 
-                    {/* Variance notes */}
+                    {/* Notes (optional) */}
                     <div>
-                        <label className="block text-xs text-gray-400 mb-1">Variance / Notes</label>
+                        <label className="block text-xs text-gray-400 mb-1">Notes</label>
                         {completeModal.viewOnly ? (
-                            <div className="px-3 py-2 rounded-lg bg-gray-800/60 border border-white/10 text-gray-200 min-h-[38px]">
-                                {completeModal.varianceNote || <span className="text-gray-500">—</span>}
+                            <div
+                                className="px-3 py-2 rounded-lg bg-gray-800/60 border border-white/10 text-gray-200 min-h-[38px]">
+                                {completeModal.notes || <span className="text-gray-500">—</span>}
                             </div>
                         ) : (
                             <textarea
                                 rows={3}
-                                value={completeModal.varianceNote}
-                                onChange={(e) => setCompleteModal(m => ({...m, varianceNote: e.target.value}))}
-                                placeholder={Number(completeModal.produced) !== Number(completeModal.calc) ? "Explain why confirmed qty differs…" : "Optional notes"}
+                                value={completeModal.notes}
+                                onChange={(e) => setCompleteModal(m => ({...m, notes: e.target.value}))}
+                                placeholder="Optional notes"
                                 className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
                             />
-                        )}
-                        {!completeModal.viewOnly && Number(completeModal.produced) !== Number(completeModal.calc) && !String(completeModal.varianceNote||"").trim() && (
-                            <div className="text-xs text-red-300 mt-1">Variance note is required when quantities differ.</div>
                         )}
                     </div>
                 </div>
             </Modal>
 
-            {/* Release Modal (warning allows proceed) */}
+            {/* Release Modal (unchanged from previous update) */}
             <Modal
                 open={releaseModal.open}
                 title={releaseModal.title}
-                onClose={() => setReleaseModal({open:false, title:"", body:null, proceedLabel:"", variant:"info"})}
+                onClose={() => setReleaseModal({
+                    open: false,
+                    title: "",
+                    variant: "info",
+                    proceedLabel: "",
+                    pending: [],
+                    releaseQty: 0,
+                    expiryDate: ""
+                })}
                 footer={
                     <>
                         <button
-                            onClick={() => setReleaseModal({open:false, title:"", body:null, proceedLabel:"", variant:"info"})}
+                            onClick={() => setReleaseModal({
+                                open: false,
+                                title: "",
+                                variant: "info",
+                                proceedLabel: "",
+                                pending: [],
+                                releaseQty: 0,
+                                expiryDate: ""
+                            })}
                             className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
                         >
                             Cancel
                         </button>
                         <button
                             onClick={proceedRelease}
-                            className={`px-4 py-2 rounded-lg text-sm ${releaseModal.variant === "warn" ? "bg-amber-600 hover:bg-amber-700 text-white" : "bg-emerald-600 hover:bg-emerald-700 text-white"}`}
+                            disabled={!releaseModal.expiryDate || Number(releaseModal.releaseQty) <= 0}
+                            className={`px-4 py-2 rounded-lg text-sm disabled:opacity-50 ${
+                                releaseModal.variant === "warn"
+                                    ? "bg-amber-600 hover:bg-amber-700 text-white"
+                                    : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                            }`}
+                            title={!releaseModal.expiryDate ? "Expiration date required" : undefined}
                         >
                             {releaseModal.proceedLabel || "Confirm"}
                         </button>
                     </>
                 }
             >
-                {releaseModal.body}
+                <div className="space-y-4">
+                    {releaseModal.pending.length > 0 && (
+                        <div
+                            className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-100">
+                            <div className="font-medium mb-2 flex items-center gap-2">
+                                <IconInfo className="h-4 w-4 text-amber-300"/> Not all operations are completed. Review
+                                what’s pending:
+                            </div>
+                            <div className="rounded-lg bg-gray-900/40 border border-white/10 overflow-hidden">
+                                <table className="min-w-full divide-y divide-gray-800 text-xs">
+                                    <thead className="bg-gray-900/80">
+                                    <tr>
+                                        <th className="px-3 py-2 text-left">Operation</th>
+                                        <th className="px-3 py-2 text-left">Title</th>
+                                        <th className="px-3 py-2 text-left">Status</th>
+                                        <th className="px-3 py-2 text-left">Assignee</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-800">
+                                    {releaseModal.pending.map(o => (
+                                        <tr key={o.id}>
+                                            <td className="px-3 py-2 font-mono">{o.id}</td>
+                                            <td className="px-3 py-2">{o.title}</td>
+                                            <td className="px-3 py-2">{o.status}</td>
+                                            <td className="px-3 py-2">{o.assignee}</td>
+                                        </tr>
+                                    ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div className="text-[11px] text-amber-200/90 mt-2">
+                                You can still release, but ensure the following output and materials are correct.
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Output section: FG details + mandatory expiration */}
+                    <div className="rounded-2xl border border-white/10 bg-gray-900/60">
+                        <div className="px-4 py-3 border-b border-white/10 text-sm font-semibold">Output (Finished
+                            Good)
+                        </div>
+                        <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                                <div className="text-xs text-gray-400">Item ID</div>
+                                <div className="px-3 py-2 rounded-lg bg-gray-800/60 border border-white/10 font-mono">
+                                    {woPlan.itemId}
+                                </div>
+                            </div>
+                            <div className="space-y-1">
+                                <div className="text-xs text-gray-400">Item Name</div>
+                                <div className="px-3 py-2 rounded-lg bg-gray-800/60 border border-white/10">
+                                    {woPlan.itemName}
+                                </div>
+                            </div>
+                            <div className="space-y-1">
+                                <label className="block text-xs text-gray-400">Count to Release</label>
+                                <input
+                                    inputMode="decimal"
+                                    value={releaseModal.releaseQty}
+                                    onChange={(e) => setReleaseModal(m => ({
+                                        ...m,
+                                        releaseQty: Math.max(0, Number(e.target.value || 0))
+                                    }))}
+                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                />
+                                {Number(releaseModal.releaseQty) > producedSoFar && (
+                                    <div className="text-[11px] text-amber-300">Note: Count exceeds produced so far
+                                        ({producedSoFar}).</div>
+                                )}
+                            </div>
+                            <div className="space-y-1">
+                                <label className="block text-xs text-gray-400">Expiration Date <span
+                                    className="text-red-300">*</span></label>
+                                <input
+                                    type="date"
+                                    value={releaseModal.expiryDate}
+                                    onChange={(e) => setReleaseModal(m => ({...m, expiryDate: e.target.value}))}
+                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                />
+                                {!releaseModal.expiryDate && (
+                                    <div className="text-[11px] text-red-300">Expiration date is required to
+                                        release.</div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* BOM summary: consumed & scrap */}
+                    <div className="rounded-2xl border border-white/10 bg-gray-900/60 overflow-hidden">
+                        <div className="px-4 py-3 border-b border-white/10 text-sm font-semibold">BOM Components —
+                            Totals
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-800 text-sm">
+                                <thead className="bg-gray-900/80">
+                                <tr>
+                                    <th className="px-4 py-2 text-left">Component</th>
+                                    <th className="px-4 py-2 text-left">Name</th>
+                                    <th className="px-4 py-2 text-left">Consumed</th>
+                                    <th className="px-4 py-2 text-left">Scrap</th>
+                                </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-800">
+                                {aggregatedBom.map(r => (
+                                    <tr key={r.itemId}>
+                                        <td className="px-4 py-2 font-mono">{r.itemId}</td>
+                                        <td className="px-4 py-2">{r.name}</td>
+                                        <td className="px-4 py-2">{r.consumed}</td>
+                                        <td className="px-4 py-2">{r.scrap}</td>
+                                    </tr>
+                                ))}
+                                {aggregatedBom.length === 0 && (
+                                    <tr>
+                                        <td className="px-4 py-3 text-gray-500" colSpan={4}>No component usage
+                                            recorded.
+                                        </td>
+                                    </tr>
+                                )}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className="px-4 py-2 text-[11px] text-gray-400 border-t border-white/10">
+                            The totals reflect all operations’ recorded consumption and scrap at this time.
+                        </div>
+                    </div>
+                </div>
             </Modal>
         </div>
     );
