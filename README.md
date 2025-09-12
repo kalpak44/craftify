@@ -32,6 +32,7 @@ VITE_AUTH0_CLIENT_ID=wUzgSsPGxVXW2g9rDKG9UUmYRRh7Oo6P
 VITE_AUTH0_REDIRECT_URL=http://localhost:5173/callback
 VITE_AUTH0_AUDIENCE=https://app.craftify.com/
 VITE_API_HOST=http://localhost:8080
+VITE_APP_ROOT_PATH=/
 ```
 
 Notes:
