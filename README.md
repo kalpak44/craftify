@@ -2,7 +2,7 @@
 
 This is a Vite-based frontend located in the `frontend/` directory. You can run it in two ways:
 
-## 1) Run from source (Vite dev server)
+## Run from source (Vite dev server)
 
 Prerequisites:
 - Node.js 20+ (LTS recommended)
