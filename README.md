@@ -48,4 +48,3 @@ This repository deploys the frontend to GitHub Pages.
 - Build directory: `frontend/`
 - Output: `frontend/dist` uploaded to Pages
 - Live URL: https://kalpak44.github.io/craftify/
-allback is enabled by copying `index.html` to `404.html` so React Router works on direct deep links.
