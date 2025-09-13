@@ -179,6 +179,8 @@ export const FullWidthLayout = ({children}) => {
                         <div className="hidden md:flex items-center gap-3">
                             <button
                                 onClick={() => {
+                                    console.log(window.location.origin);
+                                    console.log(path);
                                     loginWithRedirect(`${window.location.origin}${path}`)
                                 }}
                                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded text-sm"
