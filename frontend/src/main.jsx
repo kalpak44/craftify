@@ -8,11 +8,11 @@ import {Auth0ProviderWithNavigate} from "./Auth0ProviderWithNavigate.jsx";
 const rootPath = import.meta.env.VITE_APP_ROOT_PATH;
 
 // GitHub Pages workaround
-const redirect = sessionStorage.getItem("redirect");
-if (redirect) {
-    sessionStorage.removeItem("redirect");
-    window.history.replaceState(null, null, redirect);
-}
+// const redirect = sessionStorage.getItem("redirect");
+// if (redirect) {
+//     sessionStorage.removeItem("redirect");
+//     window.history.replaceState(null, null, redirect);
+// }
 
 
 ReactDOM.createRoot(document.getElementById('root')).render(
