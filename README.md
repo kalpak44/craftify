@@ -47,4 +47,5 @@ This repository deploys the frontend to GitHub Pages.
 - Trigger: push to `main` or `master`, or manual dispatch
 - Build directory: `frontend/`
 - Output: `frontend/dist` uploaded to Pages
+- GitHub Pages: `frontend/dist` and `public/404.html` uploaded to Pages
 - Live URL: https://kalpak44.github.io/craftify/
