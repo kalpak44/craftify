@@ -236,7 +236,7 @@ export const FullWidthLayout = ({children}) => {
                     ) : (
                         <div className="hidden md:flex items-center gap-3">
                             <button
-                                onClick={() => loginWithRedirect()}
+                                onClick={() => loginWithRedirect({ authorizationParams: {prompt: "login", screen_hint: "login"}})}
                                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded text-sm"
                             >
                                 Log In
@@ -410,7 +410,7 @@ export const FullWidthLayout = ({children}) => {
                                     <button
                                         onClick={() => {
                                             setMobileOpen(false);
-                                            loginWithRedirect();
+                                            loginWithRedirect({ authorizationParams: {prompt: "login", screen_hint: "login"}})
                                         }}
 
                                         className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm"
