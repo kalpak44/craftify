@@ -162,7 +162,7 @@ export const FullWidthLayout = ({children}) => {
                                         <button
                                             onClick={() => {
                                                 logout({
-                                                    openUrl(url) {
+                                                    openUrl() {
                                                         window.location.replace(`${window.location.origin}${path}`);
                                                     }
                                                 })
@@ -178,7 +178,7 @@ export const FullWidthLayout = ({children}) => {
                     ) : (
                         <div className="hidden md:flex items-center gap-3">
                             <button
-                                onClick={() => loginWithRedirect(`${window.location.origin}${path}`)}
+                                onClick={() => loginWithRedirect(`${window.location.origin}`)}
                                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded text-sm"
                             >
                                 Log In
