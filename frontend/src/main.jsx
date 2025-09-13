@@ -12,7 +12,7 @@ const redirect = sessionStorage.getItem("redirect");
 if (redirect) {
     sessionStorage.removeItem("redirect");
     debugger;
-    window.history.replaceState(null, null, redirect);
+    window.history.replaceState(null, null, redirect.replace(path, ""));
 }
 
 
