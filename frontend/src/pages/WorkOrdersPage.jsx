@@ -1,6 +1,20 @@
 import React, {useMemo, useState} from "react";
 import {useNavigate} from "react-router-dom";
 
+/**
+ * WorkOrdersPage
+ *
+ * ERP-style Work Orders registry built with React + Tailwind (raw JS).
+ * Updates in this version:
+ * - Fully responsive UI with a mobile card list (< md) and desktop table (>= md).
+ * - Solid background (gradient removed).
+ *
+ * Features (unchanged):
+ * - Search, filters (status/assignee/priority), sortable columns.
+ * - Pagination with selection, bulk delete + confirmation modal.
+ * - Per-row actions: “Details” and “Operations”.
+ * - Each row/card opens the Edit view at /work-orders/:id/edit.
+ */
 export const WorkOrdersPage = () => {
     const initialData = [
         {
@@ -223,24 +237,24 @@ export const WorkOrdersPage = () => {
     };
 
     return (
-        <div
-            className="min-h-[calc(100vh-140px)] bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
+        <div className="min-h-[calc(100vh-140px)] bg-gray-950 text-gray-200">
             {/* Header */}
-            <header className="mx-auto px-4 pt-10 pb-6">
-                <div className="flex items-end justify-between gap-4 flex-wrap">
+            <header className="mx-auto px-4 pt-8 pb-5">
+                <div className="flex items-start md:items-end justify-between gap-4 flex-wrap">
                     <div>
-                        <h1 className="text-3xl font-bold text-white">Work Orders</h1>
-                        <p className="mt-2 text-gray-400">Issue, track, and complete work orders.</p>
+                        <h1 className="text-2xl md:text-3xl font-bold text-white">Work Orders</h1>
+                        <p className="mt-1 md:mt-2 text-gray-400 text-sm md:text-base">Issue, track, and complete work
+                            orders.</p>
                     </div>
-                    <div className="flex gap-3 items-center">
+                    <div className="flex gap-2 md:gap-3 items-center w-full sm:w-auto">
                         <button
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
+                            className="flex-1 sm:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
                             onClick={() => navigate("/work-orders/new")}
                         >
                             + New Work Order
                         </button>
                         <button
-                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">
+                            className="flex-1 sm:flex-none px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">
                             Import CSV
                         </button>
                     </div>
@@ -249,55 +263,57 @@ export const WorkOrdersPage = () => {
 
             {/* Toolbar with filters */}
             <div className="mx-auto px-4 pb-4">
-                <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
+                <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-3 md:p-4">
                     <div className="flex flex-col md:flex-row md:items-center gap-3">
-                        <select
-                            value={status}
-                            onChange={(e) => {
-                                setStatus(e.target.value);
-                                setPage(1);
-                            }}
-                            className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
-                        >
-                            <option value="all">All Statuses</option>
-                            {STATUSES.map((s) => (
-                                <option key={s} value={s}>
-                                    {s}
-                                </option>
-                            ))}
-                        </select>
+                        <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-3">
+                            <select
+                                value={status}
+                                onChange={(e) => {
+                                    setStatus(e.target.value);
+                                    setPage(1);
+                                }}
+                                className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                            >
+                                <option value="all">All Statuses</option>
+                                {STATUSES.map((s) => (
+                                    <option key={s} value={s}>
+                                        {s}
+                                    </option>
+                                ))}
+                            </select>
 
-                        <select
-                            value={assignee}
-                            onChange={(e) => {
-                                setAssignee(e.target.value);
-                                setPage(1);
-                            }}
-                            className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
-                        >
-                            <option value="all">All Assignees</option>
-                            {assignees.map((a) => (
-                                <option key={a} value={a}>
-                                    {a}
-                                </option>
-                            ))}
-                        </select>
+                            <select
+                                value={assignee}
+                                onChange={(e) => {
+                                    setAssignee(e.target.value);
+                                    setPage(1);
+                                }}
+                                className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                            >
+                                <option value="all">All Assignees</option>
+                                {assignees.map((a) => (
+                                    <option key={a} value={a}>
+                                        {a}
+                                    </option>
+                                ))}
+                            </select>
 
-                        <select
-                            value={priority}
-                            onChange={(e) => {
-                                setPriority(e.target.value);
-                                setPage(1);
-                            }}
-                            className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
-                        >
-                            <option value="all">All Priorities</option>
-                            {PRIORITIES.map((p) => (
-                                <option key={p} value={p}>
-                                    {p}
-                                </option>
-                            ))}
-                        </select>
+                            <select
+                                value={priority}
+                                onChange={(e) => {
+                                    setPriority(e.target.value);
+                                    setPage(1);
+                                }}
+                                className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm col-span-2 sm:col-span-1"
+                            >
+                                <option value="all">All Priorities</option>
+                                {PRIORITIES.map((p) => (
+                                    <option key={p} value={p}>
+                                        {p}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
 
                         <div className="relative flex-1">
                             <input
@@ -312,7 +328,7 @@ export const WorkOrdersPage = () => {
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">⌕</span>
                         </div>
 
-                        <div className="flex items-center gap-2 ml-auto">
+                        <div className="flex items-center gap-2 md:ml-auto">
                             <button
                                 className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm hover:bg-gray-700">
                                 Export CSV
@@ -334,9 +350,87 @@ export const WorkOrdersPage = () => {
                 </div>
             </div>
 
-            {/* Table */}
+            {/* List/Table */}
             <section className="mx-auto px-4 pb-12">
-                <div className="overflow-x-auto border border-white/10 rounded-xl bg-gray-900/60">
+                {/* Mobile card list */}
+                <div className="md:hidden">
+                    {/* Select-all toolbar for mobile */}
+                    <div className="mb-2 flex items-center justify-between">
+                        <label className="inline-flex items-center gap-2 text-sm text-gray-300">
+                            <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll} onClick={stop}/>
+                            <span>Select all on page</span>
+                        </label>
+                        <span className="text-xs text-gray-400">
+              {filtered.length === 0 ? 0 : pageStart + 1}–{Math.min(filtered.length, pageStart + pageSize)} of {filtered.length}
+            </span>
+                    </div>
+
+                    <div className="space-y-2">
+                        {paged.map((wo) => (
+                            <div
+                                key={wo.id}
+                                className="rounded-xl border border-white/10 bg-gray-900/60 p-3 active:bg-gray-800/40"
+                                onClick={() => handleRowClick(wo.id)}
+                                title="Open Edit"
+                            >
+                                <div className="flex items-start gap-3">
+                                    <input
+                                        type="checkbox"
+                                        checked={!!selected[wo.id]}
+                                        onChange={() => toggleOne(wo.id)}
+                                        onClick={stop}
+                                        className="mt-1"
+                                        aria-label={`Select ${wo.id}`}
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div
+                                                className="font-mono text-white text-sm underline decoration-dotted">{wo.id}</div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="whitespace-nowrap">{pill(wo.status, STATUS_CLS)}</span>
+                                                <span
+                                                    className="whitespace-nowrap">{pill(wo.priority, PRIORITY_CLS)}</span>
+                                            </div>
+                                        </div>
+                                        <div className="mt-1 text-gray-200 text-sm line-clamp-2">{wo.product}</div>
+                                        <div className="mt-1 text-xs text-gray-400 flex items-center gap-2 flex-wrap">
+                                            <span className="truncate">{wo.itemId}</span>
+                                            <span>•</span>
+                                            <span className="truncate">{wo.assignee}</span>
+                                            <span>•</span>
+                                            <span>Due {wo.due}</span>
+                                            <span>•</span>
+                                            <span>Upd. {wo.updated}</span>
+                                        </div>
+                                        <div className="mt-3 flex flex-wrap gap-2" onClick={stop}>
+                                            <button
+                                                className="px-3 py-1.5 rounded-lg bg-blue-600/20 text-blue-300 border border-blue-600/40 text-xs hover:bg-blue-600/30 hover:text-blue-200 transition"
+                                                onClick={() => navigate(`/work-orders/${wo.id}/edit`)}
+                                            >
+                                                Details
+                                            </button>
+                                            <button
+                                                className="px-3 py-1.5 rounded-lg bg-indigo-600/20 text-indigo-300 border border-indigo-600/40 text-xs hover:bg-indigo-600/30 hover:text-indigo-200 transition"
+                                                onClick={() => navigate(`/work-orders/${wo.id}/operations`)}
+                                            >
+                                                Operations
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                        {paged.length === 0 && (
+                            <div
+                                className="rounded-xl border border-white/10 bg-gray-900/60 p-6 text-center text-gray-500">
+                                No work orders found.
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Desktop table */}
+                <div className="hidden md:block overflow-x-auto border border-white/10 rounded-xl bg-gray-900/60">
                     <table className="min-w-full divide-y divide-gray-800 text-sm">
                         <thead className="bg-gray-900/80">
                         <tr>
@@ -466,21 +560,23 @@ export const WorkOrdersPage = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/60" onClick={() => setShowDeleteModal(false)}/>
                     <div
-                        className="relative z-10 w-[90%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
+                        className="relative z-10 w-[92%] sm:w-[80%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
                         <h2 className="text-lg font-semibold text-white">Confirm deletion</h2>
                         <p className="mt-2 text-sm text-gray-300">
                             You are about to delete <span className="font-medium text-white">{selectedCount}</span>{" "}
                             {selectedCount === 1 ? "work order" : "work orders"}. This action cannot be undone.
                         </p>
-                        <div className="mt-4 flex justify-end gap-2">
+                        <div className="mt-4 flex flex-col sm:flex-row justify-end gap-2">
                             <button
                                 onClick={() => setShowDeleteModal(false)}
                                 className="px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
                             >
                                 Cancel
                             </button>
-                            <button onClick={confirmDelete}
-                                    className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm">
+                            <button
+                                onClick={confirmDelete}
+                                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm"
+                            >
                                 Delete
                             </button>
                         </div>

@@ -2,6 +2,21 @@
 import React, {useMemo, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 
+/**
+ * InventoryBatchesPage
+ *
+ * Responsive FEFO batches list for a single item (raw JS + Tailwind).
+ * Updates in this version:
+ * - Solid background (gradient removed).
+ * - Mobile card list (< md) and desktop table (>= md) with identical features.
+ *
+ * Features:
+ * - Search by Batch ID, expiration range filters.
+ * - Sortable columns, pagination.
+ * - Row selection with select-all-on-page.
+ * - CSV export and print-friendly view.
+ * - Clicking a row/card opens /inventory/:itemId/batches/:batchId.
+ */
 export default function InventoryBatchesPage() {
     const navigate = useNavigate();
     const {routeItemId} = useParams();
@@ -228,31 +243,29 @@ export default function InventoryBatchesPage() {
     );
 
     return (
-        <div
-            className="min-h-[calc(100vh-140px)] bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
+        <div className="min-h-[calc(100vh-140px)] bg-gray-950 text-gray-200">
             {/* Header (aligned with InventoryPage) */}
-            <header className="mx-auto px-4 pt-10 pb-6">
-                <div className="flex items-end justify-between gap-4 flex-wrap">
+            <header className="mx-auto px-4 pt-8 pb-5">
+                <div className="flex items-start md:items-end justify-between gap-4 flex-wrap">
                     <div>
-                        <h1 className="text-3xl font-bold text-white">Inventory • <span
-                            className="font-mono">{itemId}</span></h1>
-                        <p className="mt-2 text-gray-400">
+                        <h1 className="text-2xl md:text-3xl font-bold text-white">
+                            Inventory • <span className="font-mono">{itemId}</span>
+                        </h1>
+                        <p className="mt-1 md:mt-2 text-gray-400 text-sm md:text-base">
                             {itemInfo.name} — UoM: {itemInfo.uom}. FEFO list of batches for this item.
                         </p>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
                         <button
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
-                        >
+                            className="flex-1 sm:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm">
                             Merge
                         </button>
                         <button
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
-                        >
+                            className="flex-1 sm:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm">
                             Split
                         </button>
                         <button
-                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                            className="flex-1 sm:flex-none px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
                             onClick={goBack}
                             title="Back to Inventory"
                         >
@@ -264,7 +277,7 @@ export default function InventoryBatchesPage() {
 
             {/* Toolbar (aligned with InventoryPage) */}
             <div className="mx-auto px-4 pb-4">
-                <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
+                <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-3 md:p-4">
                     <div className="flex flex-col md:flex-row md:items-center gap-3">
                         {/* Search by Batch ID */}
                         <div className="relative flex-1">
@@ -281,32 +294,34 @@ export default function InventoryBatchesPage() {
                         </div>
 
                         {/* Expiration range filters */}
-                        <div className="flex items-center gap-2">
-                            <label className="text-sm text-gray-400">Expiration From</label>
-                            <input
-                                type="date"
-                                value={expFrom}
-                                onChange={(e) => {
-                                    setExpFrom(e.target.value);
-                                    setPage(1);
-                                }}
-                                className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
-                            />
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <label className="text-sm text-gray-400">To</label>
-                            <input
-                                type="date"
-                                value={expTo}
-                                onChange={(e) => {
-                                    setExpTo(e.target.value);
-                                    setPage(1);
-                                }}
-                                className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
-                            />
+                        <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-3">
+                            <label className="flex items-center gap-2 text-sm text-gray-400">
+                                <span className="hidden sm:inline">Expiration From</span>
+                                <input
+                                    type="date"
+                                    value={expFrom}
+                                    onChange={(e) => {
+                                        setExpFrom(e.target.value);
+                                        setPage(1);
+                                    }}
+                                    className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                />
+                            </label>
+                            <label className="flex items-center gap-2 text-sm text-gray-400">
+                                <span className="hidden sm:inline">To</span>
+                                <input
+                                    type="date"
+                                    value={expTo}
+                                    onChange={(e) => {
+                                        setExpTo(e.target.value);
+                                        setPage(1);
+                                    }}
+                                    className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                />
+                            </label>
                         </div>
 
-                        <div className="flex items-center gap-2 ml-auto">
+                        <div className="flex items-center gap-2 md:ml-auto">
                             <button
                                 onClick={handleExportCSV}
                                 className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm hover:bg-gray-700"
@@ -333,9 +348,85 @@ export default function InventoryBatchesPage() {
                 </div>
             </div>
 
-            {/* Table (aligned with InventoryPage table styles) */}
+            {/* List/Table */}
             <section className="mx-auto px-4 pb-12">
-                <div className="overflow-x-auto border border-white/10 rounded-xl bg-gray-900/60">
+                {/* Mobile card list */}
+                <div className="md:hidden">
+                    {/* Select-all toolbar for mobile */}
+                    <div className="mb-2 flex items-center justify-between">
+                        <label className="inline-flex items-center gap-2 text-sm text-gray-300">
+                            <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll}
+                                   onClick={stopRowNav}/>
+                            <span>Select all on page</span>
+                        </label>
+                        <span className="text-xs text-gray-400">
+              {filtered.length === 0 ? 0 : pageStart + 1}–{Math.min(filtered.length, pageStart + pageSize)} of {filtered.length}
+            </span>
+                    </div>
+
+                    <div className="space-y-2">
+                        {paged.map((r) => {
+                            const id = rowId(r);
+                            const available = r.available;
+                            const availClass =
+                                available < 0 ? "text-red-300" : available <= 0 ? "text-yellow-300" : "text-gray-200";
+                            return (
+                                <div
+                                    key={id}
+                                    className="rounded-xl border border-white/10 bg-gray-900/60 p-3 active:bg-gray-800/40"
+                                    onClick={() => openBatch(r.batchId)}
+                                    title="Open Batch Details"
+                                >
+                                    <div className="flex items-start gap-3">
+                                        <input
+                                            type="checkbox"
+                                            checked={!!selected[id]}
+                                            onChange={() => toggleOne(id)}
+                                            onClick={stopRowNav}
+                                            className="mt-1"
+                                        />
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <div className="font-mono text-white text-sm">{r.batchId}</div>
+                                                <div className="text-xs text-gray-300">{r.expiration}</div>
+                                            </div>
+                                            <div className="mt-1 text-gray-200 text-sm line-clamp-2">{r.item}</div>
+                                            <div
+                                                className="mt-1 text-xs text-gray-400 flex items-center gap-2 flex-wrap">
+                                                <span className="truncate">{r.itemId}</span>
+                                                <span>•</span>
+                                                <span>{r.uom}</span>
+                                            </div>
+                                            <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
+                                                <div className="rounded-lg border border-white/10 bg-gray-800/40 p-2">
+                                                    <div className="text-gray-400">Batch</div>
+                                                    <div className="font-medium text-gray-200">{r.batchSize}</div>
+                                                </div>
+                                                <div className="rounded-lg border border-white/10 bg-gray-800/40 p-2">
+                                                    <div className="text-gray-400">Allocated</div>
+                                                    <div className="font-medium text-gray-200">{r.allocated}</div>
+                                                </div>
+                                                <div className="rounded-lg border border-white/10 bg-gray-800/40 p-2">
+                                                    <div className="text-gray-400">Available</div>
+                                                    <div className={`font-medium ${availClass}`}>{available}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        {paged.length === 0 && (
+                            <div
+                                className="rounded-xl border border-white/10 bg-gray-900/60 p-6 text-center text-gray-400">
+                                No batches found.
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Desktop table (>= md) */}
+                <div className="hidden md:block overflow-x-auto border border-white/10 rounded-xl bg-gray-900/60">
                     <table className="min-w-full divide-y divide-gray-800 text-sm">
                         <thead className="bg-gray-900/80">
                         <tr>
@@ -357,11 +448,7 @@ export default function InventoryBatchesPage() {
                         {paged.map((r) => {
                             const id = rowId(r);
                             const availClass =
-                                r.available < 0
-                                    ? "text-red-300"
-                                    : r.available <= 0
-                                        ? "text-yellow-300"
-                                        : "text-gray-200";
+                                r.available < 0 ? "text-red-300" : r.available <= 0 ? "text-yellow-300" : "text-gray-200";
                             return (
                                 <tr
                                     key={id}
