@@ -5,11 +5,15 @@ import {useNavigate} from "react-router-dom";
  * BOMsPage
  *
  * ERP-style Bill of Materials registry built with React + Tailwind (raw JS).
- * Features:
+ * Updates in this version:
+ * - Fully responsive UI with a mobile card list (< md) and desktop table (>= md).
+ * - Solid background (gradient removed).
+ *
+ * Features (unchanged):
  * - Search, filter by status, sortable columns, pagination.
  * - Row selection (checkboxes) with bulk delete + confirmation modal.
  * - Consistent styling with ItemsPage (red Delete button, same modal look & feel).
- * - Each table row opens the BOM Details view at /boms/:id.
+ * - Each row/card opens the BOM Details view at /boms/:id/edit (unchanged route).
  *
  * Notes:
  * - Uses mocked data stored in component state for client-side ops.
@@ -127,7 +131,10 @@ export const BOMsPage = () => {
         if (query) {
             const q = query.toLowerCase();
             data = data.filter(
-                (r) => r.id.toLowerCase().includes(q) || r.product.toLowerCase().includes(q) || r.productId.toLowerCase().includes(q)
+                (r) =>
+                    r.id.toLowerCase().includes(q) ||
+                    r.product.toLowerCase().includes(q) ||
+                    r.productId.toLowerCase().includes(q)
             );
         }
         if (status !== "all") data = data.filter((r) => r.status === status);
@@ -196,24 +203,24 @@ export const BOMsPage = () => {
     };
 
     return (
-        <div
-            className="min-h-[calc(100vh-140px)] bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
+        <div className="min-h-[calc(100vh-140px)] bg-gray-950 text-gray-200">
             {/* Header */}
-            <header className="mx-auto  px-4 pt-10 pb-6">
-                <div className="flex items-end justify-between gap-4 flex-wrap">
+            <header className="mx-auto px-4 pt-8 pb-5">
+                <div className="flex items-start md:items-end justify-between gap-4 flex-wrap">
                     <div>
-                        <h1 className="text-3xl font-bold text-white">BOMs</h1>
-                        <p className="mt-2 text-gray-400">Define and manage bill of materials.</p>
+                        <h1 className="text-2xl md:text-3xl font-bold text-white">BOMs</h1>
+                        <p className="mt-1 md:mt-2 text-gray-400 text-sm md:text-base">Define and manage bill of
+                            materials.</p>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
                         <button
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
+                            className="flex-1 sm:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
                             onClick={() => navigate("/boms/new")}
                         >
                             + New BOM
                         </button>
                         <button
-                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">
+                            className="flex-1 sm:flex-none px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">
                             Import CSV
                         </button>
                     </div>
@@ -221,8 +228,8 @@ export const BOMsPage = () => {
             </header>
 
             {/* Toolbar */}
-            <div className="mx-auto  px-4 pb-4">
-                <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
+            <div className="mx-auto px-4 pb-4">
+                <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-3 md:p-4">
                     <div className="flex flex-col md:flex-row md:items-center gap-3">
                         <select
                             value={status}
@@ -252,7 +259,7 @@ export const BOMsPage = () => {
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">⌕</span>
                         </div>
 
-                        <div className="flex items-center gap-2 ml-auto">
+                        <div className="flex items-center gap-2 md:ml-auto">
                             <button
                                 className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm hover:bg-gray-700">
                                 Export CSV
@@ -274,9 +281,82 @@ export const BOMsPage = () => {
                 </div>
             </div>
 
-            {/* Table */}
-            <section className="mx-auto  px-4 pb-12">
-                <div className="overflow-x-auto border border-white/10 rounded-xl bg-gray-900/60">
+            {/* List/Table */}
+            <section className="mx-auto px-4 pb-12">
+                {/* Mobile card list */}
+                <div className="md:hidden">
+                    {/* Select-all toolbar for mobile */}
+                    <div className="mb-2 flex items-center justify-between">
+                        <label className="inline-flex items-center gap-2 text-sm text-gray-300">
+                            <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll}
+                                   onClick={stopRowNav}/>
+                            <span>Select all on page</span>
+                        </label>
+                        <span className="text-xs text-gray-400">
+              {filtered.length === 0 ? 0 : pageStart + 1}–{Math.min(filtered.length, pageStart + pageSize)} of {filtered.length}
+            </span>
+                    </div>
+
+                    <div className="space-y-2">
+                        {paged.map((bom) => (
+                            <div
+                                key={bom.id}
+                                className="rounded-xl border border-white/10 bg-gray-900/60 p-3 active:bg-gray-800/40"
+                                onClick={() => goToDetails(bom.id)}
+                                title="Open Details"
+                            >
+                                <div className="flex items-start gap-3">
+                                    <input
+                                        type="checkbox"
+                                        checked={!!selected[bom.id]}
+                                        onChange={() => toggleOne(bom.id)}
+                                        onClick={stopRowNav}
+                                        className="mt-1"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div className="font-mono text-white text-sm">
+                                                <span className="underline decoration-dotted">{bom.id}</span>
+                                            </div>
+                                            <span
+                                                className={`px-2 py-0.5 text-[10px] rounded-full whitespace-nowrap ${
+                                                    bom.status === "Active"
+                                                        ? "bg-green-600/30 text-green-400"
+                                                        : bom.status === "Draft"
+                                                            ? "bg-blue-600/30 text-blue-300"
+                                                            : bom.status === "Hold"
+                                                                ? "bg-yellow-600/30 text-yellow-400"
+                                                                : "bg-gray-600/30 text-gray-400"
+                                                }`}
+                                            >
+                        {bom.status}
+                      </span>
+                                        </div>
+                                        <div className="mt-1 text-gray-200 text-sm line-clamp-2">{bom.product}</div>
+                                        <div className="mt-1 text-xs text-gray-400 flex items-center gap-2 flex-wrap">
+                                            <span className="truncate">{bom.productId}</span>
+                                            <span>•</span>
+                                            <span>{bom.revision}</span>
+                                            <span>•</span>
+                                            <span className="truncate">{bom.components} components</span>
+                                            <span>•</span>
+                                            <span>{bom.lastUpdated}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                        {paged.length === 0 && (
+                            <div
+                                className="rounded-xl border border-white/10 bg-gray-900/60 p-6 text-center text-gray-400">
+                                No BOMs found.
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Desktop table */}
+                <div className="hidden md:block overflow-x-auto border border-white/10 rounded-xl bg-gray-900/60">
                     <table className="min-w-full divide-y divide-gray-800 text-sm">
                         <thead className="bg-gray-900/80">
                         <tr>
@@ -394,21 +474,23 @@ export const BOMsPage = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/60" onClick={() => setShowDeleteModal(false)}/>
                     <div
-                        className="relative z-10 w-[90%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
+                        className="relative z-10 w-[92%] sm:w-[80%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
                         <h2 className="text-lg font-semibold text-white">Confirm deletion</h2>
                         <p className="mt-2 text-sm text-gray-300">
                             You are about to delete <span className="font-medium text-white">{selectedCount}</span>{" "}
                             {selectedCount === 1 ? "BOM" : "BOMs"}. This action cannot be undone.
                         </p>
-                        <div className="mt-4 flex justify-end gap-2">
+                        <div className="mt-4 flex flex-col sm:flex-row justify-end gap-2">
                             <button
                                 onClick={() => setShowDeleteModal(false)}
                                 className="px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
                             >
                                 Cancel
                             </button>
-                            <button onClick={confirmDelete}
-                                    className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm">
+                            <button
+                                onClick={confirmDelete}
+                                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm"
+                            >
                                 Delete
                             </button>
                         </div>
