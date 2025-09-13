@@ -2,27 +2,34 @@ import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useNavigate} from "react-router-dom";
 
 /**
- * WorkOrderCreationPage — React + Tailwind (plain JS)
- * Adjusted per request:
- * - Only Save + Cancel in header + Operations button (navigate to /work-orders/{id}/operations)
- * - Remove Release / Close actions and Operations editor section
- * - BOM picker separated from Parent Item (own picker modal). Selecting BOM sets Parent, but Parent can be changed.
- * - BOM modal: search + pagination (mock data unchanged)
- * - Availability: on shortage, redirect to Purchasing page instead of creating PO
- * - Summary contains BOM and Parent as separate fields
+ * WorkOrderDetailsPage — React + Tailwind (plain JS)
+ *
+ * Purpose:
+ * - Create a production work order with BOM-driven components and FEFO lot reservation (mock).
+ *
+ * Final Adjustments (per request):
+ * - Use a modal-based alert as a placeholder for both Save and Cancel: first show alert, then navigate to /work-orders/.
+ * - Removed Status select box completely (and related state/validation).
+ * - Mobile-aligned UI: fixed full-viewport gradient, sticky bottom action bar, full-screen modals on mobile,
+ *   mobile card pickers + desktop tables.
+ *
+ * Notes:
+ * - No costs/prices anywhere.
+ * - No external libraries; mock data only; paste into Vite + Tailwind app.
  */
 
+// ---- Mocked data ----
 const MOCK_ITEMS = [
-    {id: "ITM-001", name: "Warm Yellow LED", uom: "pcs", status: "Active", cost: 0.12},
-    {id: "ITM-002", name: "Large Widget", uom: "pcs", status: "Active", cost: 9.5},
-    {id: "ITM-003", name: "Plastic Case", uom: "pcs", status: "Active", cost: 1.2},
-    {id: "ITM-004", name: "Lion Bracket", uom: "pcs", status: "Active", cost: 2.1},
-    {id: "ITM-005", name: "Chain Bracket", uom: "pcs", status: "Active", cost: 1.85},
-    {id: "ITM-006", name: "Front Assembly", uom: "ea", status: "Active", cost: 0},
-    {id: "ITM-007", name: "Steel Frame", uom: "pcs", status: "Active", cost: 7.2},
-    {id: "ITM-008", name: "Blue Paint (RAL5010)", uom: "L", status: "Hold", cost: 14.0},
-    {id: "ITM-009", name: "Screws M3×8", uom: "ea", status: "Active", cost: 0.03},
-    {id: "ITM-010", name: "Assembly Kit 10", uom: "kit", status: "Discontinued", cost: 0},
+    {id: "ITM-001", name: "Warm Yellow LED", uom: "pcs", status: "Active"},
+    {id: "ITM-002", name: "Large Widget", uom: "pcs", status: "Active"},
+    {id: "ITM-003", name: "Plastic Case", uom: "pcs", status: "Active"},
+    {id: "ITM-004", name: "Lion Bracket", uom: "pcs", status: "Active"},
+    {id: "ITM-005", name: "Chain Bracket", uom: "pcs", status: "Active"},
+    {id: "ITM-006", name: "Front Assembly", uom: "ea", status: "Active"},
+    {id: "ITM-007", name: "Steel Frame", uom: "pcs", status: "Active"},
+    {id: "ITM-008", name: "Blue Paint (RAL5010)", uom: "L", status: "Hold"},
+    {id: "ITM-009", name: "Screws M3×8", uom: "ea", status: "Active"},
+    {id: "ITM-010", name: "Assembly Kit 10", uom: "kit", status: "Discontinued"},
 ];
 
 // BOM index: finished good -> [{itemId, qty}]
@@ -56,57 +63,30 @@ const nextWO = (() => {
     return () => `WO-${String(n++).padStart(4, "0")}`;
 })();
 
+// ---------- Utilities ----------
 function classNames(...a) {
     return a.filter(Boolean).join(" ");
 }
 
-// Simple toast system
-function Toasts({toasts, dismiss}) {
-    return (
-        <div className="fixed bottom-4 right-4 z-50 space-y-2">
-            {toasts.map(t => (
-                <div key={t.id}
-                     className={classNames(
-                         "rounded-lg border px-4 py-3 shadow-lg min-w-[260px] text-sm",
-                         t.variant === "error" ? "bg-red-700/20 border-red-500/40 text-red-100" :
-                             t.variant === "success" ? "bg-emerald-700/20 border-emerald-500/40 text-emerald-100" :
-                                 "bg-gray-800/90 border-white/10 text-gray-100"
-                     )}>
-                    <div className="flex items-start gap-3">
-                        <div className="mt-1">
-              <span className={classNames("inline-block h-2 w-2 rounded-full",
-                  t.variant === "error" ? "bg-red-400" :
-                      t.variant === "success" ? "bg-emerald-400" : "bg-sky-400")}/>
-                        </div>
-                        <div className="flex-1">
-                            <div className="font-medium">{t.title}</div>
-                            {t.message && <div className="text-xs text-gray-300 mt-0.5">{t.message}</div>}
-                        </div>
-                        <button onClick={() => dismiss(t.id)}
-                                className="text-gray-400 hover:text-gray-200">&times;</button>
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
-}
-
-// Modal shell
+// ---------- Modal (mobile full-screen, desktop contained) ----------
 function Modal({open, onClose, title, children, footer}) {
     if (!open) return null;
     return (
         <div className="fixed inset-0 z-40">
             <div className="absolute inset-0 bg-black/60" onClick={onClose}/>
-            <div className="absolute inset-0 flex items-center justify-center p-4">
+            <div className="absolute inset-0 flex items-center justify-center p-0 md:p-4">
                 <div
-                    className="w-full max-w-3xl rounded-2xl border border-white/10 bg-gray-900 text-gray-200 shadow-2xl">
-                    <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
-                        <h3 className="text-lg font-semibold">{title}</h3>
-                        <button onClick={onClose} className="text-gray-400 hover:text-gray-200">&times;</button>
+                    className="w-full h-full md:h-auto md:max-h-[85vh] md:max-w-3xl overflow-hidden
+           rounded-none md:rounded-2xl border border-white/10 bg-gray-900 text-gray-200 shadow-2xl"
+                >
+                    <div className="px-4 md:px-5 py-4 border-b border-white/10 flex items-center justify-between">
+                        <h3 className="text-base md:text-lg font-semibold">{title}</h3>
+                        <button onClick={onClose}
+                                className="text-gray-400 hover:text-gray-200 text-xl leading-none">&times;</button>
                     </div>
-                    <div className="p-5 max-h-[65vh] overflow-y-auto">{children}</div>
+                    <div className="p-4 md:p-5 h-[calc(100%-112px)] md:h-auto overflow-y-auto">{children}</div>
                     <div
-                        className="px-5 py-4 border-t border-white/10 bg-gray-900/60 flex items-center justify-end gap-2">
+                        className="px-4 md:px-5 py-4 border-t border-white/10 bg-gray-900/60 flex items-center justify-end gap-2">
                         {footer}
                     </div>
                 </div>
@@ -115,15 +95,49 @@ function Modal({open, onClose, title, children, footer}) {
     );
 }
 
-// Pagination footer
+// ---------- Simple Alert Modal (placeholder for Save/Cancel) ----------
+function AlertModal({open, onClose, title, message, primary}) {
+    return (
+        <Modal
+            open={open}
+            onClose={onClose}
+            title={title || "Notice"}
+            footer={
+                <button
+                    onClick={() => {
+                        if (primary?.onClick) primary.onClick();
+                        onClose();
+                    }}
+                    className={classNames(
+                        "px-4 py-2 rounded-lg text-sm w-full md:w-auto",
+                        primary?.variant === "danger"
+                            ? "bg-red-600 hover:bg-red-700 text-white"
+                            : primary?.variant === "accent"
+                                ? "bg-indigo-600 hover:bg-indigo-700 text-white"
+                                : "bg-gray-800 hover:bg-gray-700 border border-white/10"
+                    )}
+                >
+                    {primary?.label || "OK"}
+                </button>
+            }
+        >
+            <div className="text-gray-300 text-sm">{message}</div>
+        </Modal>
+    );
+}
+
+// ---------- Pager ----------
 function Pager({page, pageSize, total, onPage, onPageSize}) {
     const pages = Math.max(1, Math.ceil(total / pageSize));
     return (
         <div className="flex items-center justify-between mt-3 text-xs text-gray-300">
             <div className="flex items-center gap-2">
                 <span>Rows per page</span>
-                <select value={pageSize} onChange={e => onPageSize(Number(e.target.value))}
-                        className="bg-gray-800 border border-white/10 rounded px-2 py-1">
+                <select
+                    value={pageSize}
+                    onChange={e => onPageSize(Number(e.target.value))}
+                    className="bg-gray-800 border border-white/10 rounded px-2 py-1"
+                >
                     {[5, 10, 20, 50].map(n => <option key={n} value={n}>{n}</option>)}
                 </select>
             </div>
@@ -146,7 +160,7 @@ function Pager({page, pageSize, total, onPage, onPageSize}) {
     );
 }
 
-// BOM search & select modal (with search + pagination)
+// ---------- BOM Picker Modal (mobile cards + desktop table) ----------
 function BomPickerModal({open, onClose, onPick, items, boms}) {
     const [q, setQ] = useState("");
     const [page, setPage] = useState(1);
@@ -178,15 +192,52 @@ function BomPickerModal({open, onClose, onPick, items, boms}) {
     }, [q, pageSize, open]);
 
     return (
-        <Modal open={open} onClose={onClose} title="Select Bill of Materials" footer={
-            <button onClick={onClose}
-                    className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">Close</button>
-        }>
+        <Modal
+            open={open}
+            onClose={onClose}
+            title="Select Bill of Materials"
+            footer={
+                <button
+                    onClick={onClose}
+                    className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm w-full md:w-auto"
+                >
+                    Close
+                </button>
+            }
+        >
             <div className="mb-3">
-                <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search by FG ID, name, or component"
-                       className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"/>
+                <input
+                    value={q}
+                    onChange={e => setQ(e.target.value)}
+                    placeholder="Search by FG ID, name, or component"
+                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                />
             </div>
-            <div className="overflow-x-auto border border-white/10 rounded-xl bg-gray-900/40">
+
+            {/* Mobile: cards */}
+            <div className="space-y-2 md:hidden">
+                {pageRows.map(r => (
+                    <div key={r.id} className="rounded-xl border border-white/10 bg-gray-900/60 p-3">
+                        <div className="flex items-start justify-between gap-3">
+                            <div>
+                                <div className="font-mono text-sm text-gray-100">{r.id}</div>
+                                <div className="text-sm text-gray-300">{r.name}</div>
+                                <div className="text-xs text-gray-500 mt-1">Components: {r.comps || "—"}</div>
+                            </div>
+                            <button
+                                onClick={() => onPick(r.id)}
+                                className="px-3 py-2 rounded-lg bg-blue-600/90 text-white border border-blue-400/30 hover:bg-blue-600 text-sm"
+                            >
+                                Use BOM
+                            </button>
+                        </div>
+                    </div>
+                ))}
+                {pageRows.length === 0 && <div className="text-center text-gray-400 py-6 text-sm">No matches</div>}
+            </div>
+
+            {/* Desktop: table */}
+            <div className="hidden md:block overflow-x-auto border border-white/10 rounded-xl bg-gray-900/40">
                 <table className="min-w-full divide-y divide-gray-800 text-sm">
                     <thead className="bg-gray-900/80">
                     <tr>
@@ -203,8 +254,10 @@ function BomPickerModal({open, onClose, onPick, items, boms}) {
                             <td className="px-4 py-3">{r.name}</td>
                             <td className="px-4 py-3 text-xs text-gray-400">{r.comps}</td>
                             <td className="px-4 py-3 text-right">
-                                <button onClick={() => onPick(r.id)}
-                                        className="px-2.5 py-1.5 rounded-md border text-xs bg-blue-600/90 text-white border-blue-400/30 hover:bg-blue-600">
+                                <button
+                                    onClick={() => onPick(r.id)}
+                                    className="px-2.5 py-1.5 rounded-md border text-xs bg-blue-600/90 text-white border-blue-400/30 hover:bg-blue-600"
+                                >
                                     Use BOM
                                 </button>
                             </td>
@@ -218,16 +271,22 @@ function BomPickerModal({open, onClose, onPick, items, boms}) {
                     </tbody>
                 </table>
             </div>
-            <Pager page={page} pageSize={pageSize} total={filtered.length}
-                   onPage={setPage} onPageSize={setPageSize}/>
+
+            <Pager
+                page={page}
+                pageSize={pageSize}
+                total={filtered.length}
+                onPage={setPage}
+                onPageSize={setPageSize}
+            />
             <div className="mt-2 text-xs text-gray-400">Tip: type components (e.g. “ITM-009”) to find BOMs using them.
             </div>
         </Modal>
     );
 }
 
-// Item picker (Parent Item) with search + pagination
-function ItemPickerModal({open, onClose, onPick, items}) {
+// ---------- Item Picker Modal (mobile cards + desktop table) ----------
+function ItemPickerModal({open, onClose, onPick, items, title = "Select Item"}) {
     const [q, setQ] = useState("");
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
@@ -249,15 +308,52 @@ function ItemPickerModal({open, onClose, onPick, items}) {
     }, [q, pageSize, open]);
 
     return (
-        <Modal open={open} onClose={onClose} title="Select Parent Item" footer={
-            <button onClick={onClose}
-                    className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">Close</button>
-        }>
+        <Modal
+            open={open}
+            onClose={onClose}
+            title={title}
+            footer={
+                <button
+                    onClick={onClose}
+                    className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm w-full md:w-auto"
+                >
+                    Close
+                </button>
+            }
+        >
             <div className="mb-3">
-                <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search by ID, name, UoM, status"
-                       className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"/>
+                <input
+                    value={q}
+                    onChange={e => setQ(e.target.value)}
+                    placeholder="Search by ID, name, UoM, status"
+                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                />
             </div>
-            <div className="overflow-x-auto border border-white/10 rounded-xl bg-gray-900/40">
+
+            {/* Mobile: cards */}
+            <div className="space-y-2 md:hidden">
+                {pageRows.map(it => (
+                    <div key={it.id} className="rounded-xl border border-white/10 bg-gray-900/60 p-3">
+                        <div className="flex items-center justify-between gap-3">
+                            <div>
+                                <div className="font-mono text-sm text-gray-100">{it.id}</div>
+                                <div className="text-sm text-gray-300">{it.name}</div>
+                                <div className="text-xs text-gray-500 mt-1">UoM: {it.uom} • Status: {it.status}</div>
+                            </div>
+                            <button
+                                onClick={() => onPick(it.id)}
+                                className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm whitespace-nowrap"
+                            >
+                                Use
+                            </button>
+                        </div>
+                    </div>
+                ))}
+                {pageRows.length === 0 && <div className="text-center text-gray-400 py-6 text-sm">No matches</div>}
+            </div>
+
+            {/* Desktop: table */}
+            <div className="hidden md:block overflow-x-auto border border-white/10 rounded-xl bg-gray-900/40">
                 <table className="min-w-full divide-y divide-gray-800 text-sm">
                     <thead className="bg-gray-900/80">
                     <tr>
@@ -276,8 +372,10 @@ function ItemPickerModal({open, onClose, onPick, items}) {
                             <td className="px-4 py-3">{it.uom}</td>
                             <td className="px-4 py-3">{it.status}</td>
                             <td className="px-4 py-3 text-right">
-                                <button onClick={() => onPick(it.id)}
-                                        className="px-2.5 py-1.5 rounded-md border text-xs bg-gray-700/80 text-white border-white/10 hover:bg-gray-700">
+                                <button
+                                    onClick={() => onPick(it.id)}
+                                    className="px-2.5 py-1.5 rounded-md border text-xs bg-gray-700/80 text-white border-white/10 hover:bg-gray-700"
+                                >
                                     Use Item
                                 </button>
                             </td>
@@ -291,17 +389,26 @@ function ItemPickerModal({open, onClose, onPick, items}) {
                     </tbody>
                 </table>
             </div>
-            <Pager page={page} pageSize={pageSize} total={filtered.length}
-                   onPage={setPage} onPageSize={setPageSize}/>
+
+            <Pager
+                page={page}
+                pageSize={pageSize}
+                total={filtered.length}
+                onPage={setPage}
+                onPageSize={setPageSize}
+            />
         </Modal>
     );
 }
 
-// Availability/Reservation modal
+// ---------- Availability Modal ----------
 function AvailabilityModal({open, onClose, requirements, lots, onReserve, onGoPurchasing}) {
     const rows = useMemo(() => {
         return requirements.map(req => {
-            const itemLots = lots.filter(l => l.itemId === req.itemId).slice().sort((a, b) => new Date(a.expiry) - new Date(b.expiry));
+            const itemLots = lots
+                .filter(l => l.itemId === req.itemId)
+                .slice()
+                .sort((a, b) => new Date(a.expiry) - new Date(b.expiry));
             let need = req.required;
             const alloc = [];
             for (const lot of itemLots) {
@@ -312,36 +419,42 @@ function AvailabilityModal({open, onClose, requirements, lots, onReserve, onGoPu
                     need -= take;
                 }
             }
-            return {
-                ...req,
-                allocations: alloc,
-                shortage: Math.max(0, need)
-            };
+            return {...req, allocations: alloc, shortage: Math.max(0, need)};
         });
     }, [requirements, lots]);
 
     const hasShortage = rows.some(r => r.shortage > 0);
 
     return (
-        <Modal open={open} onClose={onClose} title="Availability & Reservation (FEFO)"
-               footer={
-                   <>
-                       {hasShortage && (
-                           <button onClick={() => onGoPurchasing()}
-                                   className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm">
-                               Go to Purchasing
-                           </button>
-                       )}
-                       <button onClick={() => onReserve(rows)}
-                               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm">
-                           Reserve Lots
-                       </button>
-                       <button onClick={onClose}
-                               className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">
-                           Close
-                       </button>
-                   </>
-               }>
+        <Modal
+            open={open}
+            onClose={onClose}
+            title="Availability & Reservation (FEFO)"
+            footer={
+                <>
+                    {hasShortage && (
+                        <button
+                            onClick={() => onGoPurchasing()}
+                            className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm w-full md:w-auto"
+                        >
+                            Go to Purchasing
+                        </button>
+                    )}
+                    <button
+                        onClick={() => onReserve(rows)}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm w-full md:w-auto"
+                    >
+                        Reserve Lots
+                    </button>
+                    <button
+                        onClick={onClose}
+                        className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm w-full md:w-auto"
+                    >
+                        Close
+                    </button>
+                </>
+            }
+        >
             <div className="overflow-x-auto border border-white/10 rounded-xl bg-gray-900/40">
                 <table className="min-w-full divide-y divide-gray-800 text-sm">
                     <thead className="bg-gray-900/80">
@@ -361,10 +474,13 @@ function AvailabilityModal({open, onClose, requirements, lots, onReserve, onGoPu
                                     <div className="font-mono">{r.itemId}</div>
                                     <div className="text-xs text-gray-400">{it?.name}</div>
                                 </td>
-                                <td className="px-4 py-3">{r.required} <span
-                                    className="text-xs text-gray-400">{it?.uom}</span></td>
                                 <td className="px-4 py-3">
-                                    {r.allocations.length === 0 ? <span className="text-gray-500">—</span> :
+                                    {r.required} <span className="text-xs text-gray-400">{it?.uom}</span>
+                                </td>
+                                <td className="px-4 py-3">
+                                    {r.allocations.length === 0 ? (
+                                        <span className="text-gray-500">—</span>
+                                    ) : (
                                         <div className="space-y-1">
                                             {r.allocations.map(a => (
                                                 <div key={a.lotId} className="text-xs">
@@ -373,14 +489,16 @@ function AvailabilityModal({open, onClose, requirements, lots, onReserve, onGoPu
                                                 </div>
                                             ))}
                                         </div>
-                                    }
+                                    )}
                                 </td>
                                 <td className="px-4 py-3">
-                                    {r.shortage > 0
-                                        ? <span
+                                    {r.shortage > 0 ? (
+                                        <span
                                             className="px-2 py-1 text-xs rounded-full bg-red-600/30 text-red-200">{r.shortage}</span>
-                                        : <span
-                                            className="px-2 py-1 text-xs rounded-full bg-emerald-600/30 text-emerald-200">OK</span>}
+                                    ) : (
+                                        <span
+                                            className="px-2 py-1 text-xs rounded-full bg-emerald-600/30 text-emerald-200">OK</span>
+                                    )}
                                 </td>
                             </tr>
                         );
@@ -395,25 +513,23 @@ function AvailabilityModal({open, onClose, requirements, lots, onReserve, onGoPu
     );
 }
 
+// ---------- Page ----------
 export default function WorkOrderDetailsPage() {
     const navigate = useNavigate();
 
     // ----- General form -----
     const [woId, setWoId] = useState(nextWO());
-
-    // Separate BOM FG and Parent Item
     const [bomFgId, setBomFgId] = useState("");
     const [parentItemId, setParentItemId] = useState("");
 
     const [qty, setQty] = useState("");
-    const [status, setStatus] = useState("Draft");
     const [priority, setPriority] = useState("Medium");
     const [startDate, setStartDate] = useState(() => new Date().toISOString().slice(0, 10));
     const [dueDate, setDueDate] = useState(() => new Date(Date.now() + 86400000 * 3).toISOString().slice(0, 10));
     const [assignee, setAssignee] = useState("");
     const [notes, setNotes] = useState("");
 
-    // Autosave
+    // Autosave (mock)
     const [dirty, setDirty] = useState(false);
     const [lastSavedAt, setLastSavedAt] = useState(null);
     const saveTimer = useRef(null);
@@ -428,7 +544,7 @@ export default function WorkOrderDetailsPage() {
     useEffect(() => {
         requestSave();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [woId, bomFgId, parentItemId, qty, status, priority, startDate, dueDate, assignee, notes]);
+    }, [woId, bomFgId, parentItemId, qty, priority, startDate, dueDate, assignee, notes]);
 
     useEffect(() => {
         const beforeUnload = (e) => {
@@ -447,7 +563,7 @@ export default function WorkOrderDetailsPage() {
     const bomForParent = useMemo(() => MOCK_BOMS[bomFgId] || [], [bomFgId]);
     const parentItem = useMemo(() => MOCK_ITEMS.find(i => i.id === parentItemId) || null, [parentItemId]);
 
-    // Requirements from BOM × WO qty (based on selected BOM)
+    // Requirements from BOM × WO qty
     const requirements = useMemo(() => {
         return (MOCK_BOMS[bomFgId] || []).map(b => ({
             itemId: b.itemId,
@@ -472,34 +588,23 @@ export default function WorkOrderDetailsPage() {
         return {max: Number.isFinite(maxUnits) ? maxUnits : 0, limiting, details};
     }, [bomFgId]);
 
-    // Material cost (mock)
-    const materialCost = useMemo(() => {
-        return requirements.reduce((sum, r) => {
-            const it = MOCK_ITEMS.find(i => i.id === r.itemId);
-            return sum + (it ? (it.cost || 0) * r.required : 0);
-        }, 0);
-    }, [requirements]);
-
     // FEFO reservation state
     const [reservedLots, setReservedLots] = useState([]); // {itemId, lotId, expiry, qty}
     const [availabilityChecked, setAvailabilityChecked] = useState(false);
     const [lastAvailabilityResult, setLastAvailabilityResult] = useState(null);
     const [hasShortage, setHasShortage] = useState(false);
 
-    // UI: modals & toasts
+    // UI state
     const [showBomPicker, setShowBomPicker] = useState(false);
     const [showItemPicker, setShowItemPicker] = useState(false);
     const [showAvailability, setShowAvailability] = useState(false);
-    const [toasts, setToasts] = useState([]);
 
-    const addToast = (t) => {
-        const id = crypto?.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2);
-        setToasts(ts => [...ts, {id, ...t}]);
-        setTimeout(() => setToasts(ts => ts.filter(x => x.id !== id)), 3500);
-    };
-    const dismissToast = (id) => setToasts(ts => ts.filter(t => t.id !== id));
+    // Alert modal (placeholders for Save/Cancel and other notices)
+    const [alert, setAlert] = useState({open: false, title: "", message: "", primary: null});
+    const openAlert = (opts) => setAlert({open: true, ...opts});
+    const closeAlert = () => setAlert(a => ({...a, open: false}));
 
-    // Validation (minimal)
+    // Validation
     const errors = useMemo(() => {
         const list = [];
         if (!woId) list.push("WO ID is required.");
@@ -510,19 +615,29 @@ export default function WorkOrderDetailsPage() {
         return list;
     }, [woId, bomFgId, parentItemId, qty, qtyNum, startDate, dueDate]);
 
-    // Actions
-    const saveDraft = () => {
+    // Actions (placeholders -> alert then navigate to /work-orders/)
+    const handleSave = () => {
         setLastSavedAt(new Date());
         setDirty(false);
-        addToast({title: "Draft saved", message: `${woId} saved locally.`, variant: "success"});
+        openAlert({
+            title: "Work Order saved",
+            message: `${woId} saved locally (mock). Navigating to Work Orders list.`,
+            primary: {label: "OK", onClick: () => navigate("/work-orders")}
+        });
+    };
+    const handleCancel = () => {
+        openAlert({
+            title: "Canceled",
+            message: "Edits were not saved (mock). Navigating to Work Orders list.",
+            primary: {label: "Go to Work Orders", onClick: () => navigate("/work-orders")}
+        });
     };
 
     const openAvailability = () => {
         if (!bomFgId || !qtyNum) {
-            addToast({
+            openAlert({
                 title: "Set BOM & Quantity",
-                message: "Select a BOM and enter Quantity to check availability.",
-                variant: "error"
+                message: "Select a BOM and enter Quantity to check availability."
             });
             return;
         }
@@ -539,22 +654,18 @@ export default function WorkOrderDetailsPage() {
         setHasShortage(shortage);
         setLastAvailabilityResult(rows);
         setShowAvailability(false);
-        addToast({
+        openAlert({
             title: shortage ? "Partial reservation" : "Lots reserved",
-            message: shortage ? "Shortages remain — go to Purchasing to cover deficits." : "All required components reserved (mock).",
-            variant: shortage ? "" : "success"
+            message: shortage
+                ? "Shortages remain — go to Purchasing to cover deficits."
+                : "All required components reserved (mock).",
+            primary: shortage
+                ? {label: "Go to Purchasing", variant: "accent", onClick: () => navigate("/purchasing")}
+                : {label: "Close"}
         });
     };
 
-    const gotoPurchasing = () => {
-        navigate("/purchasing");
-    };
-
-    const cancel = () => navigate("/work-orders");
-
-    const gotoOperations = () => {
-        navigate(`/work-orders/${woId}/operations`);
-    };
+    const gotoOperations = () => navigate(`/work-orders/${woId}/operations`);
 
     // Reset availability state when BOM or qty changes
     useEffect(() => {
@@ -564,31 +675,44 @@ export default function WorkOrderDetailsPage() {
         setLastAvailabilityResult(null);
     }, [bomFgId, qty]);
 
-    const pill = (value, cls) => (
-        <span className={`px-2 py-1 text-xs rounded-full ${cls}`}>{value}</span>
-    );
-
     return (
-        <div className="bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
+        <div className="relative text-gray-200 min-h-screen">
+            {/* Fixed, full-viewport responsive gradient layer */}
+            <div
+                className={classNames(
+                    "pointer-events-none fixed inset-0 -z-10",
+                    "bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950",
+                    "sm:bg-gradient-to-br sm:from-gray-950 sm:via-gray-900 sm:to-gray-950",
+                    "md:bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] md:from-gray-950 md:via-gray-900 md:to-gray-950",
+                    "lg:bg-gradient-to-tr lg:from-gray-950 lg:via-gray-900 lg:to-gray-950"
+                )}
+            />
+
             {/* Header */}
-            <header className="mx-auto px-4 pt-10 pb-6">
-                <div className="flex items-end justify-between gap-4 flex-wrap">
-                    <div>
-                        <h1 className="text-3xl font-bold text-white">New Work Order</h1>
-                        <p className="mt-2 text-gray-400">Create a production order. Adjust status as needed.</p>
+            <header className="mx-auto px-4 pt-8 md:pt-10 pb-4 md:pb-6">
+                <div className="flex items-end justify-between gap-3 flex-wrap">
+                    <div className="min-w-0">
+                        <h1 className="text-2xl md:text-3xl font-bold text-white">New Work Order</h1>
+                        <p className="mt-1 md:mt-2 text-gray-400 text-sm md:text-base">Create a production order. Adjust
+                            details as needed.</p>
                     </div>
-                    {/* Right-aligned buttons: Operations + Save + Cancel */}
-                    <div className="flex flex-wrap gap-3 ml-auto">
-                        <button onClick={gotoOperations}
-                                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm">
+                    <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
+                        <button
+                            onClick={gotoOperations}
+                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm flex-1 sm:flex-none"
+                        >
                             Operations
                         </button>
-                        <button onClick={saveDraft}
-                                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">
+                        <button
+                            onClick={handleSave}
+                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm flex-1 sm:flex-none"
+                        >
                             Save
                         </button>
-                        <button onClick={cancel}
-                                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">
+                        <button
+                            onClick={handleCancel}
+                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm flex-1 sm:flex-none"
+                        >
                             Cancel
                         </button>
                     </div>
@@ -596,7 +720,7 @@ export default function WorkOrderDetailsPage() {
 
                 {/* Autosave banner */}
                 <div
-                    className="mt-4 rounded-xl border border-white/10 bg-gray-900/60 px-4 py-3 text-sm flex items-center gap-3">
+                    className="mt-3 md:mt-4 rounded-xl border border-white/10 bg-gray-900/60 px-3 md:px-4 py-3 text-sm flex items-center gap-3">
                     <span className={`inline-flex h-2 w-2 rounded-full ${dirty ? "bg-yellow-400" : "bg-green-400"}`}/>
                     <span className="text-gray-300">
             {dirty ? "Saving draft…" : lastSavedAt ? `Last saved ${lastSavedAt.toLocaleTimeString()}` : "No changes yet"}
@@ -608,38 +732,46 @@ export default function WorkOrderDetailsPage() {
             </header>
 
             {/* Content */}
-            <section className="mx-auto px-4 pb-16 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            <section className="mx-auto px-4 pb-[128px] md:pb-16 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                 {/* Left column */}
                 <div className="lg:col-span-2 space-y-6">
-
                     {/* General */}
                     <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
                         <h2 className="text-lg font-semibold text-white mb-3">General</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-xs text-gray-400 mb-1">WO ID</label>
-                                <input value={woId} onChange={(e) => setWoId(e.target.value)}
-                                       className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"/>
+                                <input
+                                    value={woId}
+                                    onChange={(e) => setWoId(e.target.value)}
+                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                />
                             </div>
 
-                            {/* BOM (separate field) */}
+                            {/* BOM */}
                             <div>
                                 <label className="block text-xs text-gray-400 mb-1">BOM (Finished Good)</label>
                                 <div className="flex gap-2">
-                                    <input value={bomFgId}
-                                           onChange={(e) => setBomFgId(e.target.value)}
-                                           placeholder="e.g. ITM-006"
-                                           className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"/>
-                                    <button onClick={() => setShowBomPicker(true)}
-                                            className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm whitespace-nowrap">
-                                        Pick BOM
+                                    <input
+                                        value={bomFgId}
+                                        onChange={(e) => setBomFgId(e.target.value)}
+                                        placeholder="e.g. ITM-006"
+                                        className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    />
+                                    <button
+                                        onClick={() => setShowBomPicker(true)}
+                                        className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm whitespace-nowrap"
+                                    >
+                                        Pick
                                     </button>
                                 </div>
                                 {bomFgId && (
                                     <div className="mt-1 text-xs text-gray-500 flex items-center gap-3">
-                                        <a href={`/boms/${bomFgId}`}
-                                           className="text-sky-300 hover:text-sky-200 underline offset-2"
-                                           onClick={(e) => e.preventDefault()}>
+                                        <a
+                                            href={`/boms/${bomFgId}`}
+                                            className="text-sky-300 hover:text-sky-200 underline offset-2"
+                                            onClick={(e) => e.preventDefault()}
+                                        >
                                             View BOM
                                         </a>
                                         <span className="text-gray-400">Selecting a BOM will set Parent Item if empty (you can still override Parent).</span>
@@ -647,17 +779,21 @@ export default function WorkOrderDetailsPage() {
                                 )}
                             </div>
 
-                            {/* Parent Item (separate + picker) */}
+                            {/* Parent Item */}
                             <div className="sm:col-span-2">
                                 <label className="block text-xs text-gray-400 mb-1">Parent Item / Finished Good</label>
                                 <div className="flex gap-2">
-                                    <input value={parentItemId}
-                                           onChange={(e) => setParentItemId(e.target.value)}
-                                           placeholder="e.g. ITM-006"
-                                           className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"/>
-                                    <button onClick={() => setShowItemPicker(true)}
-                                            className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm whitespace-nowrap">
-                                        Pick Parent
+                                    <input
+                                        value={parentItemId}
+                                        onChange={(e) => setParentItemId(e.target.value)}
+                                        placeholder="e.g. ITM-006"
+                                        className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    />
+                                    <button
+                                        onClick={() => setShowItemPicker(true)}
+                                        className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm whitespace-nowrap"
+                                    >
+                                        Pick
                                     </button>
                                 </div>
                                 {parentItem && (
@@ -669,14 +805,21 @@ export default function WorkOrderDetailsPage() {
 
                             <div>
                                 <label className="block text-xs text-gray-400 mb-1">Quantity</label>
-                                <input inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)}
-                                       placeholder="0"
-                                       className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"/>
+                                <input
+                                    inputMode="decimal"
+                                    value={qty}
+                                    onChange={(e) => setQty(e.target.value)}
+                                    placeholder="0"
+                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                />
                             </div>
                             <div>
                                 <label className="block text-xs text-gray-400 mb-1">Priority</label>
-                                <select value={priority} onChange={(e) => setPriority(e.target.value)}
-                                        className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm">
+                                <select
+                                    value={priority}
+                                    onChange={(e) => setPriority(e.target.value)}
+                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                >
                                     <option>Low</option>
                                     <option>Medium</option>
                                     <option>High</option>
@@ -685,41 +828,43 @@ export default function WorkOrderDetailsPage() {
                             </div>
 
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">Status</label>
-                                <select value={status} onChange={(e) => setStatus(e.target.value)}
-                                        className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm">
-                                    <option>Draft</option>
-                                    <option>Released</option>
-                                    <option>In Progress</option>
-                                    <option>Completed</option>
-                                    <option>Hold</option>
-                                    <option>Cancelled</option>
-                                </select>
-                            </div>
-
-                            <div>
                                 <label className="block text-xs text-gray-400 mb-1">Assignee</label>
-                                <input value={assignee} onChange={(e) => setAssignee(e.target.value)}
-                                       placeholder="e.g. K. Adams"
-                                       className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"/>
+                                <input
+                                    value={assignee}
+                                    onChange={(e) => setAssignee(e.target.value)}
+                                    placeholder="e.g. K. Adams"
+                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                />
                             </div>
 
                             <div>
                                 <label className="block text-xs text-gray-400 mb-1">Start Date</label>
-                                <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
-                                       className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"/>
+                                <input
+                                    type="date"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                />
                             </div>
                             <div>
                                 <label className="block text-xs text-gray-400 mb-1">Due Date</label>
-                                <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)}
-                                       className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"/>
+                                <input
+                                    type="date"
+                                    value={dueDate}
+                                    onChange={(e) => setDueDate(e.target.value)}
+                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                />
                             </div>
 
                             <div className="sm:col-span-2">
                                 <label className="block text-xs text-gray-400 mb-1">Notes</label>
-                                <textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)}
-                                          placeholder="Optional shop traveler notes."
-                                          className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"/>
+                                <textarea
+                                    rows={3}
+                                    value={notes}
+                                    onChange={(e) => setNotes(e.target.value)}
+                                    placeholder="Optional shop traveler notes."
+                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                />
                             </div>
                         </div>
                     </div>
@@ -729,33 +874,35 @@ export default function WorkOrderDetailsPage() {
                         <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-3">
                                 <h2 className="text-lg font-semibold text-white">Bill of Materials</h2>
-                                {/* Buildable now badge (compact) */}
                                 {bomFgId && (
                                     <div className="flex items-center gap-2 text-xs">
                     <span className="px-2 py-1 rounded-full bg-gray-800 border border-white/10">
                       Buildable now: <span className="text-gray-200 font-semibold">{buildableInfo.max}</span>
                     </span>
                                         {buildableInfo.limiting.length > 0 && (
-                                            <span className="text-gray-400">
-                        limit: {buildableInfo.limiting.join(", ")}
-                      </span>
+                                            <span
+                                                className="text-gray-400">limit: {buildableInfo.limiting.join(", ")}</span>
                                         )}
                                     </div>
                                 )}
                             </div>
                             <div className="flex items-center gap-2 text-sm">
-                                <button onClick={() => setShowBomPicker(true)}
-                                        className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700">
+                                <button
+                                    onClick={() => setShowBomPicker(true)}
+                                    className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700"
+                                >
                                     Select / Search BOM
                                 </button>
-                                <button onClick={openAvailability}
-                                        className="px-3 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">
+                                <button
+                                    onClick={openAvailability}
+                                    className="px-3 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+                                >
                                     Check & Reserve
                                 </button>
                             </div>
                         </div>
 
-                        {/* Buildable details panel */}
+                        {/* Buildable details */}
                         {bomFgId && (
                             <div className="mb-3 rounded-xl bg-gray-900/50 border border-white/10 p-3">
                                 <div className="text-sm text-gray-300">
@@ -784,8 +931,10 @@ export default function WorkOrderDetailsPage() {
                                                             <div className="font-mono">{d.itemId}</div>
                                                             <div className="text-[11px] text-gray-400">{it?.name}</div>
                                                         </td>
-                                                        <td className="px-3 py-2">{d.available} <span
-                                                            className="text-[11px] text-gray-400">{it?.uom}</span></td>
+                                                        <td className="px-3 py-2">
+                                                            {d.available} <span
+                                                            className="text-[11px] text-gray-400">{it?.uom}</span>
+                                                        </td>
                                                         <td className="px-3 py-2">{d.per}</td>
                                                         <td className="px-3 py-2">
                               <span className={classNames(
@@ -846,8 +995,9 @@ export default function WorkOrderDetailsPage() {
                         <div className="mt-4">
                             <h3 className="text-sm font-semibold text-gray-200 mb-2">Reserved Lots (Traceability)</h3>
                             {reservedLots.length === 0 ? (
-                                <div className="text-xs text-gray-500">No lots reserved yet. Run <span
-                                    className="text-gray-300">Check &amp; Reserve</span>.</div>
+                                <div className="text-xs text-gray-500">
+                                    No lots reserved yet. Run <span className="text-gray-300">Check &amp; Reserve</span>.
+                                </div>
                             ) : (
                                 <div className="overflow-x-auto border border-white/10 rounded-xl bg-gray-900/40">
                                     <table className="min-w-full divide-y divide-gray-800 text-sm">
@@ -903,7 +1053,9 @@ export default function WorkOrderDetailsPage() {
                                 <div className="text-sm text-gray-200 min-h-[20px]">
                                     {bomFgId ? (
                                         <a href={`/boms/${bomFgId}`} onClick={(e) => e.preventDefault()}
-                                           className="text-sky-300 hover:text-sky-200 underline">{bomFgId}</a>
+                                           className="text-sky-300 hover:text-sky-200 underline">
+                                            {bomFgId}
+                                        </a>
                                     ) : <span className="text-gray-500">(not set)</span>}
                                 </div>
                             </div>
@@ -926,10 +1078,6 @@ export default function WorkOrderDetailsPage() {
                                     <div
                                         className="text-[11px] text-gray-400 mt-1">Limit: {buildableInfo.limiting.join(", ")}</div>
                                 )}
-                            </div>
-                            <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
-                                <div className="text-xs text-gray-400">Mat. Cost (mock)</div>
-                                <div className="text-lg font-semibold text-gray-100">€{materialCost.toFixed(2)}</div>
                             </div>
                             <div
                                 className="rounded-2xl bg-gray-800/60 p-3 border border-white/10 col-span-2 flex items-center justify-between text-sm">
@@ -959,9 +1107,8 @@ export default function WorkOrderDetailsPage() {
                                                 className="px-2 py-1 text-xs rounded-full bg-red-600/30 text-red-200">Shortage</span>
                                             : <span
                                                 className="px-2 py-1 text-xs rounded-full bg-emerald-600/30 text-emerald-200">All reserved</span>}
-                                        <span className="text-xs text-gray-400">
-                      {reservedLots.length} lot(s) reserved
-                    </span>
+                                        <span
+                                            className="text-xs text-gray-400">{reservedLots.length} lot(s) reserved</span>
                                     </div>
                                 ) : <span className="text-xs text-gray-500">Not checked</span>}
                             </div>
@@ -976,12 +1123,38 @@ export default function WorkOrderDetailsPage() {
                             <li>Use <span className="text-gray-300">Check &amp; Reserve</span> to allocate FEFO lots and
                                 see shortages.
                             </li>
-                            <li>If there’s a shortage, use the header’s status or navigate to Purchasing to cover it.
-                            </li>
+                            <li>If there’s a shortage, navigate to Purchasing to cover it.</li>
                         </ul>
                     </div>
                 </aside>
             </section>
+
+            {/* Sticky bottom action bar (mobile) */}
+            <div
+                className="fixed md:hidden bottom-0 inset-x-0 z-30 border-t border-white/10 bg-gray-900/80 backdrop-blur supports-[backdrop-filter]:bg-gray-900/60"
+                style={{paddingBottom: "env(safe-area-inset-bottom)"}}
+            >
+                <div className="px-4 py-3 flex items-center gap-2">
+                    <button
+                        onClick={handleCancel}
+                        className="flex-1 px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleSave}
+                        className="flex-1 px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                    >
+                        Save
+                    </button>
+                    <button
+                        onClick={gotoOperations}
+                        className="flex-1 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm"
+                    >
+                        Operations
+                    </button>
+                </div>
+            </div>
 
             {/* Modals */}
             <BomPickerModal
@@ -989,7 +1162,6 @@ export default function WorkOrderDetailsPage() {
                 onClose={() => setShowBomPicker(false)}
                 onPick={(fgId) => {
                     setBomFgId(fgId);
-                    // If Parent not set or equals previous BOM, align it to selected BOM
                     setParentItemId(prev => prev ? prev : fgId);
                     setShowBomPicker(false);
                 }}
@@ -1013,11 +1185,17 @@ export default function WorkOrderDetailsPage() {
                 requirements={requirements}
                 lots={MOCK_LOTS}
                 onReserve={handleReserve}
-                onGoPurchasing={gotoPurchasing}
+                onGoPurchasing={() => navigate("/purchasing")}
             />
 
-            {/* Toasts */}
-            <Toasts toasts={toasts} dismiss={dismissToast}/>
+            {/* Alert Modal (placeholders for Save/Cancel/Notices) */}
+            <AlertModal
+                open={alert.open}
+                onClose={closeAlert}
+                title={alert.title}
+                message={alert.message}
+                primary={alert.primary}
+            />
         </div>
     );
 }
