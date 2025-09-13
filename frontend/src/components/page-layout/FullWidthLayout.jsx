@@ -178,7 +178,11 @@ export const FullWidthLayout = ({children}) => {
                     ) : (
                         <div className="hidden md:flex items-center gap-3">
                             <button
-                                onClick={() => loginWithRedirect(`${window.location.origin}`)}
+                                onClick={() => loginWithRedirect({
+                                    openUrl() {
+                                        window.location.replace(`${window.location.origin}${path}`);
+                                    }
+                                })}
                                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded text-sm"
                             >
                                 Log In
@@ -305,8 +309,11 @@ export const FullWidthLayout = ({children}) => {
                                         </NavLink>
                                         <button
                                             onClick={() => {
-                                                setMobileOpen(false);
-                                                logout({returnTo: window.location.origin});
+                                                logout({
+                                                    openUrl() {
+                                                        window.location.replace(`${window.location.origin}${path}`);
+                                                    }
+                                                })
                                             }}
                                             className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
                                         >
