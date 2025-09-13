@@ -11,8 +11,7 @@ const path = import.meta.env.VITE_APP_ROOT_PATH;
 const redirect = sessionStorage.getItem("redirect");
 if (redirect) {
     sessionStorage.removeItem("redirect");
-    debugger;
-    window.history.replaceState(null, null, redirect.replace(path, ""));
+    window.history.replaceState(null, null, redirect);
 }
 
 
