@@ -41,7 +41,7 @@ jobs:
 
       - name: Add SPA fallback
         run: |
-          cp dist/index.html dist/404.html
+          cp dist/index.html public/404.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
