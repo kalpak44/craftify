@@ -18,7 +18,6 @@ export const CallbackPage = () => {
         };
 
         if (!isLoading && isAuthenticated) {
-            debugger;
             storeTokenAndRedirect().catch(console.error);
         }
     }, [isAuthenticated, isLoading, getAccessTokenSilently]);
