@@ -1,10 +1,11 @@
 // HomePage.jsx
 import React from "react";
-import {useAuth0 as useAuth0Home} from "@auth0/auth0-react";
-import ReportsPage from "./ReportsPage"; // <- use your existing file
+import {useAuth0} from "@auth0/auth0-react";
+import ReportsPage from "./ReportsPage";
 
 export const HomePage = () => {
-    const {loginWithRedirect, isAuthenticated, isLoading} = useAuth0Home();
+    const {loginWithRedirect, isAuthenticated, isLoading} = useAuth0();
+    debugger;
 
     // While Auth0 loads, keep a neutral spinner (prevents flicker)
     if (isLoading) {
@@ -18,7 +19,7 @@ export const HomePage = () => {
 
     // If signed in, show Reports as the home dashboard
     if (isAuthenticated) {
-        return <ReportsPage/>; // reuses your dark background + layout
+        return <ReportsPage/>;
     }
 
     // Otherwise, show the current marketing home
