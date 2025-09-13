@@ -1,18 +1,50 @@
 // InventoryLotCustomDetailsPage.jsx
-import React, {useEffect, useMemo, useState} from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 
 /**
  * InventoryLotCustomDetailsPage
  *
  * Mobile-optimized custom fields editor for a single inventory lot.
- * Improvements for mobile UX (while keeping desktop table intact):
- * - Dedicated mobile card view (md:hidden) with large tap targets and stacked inputs.
- * - Sticky bottom action bar on small screens for quick Save / Add field.
- * - Drag & drop kept for desktop; on mobile, use Move Up/Down buttons.
- * - Touch-friendly input paddings, larger controls, and improved spacing.
+ * Changes in this version:
+ * - Save / Add field / Back buttons use equal widths (desktop + mobile).
+ * - Removed duplicate "+ Add field" button from the toolbar to avoid duplication.
+ * - Autosave removed: changes are only saved when pressing "Save".
+ * - Added a discard-confirm modal when navigating Back with unsaved changes (like BOM page).
  */
 const STORAGE_KEY = (itemId, lotId) => `inv:${itemId}:${lotId}:customFields`;
+
+// ---------- Utilities ----------
+function classNames(...a) {
+    return a.filter(Boolean).join(" ");
+}
+
+// ---------- Modal ----------
+function Modal({open, onClose, title, children, footer}) {
+    if (!open) return null;
+    return (
+        <div className="fixed inset-0 z-40">
+            <div className="absolute inset-0 bg-black/60" onClick={onClose}/>
+            <div className="absolute inset-0 flex items-center justify-center p-0 md:p-4">
+                <div
+                    className="w-full h-full md:h-auto md:max-h-[85vh] md:max-w-lg overflow-hidden
+                     rounded-none md:rounded-2xl border border-white/10 md:bg-gray-900 bg-gray-900 text-gray-200 shadow-2xl"
+                >
+                    <div className="px-4 md:px-5 py-4 border-b border-white/10 flex items-center justify-between">
+                        <h3 className="text-base md:text-lg font-semibold">{title}</h3>
+                        <button onClick={onClose}
+                                className="text-gray-400 hover:text-gray-200 text-xl leading-none">&times;</button>
+                    </div>
+                    <div className="p-4 md:p-5 h-[calc(100%-112px)] md:h-auto overflow-y-auto">{children}</div>
+                    <div
+                        className="px-4 md:px-5 py-4 border-t border-white/10 bg-gray-900/60 flex items-center justify-end gap-2">
+                        {footer}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export default function InventoryLotCustomDetailsPage() {
     const navigate = useNavigate();
@@ -49,6 +81,10 @@ export default function InventoryLotCustomDetailsPage() {
     const [dirty, setDirty] = useState(false);
     const [query, setQuery] = useState(""); // filter by name/note
 
+    // Discard modal
+    const [openConfirmLeave, setOpenConfirmLeave] = useState(false);
+    const pendingNavRef = useRef(null); // future extension for other exits
+
     useEffect(() => {
         setRows(load());
         setDirty(false);
@@ -58,16 +94,6 @@ export default function InventoryLotCustomDetailsPage() {
         localStorage.setItem(STORAGE_KEY(itemId, lotId), JSON.stringify(rows));
         setDirty(false);
     };
-
-    // Debounced autosave on changes
-    useEffect(() => {
-        if (!dirty) return;
-        const t = setTimeout(() => {
-            localStorage.setItem(STORAGE_KEY(itemId, lotId), JSON.stringify(rows));
-            setDirty(false);
-        }, 400);
-        return () => clearTimeout(t);
-    }, [rows, dirty]);
 
     // CRUD
     const addRow = () => {
@@ -145,6 +171,8 @@ export default function InventoryLotCustomDetailsPage() {
     };
 
     // Drag & Drop state (desktop only UI shows handle)
+    two: {
+    }
     const [dragId, setDragId] = useState(null);
     const [overId, setOverId] = useState(null);
 
@@ -183,7 +211,20 @@ export default function InventoryLotCustomDetailsPage() {
         setOverId(null);
     };
 
+    // Navigation handlers with confirm
+    const goBack = () => navigate(`/inventory/${encodeURIComponent(itemId)}`);
+    const handleBack = () => {
+        if (dirty) {
+            pendingNavRef.current = goBack;
+            setOpenConfirmLeave(true);
+        } else {
+            goBack();
+        }
+    };
+
     // UI
+    const BTN_W = "w-32";
+
     return (
         <div
             className="min-h-[calc(100vh-140px)] bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
@@ -200,27 +241,29 @@ export default function InventoryLotCustomDetailsPage() {
                         </p>
                     </div>
 
-                    {/* Desktop actions */}
+                    {/* Desktop actions (equal widths) */}
                     <div className="hidden sm:flex gap-2 md:gap-3">
                         <button
-                            className={`px-4 py-2 ${
+                            className={classNames(
+                                BTN_W,
+                                "px-4 py-2 rounded-lg text-sm",
                                 dirty ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-gray-700 text-gray-300"
-                            } rounded-lg text-sm`}
+                            )}
                             onClick={save}
                             title="Save custom details"
                         >
                             {dirty ? "Save" : "Saved"}
                         </button>
                         <button
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
+                            className={classNames(BTN_W, "px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm")}
                             onClick={addRow}
                             title="Add custom field"
                         >
                             + Add field
                         </button>
                         <button
-                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
-                            onClick={() => navigate(`/inventory/${encodeURIComponent(itemId)}`)}
+                            className={classNames(BTN_W, "px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm")}
+                            onClick={handleBack}
                             title="Back to Lot Lines"
                         >
                             Back
@@ -229,7 +272,7 @@ export default function InventoryLotCustomDetailsPage() {
                 </div>
             </header>
 
-            {/* Toolbar */}
+            {/* Toolbar (search only; removed duplicate Add field) */}
             <div className="mx-auto px-4 pb-3 md:pb-4">
                 <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-3 md:p-4">
                     <div className="flex items-center gap-3">
@@ -242,15 +285,6 @@ export default function InventoryLotCustomDetailsPage() {
                                 inputMode="text"
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">⌕</span>
-                        </div>
-                        <div className="hidden md:flex items-center gap-2 ml-auto">
-                            <button
-                                onClick={addRow}
-                                className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm"
-                                title="Add custom field"
-                            >
-                                + Add field
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -541,7 +575,7 @@ export default function InventoryLotCustomDetailsPage() {
                                             <button
                                                 onClick={() => moveBottom(r.id)}
                                                 className="px-2 py-1 rounded bg-gray-800 border border-white/10 text-sm hover:bg-gray-700"
-                                                title="Move to bottom"
+                                                title="Move bottom"
                                             >
                                                 Move bottom
                                             </button>
@@ -571,14 +605,15 @@ export default function InventoryLotCustomDetailsPage() {
                 </div>
             </section>
 
-            {/* Sticky bottom action bar (mobile) */}
+            {/* Sticky bottom action bar (mobile; equal widths) */}
             <div
                 className="fixed bottom-0 left-0 right-0 md:hidden border-t border-white/10 bg-gray-900/95 backdrop-blur supports-[backdrop-filter]:bg-gray-900/70">
                 <div className="mx-auto px-4 py-3 flex items-center gap-2">
                     <button
-                        className={`flex-1 px-4 py-3 rounded-xl text-base ${
+                        className={classNames(
+                            "flex-1 px-4 py-3 rounded-xl text-base",
                             dirty ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-gray-700 text-gray-300"
-                        }`}
+                        )}
                         onClick={save}
                         aria-label="Save custom details"
                     >
@@ -592,14 +627,43 @@ export default function InventoryLotCustomDetailsPage() {
                         + Add field
                     </button>
                     <button
-                        className="px-4 py-3 rounded-xl bg-gray-800 border border-white/10 text-base"
-                        onClick={() => navigate(`/inventory/${encodeURIComponent(itemId)}`)}
+                        className="flex-1 px-4 py-3 rounded-xl bg-gray-800 border border-white/10 text-base"
+                        onClick={handleBack}
                         aria-label="Back to lot lines"
                     >
                         Back
                     </button>
                 </div>
             </div>
+
+            {/* Discard confirm modal */}
+            <Modal
+                open={openConfirmLeave}
+                onClose={() => setOpenConfirmLeave(false)}
+                title="Discard unsaved changes?"
+                footer={
+                    <>
+                        <button
+                            onClick={() => setOpenConfirmLeave(false)}
+                            className="w-full md:w-28 px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                        >
+                            Stay
+                        </button>
+                        <button
+                            onClick={() => {
+                                setOpenConfirmLeave(false);
+                                setDirty(false);
+                                (pendingNavRef.current || (() => navigate(-1)))();
+                            }}
+                            className="w-full md:w-28 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm"
+                        >
+                            Discard
+                        </button>
+                    </>
+                }
+            >
+                <div className="text-gray-300">If you leave, your latest unsaved edits will be lost.</div>
+            </Modal>
         </div>
     );
 }
