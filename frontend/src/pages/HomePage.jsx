@@ -5,9 +5,8 @@ import ReportsPage from "./ReportsPage";
 
 export const HomePage = () => {
     const {loginWithRedirect, isAuthenticated, isLoading} = useAuth0();
-    debugger;
 
-    // While Auth0 loads, keep a neutral spinner (prevents flicker)
+    // While Auth0 loads, keep a neutral spinner
     if (isLoading) {
         return (
             <div

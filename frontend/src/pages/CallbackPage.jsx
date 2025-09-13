@@ -3,21 +3,15 @@ import {useEffect} from "react";
 
 export const CallbackPage = () => {
     const {error, isAuthenticated, isLoading, getAccessTokenSilently} = useAuth0();
-    const path = import.meta.env.VITE_APP_ROOT_PATH;
 
-    useEffect(() => {
-        const storeTokenAndRedirect = async () => {
+    useEffect(async () => {
+        if (!isLoading && isAuthenticated) {
             try {
                 const token = await getAccessTokenSilently();
                 localStorage.setItem("access_token", token);
-                window.location.href = path
             } catch (err) {
                 console.error("Error fetching access token:", err);
             }
-        };
-
-        if (!isLoading && isAuthenticated) {
-            storeTokenAndRedirect();
         }
     }, [isAuthenticated, isLoading, getAccessTokenSilently]);
 
