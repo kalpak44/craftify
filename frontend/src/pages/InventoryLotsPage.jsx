@@ -1,23 +1,22 @@
-// InventoryBatchesPage.jsx
+// InventoryLotsPage.jsx
 import React, {useMemo, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 
 /**
- * InventoryBatchesPage
+ * InventoryLotsPage
  *
- * Responsive FEFO batches list for a single item (raw JS + Tailwind).
- * Updates in this version:
- * - Solid background (gradient removed).
- * - Mobile card list (< md) and desktop table (>= md) with identical features.
+ * Responsive FEFO lots list for a single item (raw JS + Tailwind).
+ * This revision renames all former "batches" concepts (variables, labels, routes, exports)
+ * to "lots" while keeping behavior identical.
  *
  * Features:
- * - Search by Batch ID, expiration range filters.
+ * - Search by Lot ID, expiration range filters.
  * - Sortable columns, pagination.
  * - Row selection with select-all-on-page.
  * - CSV export and print-friendly view.
- * - Clicking a row/card opens /inventory/:itemId/batches/:batchId.
+ * - Clicking a row/card opens /inventory/:itemId/lots/:lotId.
  */
-export default function InventoryBatchesPage() {
+export default function InventoryLotsPage() {
     const navigate = useNavigate();
     const {routeItemId} = useParams();
 
@@ -37,23 +36,23 @@ export default function InventoryBatchesPage() {
     const itemInfo = items[routeItemId] || {name: "Unknown Item", uom: "ea"};
     const itemId = routeItemId || "ITM-000";
 
-    // Mocked batches — all rows share same Item ID/Name/UoM
-    const batches = [
-        {batchId: "B-0001", expiration: "2025-10-31", batchSize: 120, allocated: 40},
-        {batchId: "B-0002", expiration: "2025-12-15", batchSize: 80, allocated: 10},
-        {batchId: "B-0003", expiration: "2026-02-01", batchSize: 50, allocated: 0},
-        {batchId: "B-0004", expiration: "2026-05-20", batchSize: 200, allocated: 120},
-        {batchId: "B-0005", expiration: "2026-08-30", batchSize: 60, allocated: 5},
-    ].map((b) => ({
-        ...b,
+    // Mocked lots — all rows share same Item ID/Name/UoM
+    const lots = [
+        {lotId: "L-0001", expiration: "2025-10-31", lotSize: 120, allocated: 40},
+        {lotId: "L-0002", expiration: "2025-12-15", lotSize: 80, allocated: 10},
+        {lotId: "L-0003", expiration: "2026-02-01", lotSize: 50, allocated: 0},
+        {lotId: "L-0004", expiration: "2026-05-20", lotSize: 200, allocated: 120},
+        {lotId: "L-0005", expiration: "2026-08-30", lotSize: 60, allocated: 5},
+    ].map((l) => ({
+        ...l,
         itemId,
         item: itemInfo.name,
         uom: itemInfo.uom,
-        available: (b.batchSize ?? 0) - (b.allocated ?? 0),
+        available: (l.lotSize ?? 0) - (l.allocated ?? 0),
     }));
 
     // State
-    const [query, setQuery] = useState(""); // search by batchId only
+    const [query, setQuery] = useState(""); // search by lotId only
     const [expFrom, setExpFrom] = useState(""); // YYYY-MM-DD
     const [expTo, setExpTo] = useState("");     // YYYY-MM-DD
     const [sort, setSort] = useState({key: "expiration", dir: "asc"}); // FEFO by default
@@ -63,12 +62,12 @@ export default function InventoryBatchesPage() {
 
     // Filtering + sorting
     const filtered = useMemo(() => {
-        let rows = batches;
+        let rows = lots;
 
-        // Search by Batch ID only
+        // Search by Lot ID only
         if (query) {
             const q = query.toLowerCase();
-            rows = rows.filter((r) => r.batchId.toLowerCase().includes(q));
+            rows = rows.filter((r) => r.lotId.toLowerCase().includes(q));
         }
 
         // Expiration range filtering (inclusive)
@@ -88,7 +87,7 @@ export default function InventoryBatchesPage() {
             const av = a[key];
             const bv = b[key];
 
-            if (["batchSize", "allocated", "available"].includes(key)) {
+            if (["lotSize", "allocated", "available"].includes(key)) {
                 const cmp = (av ?? 0) - (bv ?? 0);
                 return dir === "asc" ? cmp : -cmp;
             }
@@ -96,13 +95,13 @@ export default function InventoryBatchesPage() {
                 const cmp = new Date(av).getTime() - new Date(bv).getTime();
                 return dir === "asc" ? cmp : -cmp;
             }
-            // strings: itemId, item, uom, batchId
+            // strings: itemId, item, uom, lotId
             const cmp = String(av).localeCompare(String(bv), undefined, {numeric: true, sensitivity: "base"});
             return dir === "asc" ? cmp : -cmp;
         });
 
         return rows;
-    }, [batches, query, expFrom, expTo, sort]);
+    }, [lots, query, expFrom, expTo, sort]);
 
     // Paging
     const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -110,7 +109,7 @@ export default function InventoryBatchesPage() {
     const paged = filtered.slice(pageStart, pageStart + pageSize);
 
     // Selection
-    const rowId = (r) => `${r.itemId}|${r.batchId}`;
+    const rowId = (r) => `${r.itemId}|${r.lotId}`;
     const toggleOne = (id) => setSelected((s) => ({...s, [id]: !s[id]}));
     const selectedIds = Object.keys(selected).filter((k) => selected[k]);
     const selectedCount = selectedIds.length;
@@ -125,14 +124,14 @@ export default function InventoryBatchesPage() {
 
     // Navigation
     const goBack = () => navigate("/inventory/");
-    const openBatch = (batchId) =>
-        navigate(`/inventory/${encodeURIComponent(itemId)}/batches/${encodeURIComponent(batchId)}`);
+    const openLot = (lotId) =>
+        navigate(`/inventory/${encodeURIComponent(itemId)}/lots/${encodeURIComponent(lotId)}`);
 
     // ---------- Export helpers (aligned with InventoryPage) ----------
     const rowsForExport = () => (selectedCount ? filtered.filter((r) => selected[rowId(r)]) : filtered);
 
     const toCSV = (dataRows) => {
-        const headers = ["Item ID", "Item", "UoM", "Batch", "Expiration", "Batch size", "Allocated", "Available"];
+        const headers = ["Item ID", "Item", "UoM", "Lot", "Expiration", "Lot size", "Allocated", "Available"];
         const escape = (v) => {
             const s = String(v ?? "");
             return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
@@ -144,9 +143,9 @@ export default function InventoryBatchesPage() {
                     escape(r.itemId),
                     escape(r.item),
                     escape(r.uom),
-                    escape(r.batchId),
+                    escape(r.lotId),
                     escape(r.expiration),
-                    escape(r.batchSize),
+                    escape(r.lotSize),
                     escape(r.allocated),
                     escape(r.available),
                 ].join(",")
@@ -170,7 +169,7 @@ export default function InventoryBatchesPage() {
         const csv = toCSV(rowsForExport());
         downloadBlob(
             new Blob(["\ufeff" + csv], {type: "text/csv;charset=utf-8;"}),
-            `inventory_${itemId}_batches_${new Date().toISOString().slice(0, 10)}.csv`
+            `inventory_${itemId}_lots_${new Date().toISOString().slice(0, 10)}.csv`
         );
     };
 
@@ -180,7 +179,7 @@ export default function InventoryBatchesPage() {
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Inventory Batches</title>
+<title>Inventory Lots</title>
 <style>
   @media print { @page { size: A4 landscape; margin: 12mm; } }
   body{ font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; color:#0f172a; }
@@ -194,12 +193,12 @@ export default function InventoryBatchesPage() {
 </style>
 </head>
 <body>
-<h1>Inventory Batches • <span class="mono">${itemId}</span></h1>
-<div class="meta">${itemInfo.name} — UoM: ${itemInfo.uom} • Exported ${new Date().toLocaleString()} • ${dataRows.length} rows ${selectedCount ? "(selection)" : "(filtered)"} • Filters: ${query ? "Batch ID contains \"" + query + "\"" : "none"}${(expFrom || expTo) ? " • Expiration " + (expFrom || "...") + " → " + (expTo || "...") : ""}</div>
+<h1>Inventory Lots • <span class="mono">${itemId}</span></h1>
+<div class="meta">${itemInfo.name} — UoM: ${itemInfo.uom} • Exported ${new Date().toLocaleString()} • ${dataRows.length} rows ${selectedCount ? "(selection)" : "(filtered)"} • Filters: ${query ? "Lot ID contains \"" + query + "\"" : "none"}${(expFrom || expTo) ? " • Expiration " + (expFrom || "...") + " → " + (expTo || "...") : ""}</div>
 <table>
   <thead>
     <tr>
-      <th>Item ID</th><th>Item</th><th>UoM</th><th>Batch</th><th>Expiration</th><th>Batch size</th><th>Allocated</th><th>Available</th>
+      <th>Item ID</th><th>Item</th><th>UoM</th><th>Lot</th><th>Expiration</th><th>Lot size</th><th>Allocated</th><th>Available</th>
     </tr>
   </thead>
   <tbody>
@@ -209,9 +208,9 @@ export default function InventoryBatchesPage() {
           <td class="mono">${r.itemId}</td>
           <td>${r.item}</td>
           <td>${r.uom}</td>
-          <td class="mono">${r.batchId}</td>
+          <td class="mono">${r.lotId}</td>
           <td>${r.expiration}</td>
-          <td class="num">${r.batchSize}</td>
+          <td class="num">${r.lotSize}</td>
           <td class="num">${r.allocated}</td>
           <td class="num">${r.available}</td>
         </tr>`
@@ -252,7 +251,7 @@ export default function InventoryBatchesPage() {
                             Inventory • <span className="font-mono">{itemId}</span>
                         </h1>
                         <p className="mt-1 md:mt-2 text-gray-400 text-sm md:text-base">
-                            {itemInfo.name} — UoM: {itemInfo.uom}. FEFO list of batches for this item.
+                            {itemInfo.name} — UoM: {itemInfo.uom}. FEFO list of lots for this item.
                         </p>
                     </div>
                     <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
@@ -279,10 +278,10 @@ export default function InventoryBatchesPage() {
             <div className="mx-auto px-4 pb-4">
                 <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-3 md:p-4">
                     <div className="flex flex-col md:flex-row md:items-center gap-3">
-                        {/* Search by Batch ID */}
+                        {/* Search by Lot ID */}
                         <div className="relative flex-1">
                             <input
-                                placeholder="Search Batch ID…"
+                                placeholder="Search Lot ID…"
                                 value={query}
                                 onChange={(e) => {
                                     setQuery(e.target.value);
@@ -374,8 +373,8 @@ export default function InventoryBatchesPage() {
                                 <div
                                     key={id}
                                     className="rounded-xl border border-white/10 bg-gray-900/60 p-3 active:bg-gray-800/40"
-                                    onClick={() => openBatch(r.batchId)}
-                                    title="Open Batch Details"
+                                    onClick={() => openLot(r.lotId)}
+                                    title="Open Lot Details"
                                 >
                                     <div className="flex items-start gap-3">
                                         <input
@@ -387,7 +386,7 @@ export default function InventoryBatchesPage() {
                                         />
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center justify-between gap-2">
-                                                <div className="font-mono text-white text-sm">{r.batchId}</div>
+                                                <div className="font-mono text-white text-sm">{r.lotId}</div>
                                                 <div className="text-xs text-gray-300">{r.expiration}</div>
                                             </div>
                                             <div className="mt-1 text-gray-200 text-sm line-clamp-2">{r.item}</div>
@@ -399,8 +398,8 @@ export default function InventoryBatchesPage() {
                                             </div>
                                             <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
                                                 <div className="rounded-lg border border-white/10 bg-gray-800/40 p-2">
-                                                    <div className="text-gray-400">Batch</div>
-                                                    <div className="font-medium text-gray-200">{r.batchSize}</div>
+                                                    <div className="text-gray-400">Lot</div>
+                                                    <div className="font-medium text-gray-200">{r.lotSize}</div>
                                                 </div>
                                                 <div className="rounded-lg border border-white/10 bg-gray-800/40 p-2">
                                                     <div className="text-gray-400">Allocated</div>
@@ -419,7 +418,7 @@ export default function InventoryBatchesPage() {
                         {paged.length === 0 && (
                             <div
                                 className="rounded-xl border border-white/10 bg-gray-900/60 p-6 text-center text-gray-400">
-                                No batches found.
+                                No lots found.
                             </div>
                         )}
                     </div>
@@ -437,9 +436,9 @@ export default function InventoryBatchesPage() {
                             {th("Item ID", "itemId")}
                             {th("Item", "item")}
                             {th("UoM", "uom")}
-                            {th("Batch", "batchId")}
+                            {th("Lot", "lotId")}
                             {th("Expiration", "expiration")}
-                            {th("Batch size", "batchSize", true)}
+                            {th("Lot size", "lotSize", true)}
                             {th("Allocated", "allocated", true)}
                             {th("Available", "available", true)}
                         </tr>
@@ -453,8 +452,8 @@ export default function InventoryBatchesPage() {
                                 <tr
                                     key={id}
                                     className="hover:bg-gray-800/40 transition cursor-pointer"
-                                    onClick={() => openBatch(r.batchId)}
-                                    title="Open Batch Details"
+                                    onClick={() => openLot(r.lotId)}
+                                    title="Open Lot Details"
                                 >
                                     <td className="px-4 py-3" onClick={stopRowNav}>
                                         <input type="checkbox" checked={!!selected[id]} onChange={() => toggleOne(id)}/>
@@ -464,9 +463,9 @@ export default function InventoryBatchesPage() {
                                     </td>
                                     <td className="px-4 py-3 text-gray-200">{r.item}</td>
                                     <td className="px-4 py-3 text-gray-400">{r.uom}</td>
-                                    <td className="px-4 py-3 font-mono text-gray-300">{r.batchId}</td>
+                                    <td className="px-4 py-3 font-mono text-gray-300">{r.lotId}</td>
                                     <td className="px-4 py-3 text-gray-300">{r.expiration}</td>
-                                    <td className="px-4 py-3 text-right text-gray-200">{r.batchSize}</td>
+                                    <td className="px-4 py-3 text-right text-gray-200">{r.lotSize}</td>
                                     <td className="px-4 py-3 text-right text-gray-200">{r.allocated}</td>
                                     <td className={`px-4 py-3 text-right ${availClass}`}>{r.available}</td>
                                 </tr>
@@ -475,7 +474,7 @@ export default function InventoryBatchesPage() {
                         {paged.length === 0 && (
                             <tr>
                                 <td className="px-4 py-6 text-center text-gray-400" colSpan={9}>
-                                    No batches found.
+                                    No lots found.
                                 </td>
                             </tr>
                         )}
@@ -534,4 +533,4 @@ export default function InventoryBatchesPage() {
     );
 }
 
-export {InventoryBatchesPage};
+export {InventoryLotsPage};

@@ -24,7 +24,7 @@ import ItemDetailsPage from "./pages/ItemDetailsPage.jsx";
 import WorkOrderOperationsPage from "./pages/WorkOrderOperationsPage.jsx";
 import {WorkOrderOperationsDetailsPage} from "./pages/WorkOrderOperationsDetailsPage.jsx";
 import CalendarPage from "./pages/CalendarPage.jsx";
-import {InventoryBatchesPage} from "./pages/InventoryBatchesPage.jsx";
+import {InventoryLotsPage} from "./pages/InventoryLotsPage.jsx";
 import InventoryBatchLinesPage from "./pages/InventoryBatchLinesPage.jsx";
 
 export default function App() {
@@ -119,10 +119,10 @@ export default function App() {
             }/>
             <Route path="/inventory/:routeItemId/" element={
                 <AuthenticationGuard>
-                    <FullWidthLayout><InventoryBatchesPage/></FullWidthLayout>
+                    <FullWidthLayout><InventoryLotsPage/></FullWidthLayout>
                 </AuthenticationGuard>
             }/>
-            <Route path="/inventory/:routeItemId/batches/:routeBatchId" element={
+            <Route path="/inventory/:routeItemId/lots/:routeBatchId" element={
                 <AuthenticationGuard>
                     <FullWidthLayout><InventoryBatchLinesPage/></FullWidthLayout>
                 </AuthenticationGuard>

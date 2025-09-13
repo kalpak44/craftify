@@ -1,12 +1,22 @@
-// InventoryBatchCustomDetailsPage.jsx
+// InventoryLotCustomDetailsPage.jsx
 import React, {useEffect, useMemo, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 
-const STORAGE_KEY = (itemId, batchId) => `inv:${itemId}:${batchId}:customFields`;
+/**
+ * InventoryLotCustomDetailsPage
+ *
+ * Mobile-optimized custom fields editor for a single inventory lot.
+ * Improvements for mobile UX (while keeping desktop table intact):
+ * - Dedicated mobile card view (md:hidden) with large tap targets and stacked inputs.
+ * - Sticky bottom action bar on small screens for quick Save / Add field.
+ * - Drag & drop kept for desktop; on mobile, use Move Up/Down buttons.
+ * - Touch-friendly input paddings, larger controls, and improved spacing.
+ */
+const STORAGE_KEY = (itemId, lotId) => `inv:${itemId}:${lotId}:customFields`;
 
-export default function InventoryBatchCustomDetailsPage() {
+export default function InventoryLotCustomDetailsPage() {
     const navigate = useNavigate();
-    const {routeItemId, routeBatchId} = useParams();
+    const {routeItemId, routeLotId} = useParams();
 
     // Mock items dict for header context
     const items = {
@@ -21,13 +31,13 @@ export default function InventoryBatchCustomDetailsPage() {
     };
 
     const itemId = routeItemId || "ITM-000";
-    const batchId = routeBatchId || "B-0000";
+    const lotId = routeLotId || "L-0000";
     const itemInfo = items[itemId] || {name: "Unknown Item", uom: "ea"};
 
     // Load & save helpers
     const load = () => {
         try {
-            const raw = localStorage.getItem(STORAGE_KEY(itemId, batchId));
+            const raw = localStorage.getItem(STORAGE_KEY(itemId, lotId));
             const parsed = raw ? JSON.parse(raw) : [];
             return Array.isArray(parsed) ? parsed : [];
         } catch {
@@ -42,10 +52,10 @@ export default function InventoryBatchCustomDetailsPage() {
     useEffect(() => {
         setRows(load());
         setDirty(false);
-    }, [itemId, batchId]);
+    }, [itemId, lotId]);
 
     const save = () => {
-        localStorage.setItem(STORAGE_KEY(itemId, batchId), JSON.stringify(rows));
+        localStorage.setItem(STORAGE_KEY(itemId, lotId), JSON.stringify(rows));
         setDirty(false);
     };
 
@@ -53,7 +63,7 @@ export default function InventoryBatchCustomDetailsPage() {
     useEffect(() => {
         if (!dirty) return;
         const t = setTimeout(() => {
-            localStorage.setItem(STORAGE_KEY(itemId, batchId), JSON.stringify(rows));
+            localStorage.setItem(STORAGE_KEY(itemId, lotId), JSON.stringify(rows));
             setDirty(false);
         }, 400);
         return () => clearTimeout(t);
@@ -82,7 +92,7 @@ export default function InventoryBatchCustomDetailsPage() {
         setDirty(true);
     };
 
-    // Filter (preserve manual order; no sorting to respect custom ordering)
+    // Filter (preserve manual order)
     const filtered = useMemo(() => {
         if (!query) return rows;
         const q = query.toLowerCase();
@@ -94,7 +104,6 @@ export default function InventoryBatchCustomDetailsPage() {
     }, [rows, query]);
 
     // --- Reordering ---
-
     const moveItem = (list, fromIndex, toIndex) => {
         if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) return list;
         const next = list.slice();
@@ -119,7 +128,23 @@ export default function InventoryBatchCustomDetailsPage() {
         setDirty(true);
     };
 
-    // Drag & Drop state
+    const moveUp = (id) => {
+        setRows((prev) => {
+            const from = prev.findIndex((r) => r.id === id);
+            return moveItem(prev, from, Math.max(0, from - 1));
+        });
+        setDirty(true);
+    };
+
+    const moveDown = (id) => {
+        setRows((prev) => {
+            const from = prev.findIndex((r) => r.id === id);
+            return moveItem(prev, from, Math.min(prev.length - 1, from + 1));
+        });
+        setDirty(true);
+    };
+
+    // Drag & Drop state (desktop only UI shows handle)
     const [dragId, setDragId] = useState(null);
     const [overId, setOverId] = useState(null);
 
@@ -163,18 +188,20 @@ export default function InventoryBatchCustomDetailsPage() {
         <div
             className="min-h-[calc(100vh-140px)] bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
             {/* Header */}
-            <header className="mx-auto px-4 pt-10 pb-6">
-                <div className="flex items-end justify-between gap-4 flex-wrap">
-                    <div>
-                        <h1 className="text-3xl font-bold text-white">
-                            Inventory • <span className="font-mono">{itemId}</span> • Batch{" "}
-                            <span className="font-mono">{batchId}</span> • Custom details
+            <header className="mx-auto px-4 pt-8 pb-4 md:pt-10 md:pb-6">
+                <div className="flex items-start md:items-end justify-between gap-3 flex-wrap">
+                    <div className="min-w-0">
+                        <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight">
+                            Inventory • <span className="font-mono">{itemId}</span> • Lot{" "}
+                            <span className="font-mono">{lotId}</span>
                         </h1>
-                        <p className="mt-2 text-gray-400">
-                            {itemInfo.name} — UoM: {itemInfo.uom}. Add and reorder your own fields for this batch.
+                        <p className="mt-1 md:mt-2 text-gray-400 text-sm md:text-base">
+                            {itemInfo.name} — UoM: {itemInfo.uom}. Custom fields for this lot.
                         </p>
                     </div>
-                    <div className="flex gap-3">
+
+                    {/* Desktop actions */}
+                    <div className="hidden sm:flex gap-2 md:gap-3">
                         <button
                             className={`px-4 py-2 ${
                                 dirty ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-gray-700 text-gray-300"
@@ -185,13 +212,16 @@ export default function InventoryBatchCustomDetailsPage() {
                             {dirty ? "Save" : "Saved"}
                         </button>
                         <button
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
+                            onClick={addRow}
+                            title="Add custom field"
+                        >
+                            + Add field
+                        </button>
+                        <button
                             className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
-                            onClick={() =>
-                                navigate(
-                                    `/inventory/${encodeURIComponent(itemId)}`
-                                )
-                            }
-                            title="Back to Batch Lines"
+                            onClick={() => navigate(`/inventory/${encodeURIComponent(itemId)}`)}
+                            title="Back to Lot Lines"
                         >
                             Back
                         </button>
@@ -200,19 +230,20 @@ export default function InventoryBatchCustomDetailsPage() {
             </header>
 
             {/* Toolbar */}
-            <div className="mx-auto px-4 pb-4">
-                <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
-                    <div className="flex flex-col md:flex-row md:items-center gap-3">
+            <div className="mx-auto px-4 pb-3 md:pb-4">
+                <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-3 md:p-4">
+                    <div className="flex items-center gap-3">
                         <div className="relative flex-1">
                             <input
                                 placeholder="Search Name or Note…"
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
-                                className="w-full rounded-lg bg-gray-800 border border-white/10 pl-3 pr-10 py-2 text-sm"
+                                className="w-full rounded-lg bg-gray-800 border border-white/10 pl-3 pr-10 py-2.5 text-sm md:text-base"
+                                inputMode="text"
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">⌕</span>
                         </div>
-                        <div className="flex items-center gap-2 ml-auto">
+                        <div className="hidden md:flex items-center gap-2 ml-auto">
                             <button
                                 onClick={addRow}
                                 className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm"
@@ -225,8 +256,154 @@ export default function InventoryBatchCustomDetailsPage() {
                 </div>
             </div>
 
-            {/* Table */}
-            <section className="mx-auto px-4 pb-12">
+            {/* Mobile card list */}
+            <section className="mx-auto px-4 md:hidden pb-28"> {/* bottom padding for sticky bar */}
+                <div className="space-y-3">
+                    {filtered.map((r, idx) => {
+                        const isDateRange = r.type === "date-range";
+                        const isDate = r.type === "date";
+                        const isText = r.type === "text";
+                        const ensureRange = (val) => (typeof val === "object" && val ? val : {from: "", to: ""});
+                        const val = isDateRange ? ensureRange(r.value) : r.value ?? "";
+
+                        return (
+                            <div key={r.id}
+                                 className="rounded-xl border border-white/10 bg-gray-900/70 p-3 active:bg-gray-800/40">
+                                <div className="flex items-center justify-between gap-2">
+                                    <input
+                                        value={r.name}
+                                        onChange={(e) => setField(r.id, {name: e.target.value})}
+                                        className="flex-1 rounded-lg bg-gray-800 border border-white/10 px-3 py-2.5 text-base"
+                                        placeholder="Field name (e.g., Certificate No.)"
+                                        aria-label="Field name"
+                                    />
+                                    <button
+                                        onClick={() => deleteRow(r.id)}
+                                        className="shrink-0 px-3 py-2 rounded-lg bg-red-600/80 hover:bg-red-600 text-white text-sm"
+                                        title="Remove field"
+                                        aria-label="Delete field"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+
+                                <div className="mt-2 grid grid-cols-2 gap-2">
+                                    <select
+                                        value={r.type}
+                                        onChange={(e) => {
+                                            const nextType = e.target.value;
+                                            const nextValue = nextType === "date-range" ? {from: "", to: ""} : "";
+                                            setField(r.id, {type: nextType, value: nextValue});
+                                        }}
+                                        className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2.5 text-base col-span-2"
+                                        aria-label="Field type"
+                                    >
+                                        <option value="text">Text</option>
+                                        <option value="date">Date</option>
+                                        <option value="date-range">Date range</option>
+                                    </select>
+
+                                    {/* Value */}
+                                    {isText && (
+                                        <input
+                                            value={val}
+                                            onChange={(e) => setField(r.id, {value: e.target.value})}
+                                            className="col-span-2 rounded-lg bg-gray-800 border border-white/10 px-3 py-2.5 text-base"
+                                            placeholder="Enter value…"
+                                            aria-label="Field value"
+                                        />
+                                    )}
+                                    {isDate && (
+                                        <input
+                                            type="date"
+                                            value={val || ""}
+                                            onChange={(e) => setField(r.id, {value: e.target.value})}
+                                            className="col-span-2 rounded-lg bg-gray-800 border border-white/10 px-3 py-2.5 text-base"
+                                            aria-label="Field date"
+                                        />
+                                    )}
+                                    {isDateRange && (
+                                        <>
+                                            <input
+                                                type="date"
+                                                value={val.from || ""}
+                                                onChange={(e) => setField(r.id, {
+                                                    value: {
+                                                        ...val,
+                                                        from: e.target.value
+                                                    }
+                                                })}
+                                                className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2.5 text-base"
+                                                aria-label="Date from"
+                                            />
+                                            <input
+                                                type="date"
+                                                value={val.to || ""}
+                                                onChange={(e) => setField(r.id, {value: {...val, to: e.target.value}})}
+                                                className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2.5 text-base"
+                                                aria-label="Date to"
+                                            />
+                                        </>
+                                    )}
+
+                                    <input
+                                        value={r.note}
+                                        onChange={(e) => setField(r.id, {note: e.target.value})}
+                                        className="col-span-2 rounded-lg bg-gray-800 border border-white/10 px-3 py-2.5 text-base"
+                                        placeholder="Optional note…"
+                                        aria-label="Field note"
+                                    />
+                                </div>
+
+                                {/* Mobile ordering controls */}
+                                <div className="mt-3 flex items-center justify-between gap-2">
+                                    <div className="text-xs text-gray-400">Position: {idx + 1}</div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => moveUp(r.id)}
+                                            className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm"
+                                            aria-label="Move up"
+                                        >
+                                            ↑
+                                        </button>
+                                        <button
+                                            onClick={() => moveDown(r.id)}
+                                            className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm"
+                                            aria-label="Move down"
+                                        >
+                                            ↓
+                                        </button>
+                                        <button
+                                            onClick={() => moveTop(r.id)}
+                                            className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm"
+                                            aria-label="Move to top"
+                                        >
+                                            Top
+                                        </button>
+                                        <button
+                                            onClick={() => moveBottom(r.id)}
+                                            className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm"
+                                            aria-label="Move to bottom"
+                                        >
+                                            Bottom
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+
+                    {filtered.length === 0 && (
+                        <div className="rounded-xl border border-white/10 bg-gray-900/60 p-6 text-center text-gray-400">
+                            No custom fields yet. Tap <span className="text-gray-200">+ Add field</span> below to create
+                            one.
+                        </div>
+                    )}
+                </div>
+            </section>
+
+            {/* Desktop table (>= md) */}
+            <section className="mx-auto px-4 hidden md:block pb-12">
                 <div className="overflow-x-auto border border-white/10 rounded-xl bg-gray-900/60">
                     <table className="min-w-full divide-y divide-gray-800 text-sm">
                         <thead className="bg-gray-900/80">
@@ -393,8 +570,38 @@ export default function InventoryBatchCustomDetailsPage() {
                     </table>
                 </div>
             </section>
+
+            {/* Sticky bottom action bar (mobile) */}
+            <div
+                className="fixed bottom-0 left-0 right-0 md:hidden border-t border-white/10 bg-gray-900/95 backdrop-blur supports-[backdrop-filter]:bg-gray-900/70">
+                <div className="mx-auto px-4 py-3 flex items-center gap-2">
+                    <button
+                        className={`flex-1 px-4 py-3 rounded-xl text-base ${
+                            dirty ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-gray-700 text-gray-300"
+                        }`}
+                        onClick={save}
+                        aria-label="Save custom details"
+                    >
+                        {dirty ? "Save" : "Saved"}
+                    </button>
+                    <button
+                        className="flex-1 px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-base"
+                        onClick={addRow}
+                        aria-label="Add custom field"
+                    >
+                        + Add field
+                    </button>
+                    <button
+                        className="px-4 py-3 rounded-xl bg-gray-800 border border-white/10 text-base"
+                        onClick={() => navigate(`/inventory/${encodeURIComponent(itemId)}`)}
+                        aria-label="Back to lot lines"
+                    >
+                        Back
+                    </button>
+                </div>
+            </div>
         </div>
     );
 }
 
-export {InventoryBatchCustomDetailsPage};
+export {InventoryLotCustomDetailsPage};
