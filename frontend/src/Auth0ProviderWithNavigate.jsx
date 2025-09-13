@@ -20,12 +20,11 @@ export const Auth0ProviderWithNavigate = ({children}) => {
     const audience = import.meta.env.VITE_AUTH0_AUDIENCE;
 
     const onRedirectCallback = (appState) => {
-        navigate(appState?.returnTo);
+        navigate(appState?.returnTo || window.location.pathname);
     };
 
     if (!(domain && clientId && redirectUri && audience)) {
-        console.warn('Auth0 configuration is missing');
-        return null;
+        throw Error('Auth0 configuration is missing');
     }
 
     return (
