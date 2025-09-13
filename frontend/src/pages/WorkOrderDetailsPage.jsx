@@ -5,17 +5,16 @@ import {useNavigate} from "react-router-dom";
  * WorkOrderDetailsPage — React + Tailwind (plain JS)
  *
  * Purpose:
- * - Create a production work order with BOM-driven components and FEFO lot reservation (mock).
+ * - Create a production Work Order with BOM-driven components and FEFO lot reservation (mock).
  *
- * Final Adjustments (per request):
- * - Use a modal-based alert as a placeholder for both Save and Cancel: first show alert, then navigate to /work-orders/.
- * - Removed Status select box completely (and related state/validation).
- * - Mobile-aligned UI: fixed full-viewport gradient, sticky bottom action bar, full-screen modals on mobile,
- *   mobile card pickers + desktop tables.
+ * Changes (per request):
+ * - Replaced the alert shown when Quantity/BOM is missing on "Check & Reserve" with a proper modal.
+ * - Reordered mobile bottom action bar buttons to match the header order: Operations, Save, Cancel.
  *
  * Notes:
- * - No costs/prices anywhere.
- * - No external libraries; mock data only; paste into Vite + Tailwind app.
+ * - Save uses native `alert()` and then navigates to `/work-orders` (mock save).
+ * - Cancel uses the exact same confirm-leave modal pattern as the BOM example.
+ * - No Start Date & Status. Fixed full-viewport gradient, sticky bottom action bar, full-screen modals on mobile.
  */
 
 // ---- Mocked data ----
@@ -68,7 +67,7 @@ function classNames(...a) {
     return a.filter(Boolean).join(" ");
 }
 
-// ---------- Modal (mobile full-screen, desktop contained) ----------
+// ---------- Modal (exact pattern from BOM example) ----------
 function Modal({open, onClose, title, children, footer}) {
     if (!open) return null;
     return (
@@ -77,7 +76,7 @@ function Modal({open, onClose, title, children, footer}) {
             <div className="absolute inset-0 flex items-center justify-center p-0 md:p-4">
                 <div
                     className="w-full h-full md:h-auto md:max-h-[85vh] md:max-w-3xl overflow-hidden
-           rounded-none md:rounded-2xl border border-white/10 bg-gray-900 text-gray-200 shadow-2xl"
+                     rounded-none md:rounded-2xl border border-white/10 md:bg-gray-900 bg-gray-900 text-gray-200 shadow-2xl"
                 >
                     <div className="px-4 md:px-5 py-4 border-b border-white/10 flex items-center justify-between">
                         <h3 className="text-base md:text-lg font-semibold">{title}</h3>
@@ -92,37 +91,6 @@ function Modal({open, onClose, title, children, footer}) {
                 </div>
             </div>
         </div>
-    );
-}
-
-// ---------- Simple Alert Modal (placeholder for Save/Cancel) ----------
-function AlertModal({open, onClose, title, message, primary}) {
-    return (
-        <Modal
-            open={open}
-            onClose={onClose}
-            title={title || "Notice"}
-            footer={
-                <button
-                    onClick={() => {
-                        if (primary?.onClick) primary.onClick();
-                        onClose();
-                    }}
-                    className={classNames(
-                        "px-4 py-2 rounded-lg text-sm w-full md:w-auto",
-                        primary?.variant === "danger"
-                            ? "bg-red-600 hover:bg-red-700 text-white"
-                            : primary?.variant === "accent"
-                                ? "bg-indigo-600 hover:bg-indigo-700 text-white"
-                                : "bg-gray-800 hover:bg-gray-700 border border-white/10"
-                    )}
-                >
-                    {primary?.label || "OK"}
-                </button>
-            }
-        >
-            <div className="text-gray-300 text-sm">{message}</div>
-        </Modal>
     );
 }
 
@@ -160,7 +128,7 @@ function Pager({page, pageSize, total, onPage, onPageSize}) {
     );
 }
 
-// ---------- BOM Picker Modal (mobile cards + desktop table) ----------
+// ---------- BOM Picker Modal ----------
 function BomPickerModal({open, onClose, onPick, items, boms}) {
     const [q, setQ] = useState("");
     const [page, setPage] = useState(1);
@@ -272,131 +240,9 @@ function BomPickerModal({open, onClose, onPick, items, boms}) {
                 </table>
             </div>
 
-            <Pager
-                page={page}
-                pageSize={pageSize}
-                total={filtered.length}
-                onPage={setPage}
-                onPageSize={setPageSize}
-            />
+            <Pager page={page} pageSize={pageSize} total={filtered.length} onPage={setPage} onPageSize={setPageSize}/>
             <div className="mt-2 text-xs text-gray-400">Tip: type components (e.g. “ITM-009”) to find BOMs using them.
             </div>
-        </Modal>
-    );
-}
-
-// ---------- Item Picker Modal (mobile cards + desktop table) ----------
-function ItemPickerModal({open, onClose, onPick, items, title = "Select Item"}) {
-    const [q, setQ] = useState("");
-    const [page, setPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
-
-    const filtered = useMemo(() => {
-        const qq = q.toLowerCase();
-        return items.filter(it =>
-            it.id.toLowerCase().includes(qq) ||
-            it.name.toLowerCase().includes(qq) ||
-            it.uom.toLowerCase().includes(qq) ||
-            it.status.toLowerCase().includes(qq)
-        );
-    }, [q, items]);
-
-    const start = (page - 1) * pageSize;
-    const pageRows = filtered.slice(start, start + pageSize);
-    useEffect(() => {
-        setPage(1);
-    }, [q, pageSize, open]);
-
-    return (
-        <Modal
-            open={open}
-            onClose={onClose}
-            title={title}
-            footer={
-                <button
-                    onClick={onClose}
-                    className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm w-full md:w-auto"
-                >
-                    Close
-                </button>
-            }
-        >
-            <div className="mb-3">
-                <input
-                    value={q}
-                    onChange={e => setQ(e.target.value)}
-                    placeholder="Search by ID, name, UoM, status"
-                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
-                />
-            </div>
-
-            {/* Mobile: cards */}
-            <div className="space-y-2 md:hidden">
-                {pageRows.map(it => (
-                    <div key={it.id} className="rounded-xl border border-white/10 bg-gray-900/60 p-3">
-                        <div className="flex items-center justify-between gap-3">
-                            <div>
-                                <div className="font-mono text-sm text-gray-100">{it.id}</div>
-                                <div className="text-sm text-gray-300">{it.name}</div>
-                                <div className="text-xs text-gray-500 mt-1">UoM: {it.uom} • Status: {it.status}</div>
-                            </div>
-                            <button
-                                onClick={() => onPick(it.id)}
-                                className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm whitespace-nowrap"
-                            >
-                                Use
-                            </button>
-                        </div>
-                    </div>
-                ))}
-                {pageRows.length === 0 && <div className="text-center text-gray-400 py-6 text-sm">No matches</div>}
-            </div>
-
-            {/* Desktop: table */}
-            <div className="hidden md:block overflow-x-auto border border-white/10 rounded-xl bg-gray-900/40">
-                <table className="min-w-full divide-y divide-gray-800 text-sm">
-                    <thead className="bg-gray-900/80">
-                    <tr>
-                        <th className="px-4 py-3 text-left">Item</th>
-                        <th className="px-4 py-3 text-left">Name</th>
-                        <th className="px-4 py-3 text-left">UoM</th>
-                        <th className="px-4 py-3 text-left">Status</th>
-                        <th className="px-4 py-3 text-right">Action</th>
-                    </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-800">
-                    {pageRows.map(it => (
-                        <tr key={it.id} className="hover:bg-gray-800/40">
-                            <td className="px-4 py-3 font-mono">{it.id}</td>
-                            <td className="px-4 py-3">{it.name}</td>
-                            <td className="px-4 py-3">{it.uom}</td>
-                            <td className="px-4 py-3">{it.status}</td>
-                            <td className="px-4 py-3 text-right">
-                                <button
-                                    onClick={() => onPick(it.id)}
-                                    className="px-2.5 py-1.5 rounded-md border text-xs bg-gray-700/80 text-white border-white/10 hover:bg-gray-700"
-                                >
-                                    Use Item
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                    {pageRows.length === 0 && (
-                        <tr>
-                            <td colSpan={5} className="px-4 py-6 text-center text-gray-400">No matches</td>
-                        </tr>
-                    )}
-                    </tbody>
-                </table>
-            </div>
-
-            <Pager
-                page={page}
-                pageSize={pageSize}
-                total={filtered.length}
-                onPage={setPage}
-                onPageSize={setPageSize}
-            />
         </Modal>
     );
 }
@@ -506,9 +352,30 @@ function AvailabilityModal({open, onClose, requirements, lots, onReserve, onGoPu
                     </tbody>
                 </table>
             </div>
-            <div className="mt-3 text-xs text-gray-400">
-                FEFO = First-Expired-First-Out. The earliest expiry lots are allocated first for each component.
+            <div className="mt-3 text-xs text-gray-400">FEFO = First-Expired-First-Out. The earliest expiry lots are
+                allocated first for each component.
             </div>
+        </Modal>
+    );
+}
+
+// ---------- Simple Notice Modal ----------
+function NoticeModal({open, onClose, title = "Heads up", message, actionLabel = "OK"}) {
+    return (
+        <Modal
+            open={open}
+            onClose={onClose}
+            title={title}
+            footer={
+                <button
+                    onClick={onClose}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm w-full md:w-auto"
+                >
+                    {actionLabel}
+                </button>
+            }
+        >
+            <div className="text-sm text-gray-300">{message}</div>
         </Modal>
     );
 }
@@ -520,35 +387,31 @@ export default function WorkOrderDetailsPage() {
     // ----- General form -----
     const [woId, setWoId] = useState(nextWO());
     const [bomFgId, setBomFgId] = useState("");
-    const [parentItemId, setParentItemId] = useState("");
 
     const [qty, setQty] = useState("");
     const [priority, setPriority] = useState("Medium");
-    const [startDate, setStartDate] = useState(() => new Date().toISOString().slice(0, 10));
     const [dueDate, setDueDate] = useState(() => new Date(Date.now() + 86400000 * 3).toISOString().slice(0, 10));
     const [assignee, setAssignee] = useState("");
     const [notes, setNotes] = useState("");
 
-    // Autosave (mock)
-    const [dirty, setDirty] = useState(false);
-    const [lastSavedAt, setLastSavedAt] = useState(null);
-    const saveTimer = useRef(null);
-    const requestSave = () => {
-        setDirty(true);
-        if (saveTimer.current) window.clearTimeout(saveTimer.current);
-        saveTimer.current = window.setTimeout(() => {
-            setLastSavedAt(new Date());
-            setDirty(false);
-        }, 800);
-    };
+    // ---- Exact "unsaved changes" tracking like BOM (snapshot) ----
+    const initialSnapshotRef = useRef(null);
+    const makeSnapshot = () => JSON.stringify({
+        woId, bomFgId, qty, priority, dueDate, assignee, notes
+    });
     useEffect(() => {
-        requestSave();
+        if (initialSnapshotRef.current == null) initialSnapshotRef.current = makeSnapshot();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [woId, bomFgId, parentItemId, qty, priority, startDate, dueDate, assignee, notes]);
+    }, []);
+    const hasChanges = useMemo(() => initialSnapshotRef.current !== makeSnapshot(),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [woId, bomFgId, qty, priority, dueDate, assignee, notes]
+    );
 
+    // beforeunload guard (uses hasChanges, same as BOM)
     useEffect(() => {
         const beforeUnload = (e) => {
-            if (dirty) {
+            if (hasChanges) {
                 e.preventDefault();
                 e.returnValue = "";
                 return "";
@@ -556,12 +419,12 @@ export default function WorkOrderDetailsPage() {
         };
         window.addEventListener("beforeunload", beforeUnload);
         return () => window.removeEventListener("beforeunload", beforeUnload);
-    }, [dirty]);
+    }, [hasChanges]);
 
     // Derived
     const qtyNum = Number(qty || 0);
     const bomForParent = useMemo(() => MOCK_BOMS[bomFgId] || [], [bomFgId]);
-    const parentItem = useMemo(() => MOCK_ITEMS.find(i => i.id === parentItemId) || null, [parentItemId]);
+    const parentItem = useMemo(() => MOCK_ITEMS.find(i => i.id === bomFgId) || null, [bomFgId]);
 
     // Requirements from BOM × WO qty
     const requirements = useMemo(() => {
@@ -572,7 +435,7 @@ export default function WorkOrderDetailsPage() {
         }));
     }, [bomFgId, qtyNum]);
 
-    // Buildable now (max units from available lots vs BOM)
+    // Buildable now (max units)
     const buildableInfo = useMemo(() => {
         const bom = MOCK_BOMS[bomFgId] || [];
         if (bom.length === 0) return {max: 0, limiting: [], details: []};
@@ -589,61 +452,48 @@ export default function WorkOrderDetailsPage() {
     }, [bomFgId]);
 
     // FEFO reservation state
-    const [reservedLots, setReservedLots] = useState([]); // {itemId, lotId, expiry, qty}
+    const [reservedLots, setReservedLots] = useState([]);
     const [availabilityChecked, setAvailabilityChecked] = useState(false);
-    const [lastAvailabilityResult, setLastAvailabilityResult] = useState(null);
     const [hasShortage, setHasShortage] = useState(false);
 
     // UI state
     const [showBomPicker, setShowBomPicker] = useState(false);
-    const [showItemPicker, setShowItemPicker] = useState(false);
     const [showAvailability, setShowAvailability] = useState(false);
+    const [showNotice, setShowNotice] = useState(false);
+    const [noticeMsg, setNoticeMsg] = useState("");
 
-    // Alert modal (placeholders for Save/Cancel and other notices)
-    const [alert, setAlert] = useState({open: false, title: "", message: "", primary: null});
-    const openAlert = (opts) => setAlert({open: true, ...opts});
-    const closeAlert = () => setAlert(a => ({...a, open: false}));
+    // Cancel modal (exactly like BOM)
+    const [openConfirmLeave, setOpenConfirmLeave] = useState(false);
 
     // Validation
     const errors = useMemo(() => {
         const list = [];
         if (!woId) list.push("WO ID is required.");
         if (!bomFgId) list.push("BOM (Finished Good) is required.");
-        if (!parentItemId) list.push("Parent Item is required.");
         if (!qty || qtyNum <= 0) list.push("Quantity must be > 0.");
-        if (startDate && dueDate && startDate > dueDate) list.push("Due date must be after start date.");
         return list;
-    }, [woId, bomFgId, parentItemId, qty, qtyNum, startDate, dueDate]);
+    }, [woId, bomFgId, qty, qtyNum]);
 
-    // Actions (placeholders -> alert then navigate to /work-orders/)
+    // Actions
     const handleSave = () => {
-        setLastSavedAt(new Date());
-        setDirty(false);
-        openAlert({
-            title: "Work Order saved",
-            message: `${woId} saved locally (mock). Navigating to Work Orders list.`,
-            primary: {label: "OK", onClick: () => navigate("/work-orders")}
-        });
+        alert("Work Order saved (mock). Navigating to Work Orders list.");
+        navigate("/work-orders");
     };
     const handleCancel = () => {
-        openAlert({
-            title: "Canceled",
-            message: "Edits were not saved (mock). Navigating to Work Orders list.",
-            primary: {label: "Go to Work Orders", onClick: () => navigate("/work-orders")}
-        });
+        if (hasChanges) setOpenConfirmLeave(true);
+        else navigate("/work-orders");
     };
-
     const openAvailability = () => {
         if (!bomFgId || !qtyNum) {
-            openAlert({
-                title: "Set BOM & Quantity",
-                message: "Select a BOM and enter Quantity to check availability."
-            });
+            const missing = [];
+            if (!bomFgId) missing.push("BOM (Finished Good)");
+            if (!qtyNum) missing.push("Quantity");
+            setNoticeMsg(`Please provide the following before checking availability: ${missing.join(" and ")}.`);
+            setShowNotice(true);
             return;
         }
         setShowAvailability(true);
     };
-
     const handleReserve = (rows) => {
         const allocations = rows.flatMap(r => r.allocations.map(a => ({
             itemId: r.itemId, lotId: a.lotId, expiry: a.expiry, qty: a.alloc
@@ -652,19 +502,9 @@ export default function WorkOrderDetailsPage() {
         setAvailabilityChecked(true);
         const shortage = rows.some(r => r.shortage > 0);
         setHasShortage(shortage);
-        setLastAvailabilityResult(rows);
         setShowAvailability(false);
-        openAlert({
-            title: shortage ? "Partial reservation" : "Lots reserved",
-            message: shortage
-                ? "Shortages remain — go to Purchasing to cover deficits."
-                : "All required components reserved (mock).",
-            primary: shortage
-                ? {label: "Go to Purchasing", variant: "accent", onClick: () => navigate("/purchasing")}
-                : {label: "Close"}
-        });
+        alert(shortage ? "Partial reservation. Shortages remain — go to Purchasing to cover deficits." : "All required components reserved (mock).");
     };
-
     const gotoOperations = () => navigate(`/work-orders/${woId}/operations`);
 
     // Reset availability state when BOM or qty changes
@@ -672,7 +512,6 @@ export default function WorkOrderDetailsPage() {
         setReservedLots([]);
         setAvailabilityChecked(false);
         setHasShortage(false);
-        setLastAvailabilityResult(null);
     }, [bomFgId, qty]);
 
     return (
@@ -718,12 +557,13 @@ export default function WorkOrderDetailsPage() {
                     </div>
                 </div>
 
-                {/* Autosave banner */}
+                {/* Unsaved banner (like BOM) */}
                 <div
                     className="mt-3 md:mt-4 rounded-xl border border-white/10 bg-gray-900/60 px-3 md:px-4 py-3 text-sm flex items-center gap-3">
-                    <span className={`inline-flex h-2 w-2 rounded-full ${dirty ? "bg-yellow-400" : "bg-green-400"}`}/>
-                    <span className="text-gray-300">
-            {dirty ? "Saving draft…" : lastSavedAt ? `Last saved ${lastSavedAt.toLocaleTimeString()}` : "No changes yet"}
+                    <span
+                        className={`inline-flex h-2 w-2 rounded-full ${hasChanges ? "bg-yellow-400" : "bg-green-400"}`}/>
+                    <span className="text-gray-300 truncate">
+            {hasChanges ? "You have unsaved changes" : "No changes since open"}
           </span>
                     <span className="ml-auto text-xs text-gray-500">
             WO ID: <span className="font-mono text-gray-300">{woId}</span>
@@ -774,31 +614,6 @@ export default function WorkOrderDetailsPage() {
                                         >
                                             View BOM
                                         </a>
-                                        <span className="text-gray-400">Selecting a BOM will set Parent Item if empty (you can still override Parent).</span>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Parent Item */}
-                            <div className="sm:col-span-2">
-                                <label className="block text-xs text-gray-400 mb-1">Parent Item / Finished Good</label>
-                                <div className="flex gap-2">
-                                    <input
-                                        value={parentItemId}
-                                        onChange={(e) => setParentItemId(e.target.value)}
-                                        placeholder="e.g. ITM-006"
-                                        className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
-                                    />
-                                    <button
-                                        onClick={() => setShowItemPicker(true)}
-                                        className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm whitespace-nowrap"
-                                    >
-                                        Pick
-                                    </button>
-                                </div>
-                                {parentItem && (
-                                    <div className="mt-1 text-xs text-gray-500">
-                                        {parentItem.name} • UoM: {parentItem.uom} • Status: {parentItem.status}
                                     </div>
                                 )}
                             </div>
@@ -837,15 +652,6 @@ export default function WorkOrderDetailsPage() {
                                 />
                             </div>
 
-                            <div>
-                                <label className="block text-xs text-gray-400 mb-1">Start Date</label>
-                                <input
-                                    type="date"
-                                    value={startDate}
-                                    onChange={(e) => setStartDate(e.target.value)}
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
-                                />
-                            </div>
                             <div>
                                 <label className="block text-xs text-gray-400 mb-1">Due Date</label>
                                 <input
@@ -937,10 +743,8 @@ export default function WorkOrderDetailsPage() {
                                                         </td>
                                                         <td className="px-3 py-2">{d.per}</td>
                                                         <td className="px-3 py-2">
-                              <span className={classNames(
-                                  "px-2 py-0.5 rounded-full",
-                                  isLimit ? "bg-red-600/30 text-red-200" : "bg-gray-700/40 text-gray-200"
-                              )}>
+                              <span
+                                  className={classNames("px-2 py-0.5 rounded-full", isLimit ? "bg-red-600/30 text-red-200" : "bg-gray-700/40 text-gray-200")}>
                                 {d.maxFromThis}
                               </span>
                                                         </td>
@@ -1060,7 +864,7 @@ export default function WorkOrderDetailsPage() {
                                 </div>
                             </div>
                             <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
-                                <div className="text-xs text-gray-400">Parent Item</div>
+                                <div className="text-xs text-gray-400">Finished Good</div>
                                 <div className="text-sm text-gray-200 min-h-[20px]">
                                     {parentItem ? `${parentItem.id} — ${parentItem.name}` :
                                         <span className="text-gray-500">(not set)</span>}
@@ -1119,7 +923,6 @@ export default function WorkOrderDetailsPage() {
                         <div className="font-semibold text-gray-300 mb-2">Tips</div>
                         <ul className="list-disc pl-5 space-y-1">
                             <li>Select a BOM; components appear from its structure (mock).</li>
-                            <li>Picking a BOM sets Parent if it’s empty; you can still override the Parent Item.</li>
                             <li>Use <span className="text-gray-300">Check &amp; Reserve</span> to allocate FEFO lots and
                                 see shortages.
                             </li>
@@ -1129,17 +932,17 @@ export default function WorkOrderDetailsPage() {
                 </aside>
             </section>
 
-            {/* Sticky bottom action bar (mobile) */}
+            {/* Sticky bottom action bar (mobile) — order: Operations, Save, Cancel */}
             <div
                 className="fixed md:hidden bottom-0 inset-x-0 z-30 border-t border-white/10 bg-gray-900/80 backdrop-blur supports-[backdrop-filter]:bg-gray-900/60"
                 style={{paddingBottom: "env(safe-area-inset-bottom)"}}
             >
                 <div className="px-4 py-3 flex items-center gap-2">
                     <button
-                        onClick={handleCancel}
-                        className="flex-1 px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                        onClick={gotoOperations}
+                        className="flex-1 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm"
                     >
-                        Cancel
+                        Operations
                     </button>
                     <button
                         onClick={handleSave}
@@ -1148,37 +951,50 @@ export default function WorkOrderDetailsPage() {
                         Save
                     </button>
                     <button
-                        onClick={gotoOperations}
-                        className="flex-1 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm"
+                        onClick={handleCancel}
+                        className="flex-1 px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
                     >
-                        Operations
+                        Cancel
                     </button>
                 </div>
             </div>
 
-            {/* Modals */}
+            {/* Confirm leave (exact same modal pattern as BOM) */}
+            <Modal
+                open={openConfirmLeave}
+                onClose={() => setOpenConfirmLeave(false)}
+                title="Discard unsaved changes?"
+                footer={
+                    <>
+                        <button
+                            onClick={() => setOpenConfirmLeave(false)}
+                            className="w-full md:w-28 px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                        >
+                            Stay
+                        </button>
+                        <button
+                            onClick={() => navigate("/work-orders")}
+                            className="w-full md:w-28 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm"
+                        >
+                            Discard
+                        </button>
+                    </>
+                }
+            >
+                <div className="text-gray-300">If you leave, your latest unsaved edits will be lost.</div>
+            </Modal>
+
+            {/* Pickers, Availability & Notices */}
             <BomPickerModal
                 open={showBomPicker}
                 onClose={() => setShowBomPicker(false)}
                 onPick={(fgId) => {
                     setBomFgId(fgId);
-                    setParentItemId(prev => prev ? prev : fgId);
                     setShowBomPicker(false);
                 }}
                 items={MOCK_ITEMS}
                 boms={MOCK_BOMS}
             />
-
-            <ItemPickerModal
-                open={showItemPicker}
-                onClose={() => setShowItemPicker(false)}
-                onPick={(itemId) => {
-                    setParentItemId(itemId);
-                    setShowItemPicker(false);
-                }}
-                items={MOCK_ITEMS}
-            />
-
             <AvailabilityModal
                 open={showAvailability}
                 onClose={() => setShowAvailability(false)}
@@ -1187,14 +1003,12 @@ export default function WorkOrderDetailsPage() {
                 onReserve={handleReserve}
                 onGoPurchasing={() => navigate("/purchasing")}
             />
-
-            {/* Alert Modal (placeholders for Save/Cancel/Notices) */}
-            <AlertModal
-                open={alert.open}
-                onClose={closeAlert}
-                title={alert.title}
-                message={alert.message}
-                primary={alert.primary}
+            <NoticeModal
+                open={showNotice}
+                onClose={() => setShowNotice(false)}
+                title="Missing Information"
+                message={noticeMsg}
+                actionLabel="Got it"
             />
         </div>
     );
