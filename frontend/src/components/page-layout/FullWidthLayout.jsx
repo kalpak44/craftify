@@ -55,7 +55,6 @@ export const FullWidthLayout = ({children}) => {
 
     const handleSignUp = () => {
         loginWithRedirect({
-            appState: {returnTo: `${path}/callback`},
             authorizationParams: {prompt: "login", screen_hint: "signup"}
         });
     };
