@@ -11,7 +11,6 @@ export const CallbackPage = () => {
             try {
                 const token = await getAccessTokenSilently();
                 localStorage.setItem("access_token", token);
-                debugger;
                 navigate("/");
             } catch (err) {
                 console.error("Error fetching access token:", err);
@@ -19,6 +18,7 @@ export const CallbackPage = () => {
         };
 
         if (!isLoading && isAuthenticated) {
+            debugger;
             storeTokenAndRedirect().catch(console.error);
         }
     }, [isAuthenticated, isLoading, getAccessTokenSilently]);
