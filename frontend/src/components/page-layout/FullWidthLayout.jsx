@@ -12,6 +12,7 @@ import {Loader as Spinner} from "../common/Loader";
  * Update:
  * - Style the "Calendar" link as a gray button (desktop dropdown + mobile drawer).
  * - Keep "Calendar" centered in desktop dropdown; keep extra margin-top for Logout.
+ * - Show a warning indicator/banner in menus if email is not verified (reads localStorage "email_verified").
  */
 export const FullWidthLayout = ({children}) => {
     const {isAuthenticated, user, logout, loginWithRedirect, isLoading} = useAuth0();
@@ -21,6 +22,22 @@ export const FullWidthLayout = ({children}) => {
 
     const [mobileOpen, setMobileOpen] = useState(false);
     const mobileFirstLinkRef = useRef(null);
+
+    // Email verification state from localStorage
+    const [isEmailVerified, setIsEmailVerified] = useState(true);
+    useEffect(() => {
+        const read = () => {
+            const v = localStorage.getItem("email_verified");
+            setIsEmailVerified(v === "true");
+        };
+        read();
+        // Keep in sync if another tab updates it
+        const onStorage = (e) => {
+            if (e.key === "email_verified") read();
+        };
+        window.addEventListener("storage", onStorage);
+        return () => window.removeEventListener("storage", onStorage);
+    }, []);
 
     // Close profile on the outside click + Esc for both profile and mobile
     useEffect(() => {
@@ -120,11 +137,21 @@ export const FullWidthLayout = ({children}) => {
                                     aria-expanded={showProfile}
                                     onClick={() => setShowProfile((p) => !p)}
                                 >
-                                    <img
-                                        src={user?.picture}
-                                        alt="profile"
-                                        className="w-8 h-8 rounded-full cursor-pointer border border-gray-700"
-                                    />
+                                    <div className="relative">
+                                        <img
+                                            src={user?.picture}
+                                            alt="profile"
+                                            className="w-8 h-8 rounded-full cursor-pointer border border-gray-700"
+                                        />
+                                        {/* Red dot indicator when email NOT verified */}
+                                        {(!isEmailVerified) && (
+                                            <span
+                                                className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-amber-400 border border-gray-950"
+                                                aria-hidden="true"
+                                                title="Email not verified"
+                                            />
+                                        )}
+                                    </div>
                                 </button>
                                 {showProfile && (
                                     <div
@@ -132,12 +159,44 @@ export const FullWidthLayout = ({children}) => {
                                         role="menu"
                                     >
                                         <div className="flex items-center space-x-3 mb-3">
-                                            <img src={user?.picture} alt="avatar" className="w-10 h-10 rounded-full"/>
+                                            <div className="relative">
+                                                <img src={user?.picture} alt="avatar"
+                                                     className="w-10 h-10 rounded-full"/>
+                                                {(!isEmailVerified) && (
+                                                    <span
+                                                        className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-amber-400 border border-gray-800"
+                                                        aria-hidden="true"
+                                                        title="Email not verified"
+                                                    />
+                                                )}
+                                            </div>
                                             <div>
                                                 <p className="text-sm font-medium text-white">{user?.name}</p>
                                                 <p className="text-xs text-gray-400">{user?.email}</p>
                                             </div>
                                         </div>
+
+                                        {/* Warning banner if email is not verified */}
+                                        {(!isEmailVerified) && (
+                                            <div
+                                                className="mb-3 rounded-md border border-amber-400/40 bg-amber-500/10 p-2 text-xs text-amber-300">
+                                                <div className="flex items-start gap-2">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                                                         fill="currentColor" className="h-4 w-4 mt-0.5">
+                                                        <path fillRule="evenodd"
+                                                              d="M8.257 3.099c.765-1.36 2.721-1.36 3.486 0l6.518 11.584c.724 1.285-.198 2.817-1.743 2.817H3.482c-1.545 0-2.467-1.532-1.743-2.817L8.257 3.1zM11 13a1 1 0 10-2 0 1 1 0 002 0zm-.75-6.75a.75.75 0 00-1.5 0v4.25a.75.75 0 001.5 0V6.25z"
+                                                              clipRule="evenodd"/>
+                                                    </svg>
+                                                    <div>
+                                                        <p className="font-medium">Verify your email</p>
+                                                        <p className="opacity-90">
+                                                            Some features may be limited until you verify your email
+                                                            address.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
 
                                         {/* Calendar link as GRAY BUTTON (centered) */}
                                         <NavLink
@@ -282,16 +341,46 @@ export const FullWidthLayout = ({children}) => {
                             {isAuthenticated ? (
                                 <>
                                     <div className="flex items-center gap-3">
-                                        <img
-                                            src={user?.picture}
-                                            alt="avatar"
-                                            className="w-10 h-10 rounded-full border border-gray-700"
-                                        />
+                                        <div className="relative">
+                                            <img
+                                                src={user?.picture}
+                                                alt="avatar"
+                                                className="w-10 h-10 rounded-full border border-gray-700"
+                                            />
+                                            {(!isEmailVerified) && (
+                                                <span
+                                                    className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-amber-400 border border-gray-900"
+                                                    aria-hidden="true"
+                                                    title="Email not verified"
+                                                />
+                                            )}
+                                        </div>
                                         <div className="min-w-0">
                                             <p className="text-sm font-medium truncate">{user?.name}</p>
                                             <p className="text-xs text-gray-400 truncate">{user?.email}</p>
                                         </div>
                                     </div>
+
+                                    {/* Warning banner if email is not verified */}
+                                    {(!isEmailVerified) && (
+                                        <div
+                                            className="mt-3 rounded-md border border-amber-400/40 bg-amber-500/10 p-2 text-xs text-amber-300">
+                                            <div className="flex items-start gap-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                                                     fill="currentColor" className="h-4 w-4 mt-0.5">
+                                                    <path fillRule="evenodd"
+                                                          d="M8.257 3.099c.765-1.36 2.721-1.36 3.486 0l6.518 11.584c.724 1.285-.198 2.817-1.743 2.817H3.482c-1.545 0-2.467-1.532-1.743-2.817L8.257 3.1zM11 13a1 1 0 10-2 0 1 1 0 002 0zm-.75-6.75a.75.75 0 00-1.5 0v4.25a.75.75 0 001.5 0V6.25z"
+                                                          clipRule="evenodd"/>
+                                                </svg>
+                                                <div>
+                                                    <p className="font-medium">Verify your email</p>
+                                                    <p className="opacity-90">
+                                                        Some features may be limited until verification is complete.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {/* Calendar (GRAY BUTTON) + Logout */}
                                     <div className="grid grid-cols-2 gap-2 mt-3">

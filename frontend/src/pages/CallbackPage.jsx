@@ -3,7 +3,7 @@ import {useEffect} from "react";
 import {useNavigate} from "react-router-dom";
 
 export const CallbackPage = () => {
-    const {error, isAuthenticated, isLoading, getAccessTokenSilently} = useAuth0();
+    const {error, isAuthenticated, isLoading, user, getAccessTokenSilently} = useAuth0();
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -11,6 +11,10 @@ export const CallbackPage = () => {
             try {
                 const token = await getAccessTokenSilently();
                 localStorage.setItem("access_token", token);
+
+                const emailVerified = !!user?.email_verified;
+                localStorage.setItem("email_verified", emailVerified.toString());
+
                 navigate("/");
             } catch (err) {
                 console.error("Error fetching access token:", err);
@@ -20,7 +24,7 @@ export const CallbackPage = () => {
         if (!isLoading && isAuthenticated) {
             storeTokenAndRedirect().catch(console.error);
         }
-    }, [isAuthenticated, isLoading, getAccessTokenSilently]);
+    }, [isAuthenticated, isLoading, getAccessTokenSilently, user]);
 
     if (error) {
         return (
