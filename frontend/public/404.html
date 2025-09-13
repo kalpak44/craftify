@@ -6,9 +6,9 @@
 </head>
 <body>
 <script>
+    // GitHub Pages workaround
     const redirectTo = window.location.pathname + window.location.search + window.location.hash;
-    sessionStorage.redirect = redirectTo;
+    sessionStorage.setItem("redirect", redirectTo);
     window.location.replace("/craftify/");
 </script>
 </body>
-</html>
