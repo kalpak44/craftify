@@ -5,13 +5,17 @@ import {useNavigate} from "react-router-dom";
  * ItemsPage
  *
  * ERP-style Items list built with React + Tailwind (raw JS).
- * Features:
+ * Updates in this version:
+ * - Fully responsive UI with a dedicated mobile card list (shown on < md) and desktop table (>= md).
+ * - Solid background (gradient removed).
+ *
+ * Features (unchanged):
  * - Search, filters (status/category/UoM), sortable columns.
  * - Pagination with selectable rows and bulk actions.
  * - CSV export and print-friendly view.
  * - Row selection with bulk delete + confirmation modal.
  * - Per-row actions: “Search in Inventory” and “Search in PO”.
- * - Each table row opens the Edit view at /items/:id/edit.
+ * - Each row/card opens the Edit view at /items/:id/edit.
  *
  * Notes:
  * - Mock data intentionally minimal (id, name, status, category, uom).
@@ -149,9 +153,7 @@ export const ItemsPage = () => {
 </head>
 <body>
 <h1>Items</h1>
-<div class="meta">Exported ${new Date().toLocaleString()} • ${data.length} rows ${
-            selectedCount ? "(selection)" : "(filtered)"
-        }</div>
+<div class="meta">Exported ${new Date().toLocaleString()} • ${data.length} rows ${selectedCount ? "(selection)" : "(filtered)"}</div>
 <table>
   <thead>
     <tr>
@@ -185,9 +187,7 @@ export const ItemsPage = () => {
     const th = (label, key, alignRight = false) => (
         <th
             onClick={() => setSort((s) => ({key, dir: s.key === key && s.dir === "asc" ? "desc" : "asc"}))}
-            className={`px-4 py-3 font-semibold text-gray-300 select-none cursor-pointer ${
-                alignRight ? "text-right" : "text-left"
-            }`}
+            className={`px-4 py-3 font-semibold text-gray-300 select-none cursor-pointer ${alignRight ? "text-right" : "text-left"}`}
         >
       <span className="inline-flex items-center gap-1">
         {label}
@@ -223,24 +223,24 @@ export const ItemsPage = () => {
     const stopRowNav = (e) => e.stopPropagation();
 
     return (
-        <div
-            className="min-h-[calc(100vh-140px)] bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
+        <div className="min-h-[calc(100vh-140px)] bg-gray-950 text-gray-200">
             {/* Header */}
-            <header className="mx-auto px-4 pt-10 pb-6">
-                <div className="flex items-end justify-between gap-4 flex-wrap">
+            <header className="mx-auto px-4 pt-8 pb-5">
+                <div className="flex items-start md:items-end justify-between gap-4 flex-wrap">
                     <div>
-                        <h1 className="text-3xl font-bold text-white">Items</h1>
-                        <p className="mt-2 text-gray-400">Search, filter, and manage SKUs.</p>
+                        <h1 className="text-2xl md:text-3xl font-bold text-white">Items</h1>
+                        <p className="mt-1 md:mt-2 text-gray-400 text-sm md:text-base">Search, filter, and manage
+                            SKUs.</p>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
                         <button
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
+                            className="flex-1 sm:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
                             onClick={() => navigate("/items/new")}
                         >
                             + New Item
                         </button>
                         <button
-                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">
+                            className="flex-1 sm:flex-none px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">
                             Import CSV
                         </button>
                     </div>
@@ -249,51 +249,53 @@ export const ItemsPage = () => {
 
             {/* Filters / Toolbar */}
             <div className="mx-auto px-4 pb-4">
-                <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
+                <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-3 md:p-4">
                     <div className="flex flex-col md:flex-row md:items-center gap-3">
-                        <select
-                            value={category}
-                            onChange={(e) => {
-                                setCategory(e.target.value);
-                                setPage(1);
-                            }}
-                            className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
-                        >
-                            {categories.map((c) => (
-                                <option key={c} value={c}>
-                                    {c === "all" ? "All Categories" : c}
-                                </option>
-                            ))}
-                        </select>
+                        <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-3">
+                            <select
+                                value={category}
+                                onChange={(e) => {
+                                    setCategory(e.target.value);
+                                    setPage(1);
+                                }}
+                                className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                            >
+                                {categories.map((c) => (
+                                    <option key={c} value={c}>
+                                        {c === "all" ? "All Categories" : c}
+                                    </option>
+                                ))}
+                            </select>
 
-                        <select
-                            value={status}
-                            onChange={(e) => {
-                                setStatus(e.target.value);
-                                setPage(1);
-                            }}
-                            className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
-                        >
-                            <option value="all">All Statuses</option>
-                            <option value="Active">Active</option>
-                            <option value="Hold">Hold</option>
-                            <option value="Discontinued">Discontinued</option>
-                        </select>
+                            <select
+                                value={status}
+                                onChange={(e) => {
+                                    setStatus(e.target.value);
+                                    setPage(1);
+                                }}
+                                className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                            >
+                                <option value="all">All Statuses</option>
+                                <option value="Active">Active</option>
+                                <option value="Hold">Hold</option>
+                                <option value="Discontinued">Discontinued</option>
+                            </select>
 
-                        <select
-                            value={uom}
-                            onChange={(e) => {
-                                setUom(e.target.value);
-                                setPage(1);
-                            }}
-                            className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
-                        >
-                            {uoms.map((u) => (
-                                <option key={u} value={u}>
-                                    {u === "all" ? "All UoM" : u}
-                                </option>
-                            ))}
-                        </select>
+                            <select
+                                value={uom}
+                                onChange={(e) => {
+                                    setUom(e.target.value);
+                                    setPage(1);
+                                }}
+                                className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm col-span-2 sm:col-span-1"
+                            >
+                                {uoms.map((u) => (
+                                    <option key={u} value={u}>
+                                        {u === "all" ? "All UoM" : u}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
 
                         <div className="relative flex-1">
                             <input
@@ -309,7 +311,7 @@ export const ItemsPage = () => {
                         </div>
 
                         {/* Bulk actions */}
-                        <div className="flex items-center gap-2 ml-auto">
+                        <div className="flex items-center gap-2 md:ml-auto">
                             <button
                                 onClick={handleExportCSV}
                                 className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm hover:bg-gray-700"
@@ -337,9 +339,92 @@ export const ItemsPage = () => {
                 </div>
             </div>
 
-            {/* Table */}
+            {/* List/Table */}
             <section className="mx-auto px-4 pb-12">
-                <div className="overflow-x-auto border border-white/10 rounded-xl bg-gray-900/60">
+                {/* Mobile card list */}
+                <div className="md:hidden">
+                    {/* Select-all toolbar for mobile */}
+                    <div className="mb-2 flex items-center justify-between">
+                        <label className="inline-flex items-center gap-2 text-sm text-gray-300">
+                            <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll}
+                                   onClick={stopRowNav}/>
+                            <span>Select all on page</span>
+                        </label>
+                        <span className="text-xs text-gray-400">
+              {filtered.length === 0 ? 0 : pageStart + 1}–{Math.min(filtered.length, pageStart + pageSize)} of {filtered.length}
+            </span>
+                    </div>
+
+                    <div className="space-y-2">
+                        {paged.map((item) => (
+                            <div
+                                key={item.id}
+                                className="rounded-xl border border-white/10 bg-gray-900/60 p-3 active:bg-gray-800/40"
+                                onClick={() => goToEdit(item.id)}
+                                title="Open Edit"
+                            >
+                                <div className="flex items-start gap-3">
+                                    <input
+                                        type="checkbox"
+                                        checked={!!selected[item.id]}
+                                        onChange={() => toggleOne(item.id)}
+                                        onClick={stopRowNav}
+                                        className="mt-1"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div className="font-mono text-white text-sm">
+                                                <span className="underline decoration-dotted">{item.id}</span>
+                                            </div>
+                                            <span
+                                                className={`px-2 py-0.5 text-[10px] rounded-full whitespace-nowrap ${
+                                                    item.status === "Active"
+                                                        ? "bg-green-600/30 text-green-400"
+                                                        : item.status === "Hold"
+                                                            ? "bg-yellow-600/30 text-yellow-400"
+                                                            : "bg-gray-600/30 text-gray-400"
+                                                }`}
+                                            >
+                        {item.status}
+                      </span>
+                                        </div>
+                                        <div className="mt-1 text-gray-200 text-sm line-clamp-2">{item.name}</div>
+                                        <div className="mt-1 text-xs text-gray-400 flex items-center gap-2">
+                                            <span className="truncate">{item.category}</span>
+                                            <span>•</span>
+                                            <span>{item.uom}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="mt-3 flex flex-wrap gap-2" onClick={stopRowNav}>
+                                    <button
+                                        onClick={() => navigate(`/inventory?query=${encodeURIComponent(item.id)}`)}
+                                        className="px-3 py-1.5 rounded-lg bg-blue-600/20 text-blue-300 border border-blue-600/40 text-xs hover:bg-blue-600/30 hover:text-blue-200 transition"
+                                        title="Search this item in Inventory"
+                                    >
+                                        Search in Inventory
+                                    </button>
+                                    <button
+                                        onClick={() => navigate(`/purchasing?query=${encodeURIComponent(item.id)}`)}
+                                        className="px-3 py-1.5 rounded-lg bg-indigo-600/20 text-indigo-300 border border-indigo-600/40 text-xs hover:bg-indigo-600/30 hover:text-indigo-200 transition"
+                                        title="Search this item in Purchase Orders"
+                                    >
+                                        Search in PO
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                        {paged.length === 0 && (
+                            <div
+                                className="rounded-xl border border-white/10 bg-gray-900/60 p-6 text-center text-gray-400">
+                                No items found.
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Desktop table */}
+                <div className="hidden md:block overflow-x-auto border border-white/10 rounded-xl bg-gray-900/60">
                     <table className="min-w-full divide-y divide-gray-800 text-sm">
                         <thead className="bg-gray-900/80">
                         <tr>
@@ -402,7 +487,6 @@ export const ItemsPage = () => {
                                         Search in PO
                                     </button>
                                 </td>
-
                             </tr>
                         ))}
                         {paged.length === 0 && (
@@ -419,7 +503,7 @@ export const ItemsPage = () => {
                 {/* Footer / Pagination */}
                 <div
                     className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-gray-400">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                         <span>Rows per page</span>
                         <select
                             value={pageSize}
@@ -469,13 +553,13 @@ export const ItemsPage = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/60" onClick={() => setShowDeleteModal(false)}/>
                     <div
-                        className="relative z-10 w-[90%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
+                        className="relative z-10 w-[92%] sm:w-[80%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
                         <h2 className="text-lg font-semibold text-white">Confirm deletion</h2>
                         <p className="mt-2 text-sm text-gray-300">
                             You are about to delete <span className="font-medium text-white">{selectedCount}</span>{" "}
                             {selectedCount === 1 ? "item" : "items"}. This action cannot be undone.
                         </p>
-                        <div className="mt-4 flex justify-end gap-2">
+                        <div className="mt-4 flex flex-col sm:flex-row justify-end gap-2">
                             <button
                                 onClick={() => setShowDeleteModal(false)}
                                 className="px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
