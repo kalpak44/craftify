@@ -1,10 +1,10 @@
 // HomePage.jsx
 import React from "react";
-import {useAuth0} from "@auth0/auth0-react";
+import {useAuth0 as useAuth0Home} from "@auth0/auth0-react";
 import ReportsPage from "./ReportsPage";
 
 export const HomePage = () => {
-    const {loginWithRedirect, isAuthenticated, isLoading} = useAuth0();
+    const {loginWithRedirect, isAuthenticated, isLoading} = useAuth0Home();
 
     // While Auth0 loads, keep a neutral spinner
     if (isLoading) {
