@@ -2,14 +2,15 @@ import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useNavigate} from "react-router-dom";
 
 /**
- * BOMDetailsPage — React + Tailwind (Save/Cancel only, simplified; no Scrap %, pricing, or capacity)
+ * BOMDetailsPage — React + Tailwind (Mobile-friendly UX + Responsive, Fixed Background Gradient)
  *
  * Purpose:
- * - Two equal-width actions: Save and Cancel.
- * - Cancel: if there are unsaved changes since open, show a confirmation modal; otherwise navigate to /boms.
- * - Save: mock alert (prep for backend), then navigate to /boms.
- * - Simplified form: removed Effective Date, Release Rate, Planned Yield, pricing/capacity features, and Scrap % column.
- * - Keeps parent/component pickers, validation, attachments placeholder.
+ * - Create/edit a simplified BOM with Save/Cancel actions.
+ * - Mobile UX upgrades: sticky bottom action bar, mobile card editor, full-screen modals, stacked header actions.
+ * - Responsive background gradient that never “runs out” on tall pages:
+ *   - Implemented as a fixed, full-viewport background layer behind content.
+ *   - Breakpoint-adaptive directions (b, br, radial at md, tr at lg).
+ * - No external libraries, mock data only, ready to paste into a Vite + Tailwind project.
  */
 
 // ---- Mocked item master ----
@@ -50,16 +51,19 @@ function Modal({open, onClose, title, children, footer}) {
     return (
         <div className="fixed inset-0 z-40">
             <div className="absolute inset-0 bg-black/60" onClick={onClose}/>
-            <div className="absolute inset-0 flex items-center justify-center p-4">
+            <div className="absolute inset-0 flex items-center justify-center p-0 md:p-4">
                 <div
-                    className="w-full max-w-3xl rounded-2xl border border-white/10 bg-gray-900 text-gray-200 shadow-2xl">
-                    <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
-                        <h3 className="text-lg font-semibold">{title}</h3>
-                        <button onClick={onClose} className="text-gray-400 hover:text-gray-200">&times;</button>
+                    className="w-full h-full md:h-auto md:max-h-[85vh] md:max-w-3xl overflow-hidden
+                     rounded-none md:rounded-2xl border border-white/10 md:bg-gray-900 bg-gray-900 text-gray-200 shadow-2xl"
+                >
+                    <div className="px-4 md:px-5 py-4 border-b border-white/10 flex items-center justify-between">
+                        <h3 className="text-base md:text-lg font-semibold">{title}</h3>
+                        <button onClick={onClose}
+                                className="text-gray-400 hover:text-gray-200 text-xl leading-none">&times;</button>
                     </div>
-                    <div className="p-5 max-h-[65vh] overflow-y-auto">{children}</div>
+                    <div className="p-4 md:p-5 h-[calc(100%-112px)] md:h-auto overflow-y-auto">{children}</div>
                     <div
-                        className="px-5 py-4 border-t border-white/10 bg-gray-900/60 flex items-center justify-end gap-2">
+                        className="px-4 md:px-5 py-4 border-t border-white/10 bg-gray-900/60 flex items-center justify-end gap-2">
                         {footer}
                     </div>
                 </div>
@@ -87,8 +91,10 @@ function ItemPickerModal({open, onClose, onPick, items, title = "Select Item"}) 
             onClose={onClose}
             title={title}
             footer={
-                <button onClick={onClose}
-                        className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">
+                <button
+                    onClick={onClose}
+                    className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm w-full md:w-auto"
+                >
                     Close
                 </button>
             }
@@ -101,7 +107,32 @@ function ItemPickerModal({open, onClose, onPick, items, title = "Select Item"}) 
                     className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
                 />
             </div>
-            <div className="overflow-x-auto border border-white/10 rounded-xl bg-gray-900/40">
+
+            {/* Mobile: cards; Desktop: table */}
+            <div className="space-y-2 md:hidden">
+                {filtered.map(it => (
+                    <div key={it.id} className="rounded-xl border border-white/10 bg-gray-900/60 p-3">
+                        <div className="flex items-center justify-between gap-3">
+                            <div>
+                                <div className="font-mono text-sm text-gray-100">{it.id}</div>
+                                <div className="text-sm text-gray-300">{it.name}</div>
+                                <div className="text-xs text-gray-500 mt-1">UoM: {it.uom} • Status: {it.status}</div>
+                            </div>
+                            <button
+                                onClick={() => onPick(it)}
+                                className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm whitespace-nowrap"
+                            >
+                                Use
+                            </button>
+                        </div>
+                    </div>
+                ))}
+                {filtered.length === 0 && (
+                    <div className="text-center text-gray-400 py-6 text-sm">No matches</div>
+                )}
+            </div>
+
+            <div className="hidden md:block overflow-x-auto border border-white/10 rounded-xl bg-gray-900/40">
                 <table className="min-w-full divide-y divide-gray-800 text-sm">
                     <thead className="bg-gray-900/80">
                     <tr>
@@ -122,7 +153,8 @@ function ItemPickerModal({open, onClose, onPick, items, title = "Select Item"}) 
                             <td className="px-4 py-3 text-right">
                                 <button
                                     onClick={() => onPick(it)}
-                                    className="px-2.5 py-1.5 rounded-md border text-xs bg-gray-700/80 text-white border-white/10 hover:bg-gray-700">
+                                    className="px-2.5 py-1.5 rounded-md border text-xs bg-gray-700/80 text-white border-white/10 hover:bg-gray-700"
+                                >
                                     Use Item
                                 </button>
                             </td>
@@ -231,24 +263,42 @@ export default function BOMDetailsPage() {
     };
 
     return (
-        <div className="bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
+        <div className="relative text-gray-200 min-h-screen">
+            {/* Fixed, full-viewport responsive gradient layer (prevents partial coverage on tall pages) */}
+            <div
+                className={classNames(
+                    "pointer-events-none fixed inset-0 -z-10",
+                    "bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950",
+                    "sm:bg-gradient-to-br sm:from-gray-950 sm:via-gray-900 sm:to-gray-950",
+                    "md:bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] md:from-gray-950 md:via-gray-900 md:to-gray-950",
+                    "lg:bg-gradient-to-tr lg:from-gray-950 lg:via-gray-900 lg:to-gray-950"
+                )}
+            />
+
             {/* Header */}
-            <header className="mx-auto px-4 pt-10 pb-6">
-                <div className="flex items-end justify-between gap-4 flex-wrap">
-                    <div>
-                        <h1 className="text-3xl font-bold text-white">New BOM</h1>
-                        <p className="mt-2 text-gray-400">Create a bill of materials — save when ready.</p>
+            <header className="mx-auto px-4 pt-8 md:pt-10 pb-4 md:pb-6">
+                <div className="flex items-end justify-between gap-3 flex-wrap">
+                    <div className="min-w-0">
+                        <h1 className="text-2xl md:text-3xl font-bold text-white">New BOM</h1>
+                        <p className="mt-1 md:mt-2 text-gray-400 text-sm md:text-base">Create a bill of materials — save
+                            when ready.</p>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
                         <button
                             onClick={handleSave}
-                            className={classNames(BTN_W, "px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm")}
+                            className={classNames(
+                                BTN_W,
+                                "px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm flex-1 sm:flex-none"
+                            )}
                         >
                             Save
                         </button>
                         <button
                             onClick={handleCancel}
-                            className={classNames(BTN_W, "px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm")}
+                            className={classNames(
+                                BTN_W,
+                                "px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm flex-1 sm:flex-none"
+                            )}
                         >
                             Cancel
                         </button>
@@ -257,10 +307,10 @@ export default function BOMDetailsPage() {
 
                 {/* Unsaved banner */}
                 <div
-                    className="mt-4 rounded-xl border border-white/10 bg-gray-900/60 px-4 py-3 text-sm flex items-center gap-3">
+                    className="mt-3 md:mt-4 rounded-xl border border-white/10 bg-gray-900/60 px-3 md:px-4 py-3 text-sm flex items-center gap-3">
                     <span
                         className={`inline-flex h-2 w-2 rounded-full ${hasChanges ? "bg-yellow-400" : "bg-green-400"}`}/>
-                    <span className="text-gray-300">
+                    <span className="text-gray-300 truncate">
             {hasChanges ? "You have unsaved changes" : "No changes since open"}
           </span>
                     <span className="ml-auto text-xs text-gray-500">
@@ -270,7 +320,7 @@ export default function BOMDetailsPage() {
             </header>
 
             {/* Content */}
-            <section className="mx-auto px-4 pb-16 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            <section className="mx-auto px-4 pb-[112px] md:pb-16 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                 {/* Left: form */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* General */}
@@ -358,7 +408,134 @@ export default function BOMDetailsPage() {
                             </button>
                         </div>
 
-                        <div className="overflow-x-auto border border-white/10 rounded-xl bg-gray-900/40">
+                        {/* Mobile: Card list */}
+                        <div className="space-y-3 md:hidden">
+                            {rows.map((r) => {
+                                const it = MOCK_ITEMS.find(i => i.id === r.itemId);
+                                const rowErrors = {
+                                    itemId: !r.itemId,
+                                    qty: !r.qty || Number(r.qty) <= 0,
+                                    uom: !r.uom,
+                                    sameAsParent: r.itemId && r.itemId === parentItemId,
+                                };
+                                return (
+                                    <div key={r.key} className="rounded-xl border border-white/10 bg-gray-900/40 p-3">
+                                        <div className="flex items-start gap-2">
+                                            <div className="flex-1 space-y-2">
+                                                {/* Item */}
+                                                <div>
+                                                    <label className="block text-[11px] text-gray-400 mb-1">Component
+                                                        Item</label>
+                                                    <div className="flex gap-2">
+                                                        <input
+                                                            value={r.itemId}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                const selectedItem = MOCK_ITEMS.find(i => i.id === val);
+                                                                updateRow(r.key, {
+                                                                    itemId: val,
+                                                                    uom: selectedItem ? selectedItem.uom : r.uom
+                                                                });
+                                                            }}
+                                                            placeholder="e.g. ITM-003"
+                                                            className={classNames(
+                                                                "w-full rounded-lg bg-gray-800 px-3 py-2 text-sm border",
+                                                                rowErrors.itemId ? "border-red-500/60" : "border-white/10"
+                                                            )}
+                                                        />
+                                                        <button
+                                                            onClick={() => setOpenComponentPicker({
+                                                                open: true,
+                                                                rowKey: r.key
+                                                            })}
+                                                            className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                                                        >
+                                                            Pick
+                                                        </button>
+                                                    </div>
+                                                    {it && (
+                                                        <div className="text-xs text-gray-500 mt-1">
+                                                            {it.name} • Default UoM: {it.uom} • Status: {it.status}
+                                                        </div>
+                                                    )}
+                                                    {rowErrors.sameAsParent && (
+                                                        <div className="text-xs text-red-400 mt-1">Component cannot
+                                                            equal parent item.</div>
+                                                    )}
+                                                </div>
+
+                                                {/* Qty & UoM */}
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <div>
+                                                        <label className="block text-[11px] text-gray-400 mb-1">Qty / 1
+                                                            pc</label>
+                                                        <input
+                                                            inputMode="decimal"
+                                                            value={r.qty}
+                                                            onChange={(e) => updateRow(r.key, {qty: e.target.value})}
+                                                            placeholder="0"
+                                                            className={classNames(
+                                                                "w-full rounded-lg bg-gray-800 border px-3 py-2 text-sm",
+                                                                rowErrors.qty ? "border-red-500/60" : "border-white/10"
+                                                            )}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label
+                                                            className="block text-[11px] text-gray-400 mb-1">UoM</label>
+                                                        <input
+                                                            value={r.uom}
+                                                            onChange={(e) => updateRow(r.key, {uom: e.target.value})}
+                                                            placeholder={it ? it.uom : "e.g. pcs"}
+                                                            className={classNames(
+                                                                "w-full rounded-lg bg-gray-800 border px-3 py-2 text-sm",
+                                                                rowErrors.uom ? "border-red-500/60" : "border-white/10"
+                                                            )}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                {/* Notes */}
+                                                <div>
+                                                    <label
+                                                        className="block text-[11px] text-gray-400 mb-1">Notes</label>
+                                                    <input
+                                                        value={r.notes}
+                                                        onChange={(e) => updateRow(r.key, {notes: e.target.value})}
+                                                        placeholder="Optional notes"
+                                                        className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Actions */}
+                                            <div className="flex flex-col gap-2">
+                                                <button
+                                                    onClick={() => cloneRow(r.key)}
+                                                    title="Clone row"
+                                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md border text-xs font-medium
+                                     bg-gray-800/60 border-white/10 text-gray-200 hover:bg-gray-700/60"
+                                                >
+                                                    Clone
+                                                </button>
+                                                <button
+                                                    onClick={() => removeRow(r.key)}
+                                                    title="Remove row"
+                                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md border text-xs font-medium
+                                     bg-red-600/10 border-red-500/30 text-red-300 hover:bg-red-600/20 hover:text-red-200"
+                                                >
+                                                    Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Desktop: Table */}
+                        <div
+                            className="hidden md:block overflow-x-auto border border-white/10 rounded-xl bg-gray-900/40">
                             <table className="min-w-full divide-y divide-gray-800 text-sm">
                                 <thead className="bg-gray-900/80">
                                 <tr>
@@ -485,10 +662,13 @@ export default function BOMDetailsPage() {
 
                         {/* Table footer helper */}
                         <div className="mt-3 text-xs text-gray-500 flex items-center justify-between flex-wrap gap-3">
-                            <div>
+                            <div className="hidden md:block">
                                 Shortcuts: <span className="text-gray-300">Enter</span> add row • <span
                                 className="text-gray-300">Ctrl/⌘+D</span> duplicate focused row • <span
                                 className="text-gray-300">Delete</span> remove focused row
+                            </div>
+                            <div className="md:hidden">
+                                Tip: Use the <span className="text-gray-300">Pick</span> button to search items quickly.
                             </div>
                             <div className="flex items-center gap-3">
                                 {componentsCount === 0 ? (
@@ -514,7 +694,8 @@ export default function BOMDetailsPage() {
                     {/* Attachments (placeholder) */}
                     <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
                         <h2 className="text-lg font-semibold text-white mb-3">Attachments</h2>
-                        <div className="text-sm text-gray-400">Upload drawings/specs here in the future. (Placeholder)
+                        <div className="text-sm text-gray-400">
+                            Upload drawings/specs here in the future. (Placeholder)
                         </div>
                     </div>
                 </div>
@@ -530,7 +711,19 @@ export default function BOMDetailsPage() {
                             </div>
                             <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
                                 <div className="text-xs text-gray-400">Status</div>
-                                <div className="text-lg font-semibold text-gray-100">{status}</div>
+                                <div className="mt-1">
+                                  <span
+                                      className={classNames(
+                                          "inline-block px-3 py-1 text-xs font-medium rounded-full",
+                                          status === "Draft" && "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30",
+                                          status === "Active" && "bg-green-500/20 text-green-300 border border-green-500/30",
+                                          status === "Hold" && "bg-orange-500/20 text-orange-300 border border-orange-500/30",
+                                          status === "Obsolete" && "bg-red-500/20 text-red-300 border border-red-500/30"
+                                      )}
+                                  >
+                                    {status}
+                                  </span>
+                                </div>
                             </div>
                             <div className="rounded-2xl bg-gray-800/60 p-3 border border-white/10 col-span-2">
                                 <div className="text-xs text-gray-400">Parent Item</div>
@@ -551,7 +744,29 @@ export default function BOMDetailsPage() {
                         </ul>
                     </div>
                 </aside>
+
             </section>
+
+            {/* Sticky bottom action bar (mobile) */}
+            <div
+                className="fixed md:hidden bottom-0 inset-x-0 z-30 border-t border-white/10 bg-gray-900/80 backdrop-blur supports-[backdrop-filter]:bg-gray-900/60"
+                style={{paddingBottom: "env(safe-area-inset-bottom)"}}
+            >
+                <div className="px-4 py-3 flex items-center gap-2">
+                    <button
+                        onClick={handleCancel}
+                        className="flex-1 px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleSave}
+                        className="flex-1 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm"
+                    >
+                        Save
+                    </button>
+                </div>
+            </div>
 
             {/* Confirm leave */}
             <Modal
@@ -562,13 +777,13 @@ export default function BOMDetailsPage() {
                     <>
                         <button
                             onClick={() => setOpenConfirmLeave(false)}
-                            className="w-28 px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                            className="w-full md:w-28 px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
                         >
                             Stay
                         </button>
                         <button
                             onClick={() => navigate("/boms")}
-                            className="w-28 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm"
+                            className="w-full md:w-28 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm"
                         >
                             Discard & Leave
                         </button>
