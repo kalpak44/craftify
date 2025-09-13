@@ -5,14 +5,13 @@ import {useNavigate} from "react-router-dom";
 export const CallbackPage = () => {
     const {error, isAuthenticated, isLoading, getAccessTokenSilently} = useAuth0();
     const navigate = useNavigate();
-    const path = import.meta.env.VITE_APP_ROOT_PATH;
 
     useEffect(() => {
         const storeTokenAndRedirect = async () => {
             try {
                 const token = await getAccessTokenSilently();
                 localStorage.setItem("access_token", token);
-                navigate(path);
+                navigate("/");
             } catch (err) {
                 console.error("Error fetching access token:", err);
             }
