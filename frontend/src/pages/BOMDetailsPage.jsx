@@ -785,7 +785,7 @@ export default function BOMDetailsPage() {
                             onClick={() => navigate("/boms")}
                             className="w-full md:w-28 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm"
                         >
-                            Discard & Leave
+                            Discard
                         </button>
                     </>
                 }
