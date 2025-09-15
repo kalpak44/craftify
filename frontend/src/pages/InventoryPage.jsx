@@ -1,25 +1,26 @@
 import React, {useMemo, useState} from "react";
-import {useNavigate} from "react-router-dom";
+import {useLocation, useNavigate} from "react-router-dom";
 
 /**
  * InventoryPage
  *
- * ERP-style inventory list with responsive UI.
+ * ERP-style inventory list aligned with Items/Work Orders UX.
  * Updates in this version:
- * - Solid background (gradient removed).
- * - Mobile card list (< md) and desktop table (>= md) with the same features.
+ * - Removed row click navigation to details.
+ * - Added per-row action buttons (aligned to WorkOrders): “Details” (blue) then “Lots” (indigo).
+ * - Header actions remain: “+ New Item” and “Import CSV”.
  *
  * Features:
  * - Search, filter by category/UoM, sortable columns.
  * - Row selection with select-all-on-page.
  * - CSV export and print-friendly view.
  * - Pagination.
- * - Clicking a row/card opens /inventory/:itemId.
  */
 export default function InventoryPage() {
     const navigate = useNavigate();
+    const location = useLocation();
 
-    // Mock data (one row per item) — includes category
+    // ---- Inventory rows (one per item) ----
     const data = [
         {
             item: "Assembly Kit 10",
@@ -103,8 +104,10 @@ export default function InventoryPage() {
         },
     ];
 
-    // State
-    const [query, setQuery] = useState("");
+    // ---- State ----
+    const params = new URLSearchParams(location.search);
+    const initialQuery = params.get("query") || "";
+    const [query, setQuery] = useState(initialQuery);
     const [categoryFilter, setCategoryFilter] = useState("all");
     const [uomFilter, setUomFilter] = useState("all");
     const [sort, setSort] = useState({key: "itemId", dir: "asc"});
@@ -112,11 +115,11 @@ export default function InventoryPage() {
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(8);
 
-    // Options for filters (aligned with ItemsPage style)
+    // ---- Options ----
     const categories = useMemo(() => ["all", ...Array.from(new Set(data.map(d => d.category))).sort((a, b) => a.localeCompare(b))], [data]);
     const uoms = useMemo(() => ["all", ...Array.from(new Set(data.map(d => d.uom))).sort((a, b) => a.localeCompare(b))], [data]);
 
-    // Derived rows
+    // ---- Derived rows ----
     const filtered = useMemo(() => {
         let rows = data.map((r) => ({...r, available: r.onHand - r.allocated}));
 
@@ -140,12 +143,12 @@ export default function InventoryPage() {
         return rows;
     }, [data, query, categoryFilter, uomFilter, sort]);
 
-    // Paging
+    // ---- Paging ----
     const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
     const pageStart = (page - 1) * pageSize;
     const paged = filtered.slice(pageStart, pageStart + pageSize);
 
-    // Selection
+    // ---- Selection ----
     const rowId = (r) => r.itemId;
     const toggleOne = (id) => setSelected((s) => ({...s, [id]: !s[id]}));
     const selectedIds = Object.keys(selected).filter((k) => selected[k]);
@@ -158,9 +161,10 @@ export default function InventoryPage() {
         setSelected(next);
     };
 
-    // Navigation helpers
-    const goToDetails = (id) => navigate(`/inventory/${encodeURIComponent(id)}`);
-    const stopRowNav = (e) => e.stopPropagation();
+    // ---- Navigation helpers (only buttons trigger navigation now) ----
+    const goToDetails = (id) => navigate(`/inventory/${encodeURIComponent(id)}/edit`);
+    const goToLots = (id) => navigate(`/inventory/${encodeURIComponent(id)}`);
+    const stop = (e) => e.stopPropagation();
 
     // ---------- Export helpers ----------
     const rowsForExport = () => (selectedCount ? filtered.filter((r) => selectedIds.includes(r.itemId)) : filtered);
@@ -292,21 +296,9 @@ export default function InventoryPage() {
                     <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
                         <button
                             className="flex-1 sm:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
-                            onClick={() => navigate("/inventory/transfer")}
+                            onClick={() => navigate("/inventory/")}
                         >
-                            Transfer
-                        </button>
-                        <button
-                            className="flex-1 sm:flex-none px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
-                            onClick={() => navigate("/inventory/adjust")}
-                        >
-                            Adjust
-                        </button>
-                        <button
-                            className="flex-1 sm:flex-none px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
-                            onClick={() => navigate("/inventory/receive")}
-                        >
-                            Receive
+                            + New Item
                         </button>
                         <button
                             className="flex-1 sm:flex-none px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">
@@ -356,18 +348,27 @@ export default function InventoryPage() {
                             </select>
                         </div>
 
-                        {/* Search */}
-                        <div className="relative flex-1">
-                            <input
-                                placeholder="Search Item or Item ID…"
-                                value={query}
-                                onChange={(e) => {
-                                    setQuery(e.target.value);
-                                    setPage(1);
-                                }}
-                                className="w-full rounded-lg bg-gray-800 border border-white/10 pl-3 pr-10 py-2 text-sm"
-                            />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">⌕</span>
+                        {/* Search + Pick */}
+                        <div className="flex-1 flex gap-2">
+                            <div className="relative flex-1">
+                                <input
+                                    placeholder="Search Item or Item ID…"
+                                    value={query}
+                                    onChange={(e) => {
+                                        setQuery(e.target.value);
+                                        setPage(1);
+                                    }}
+                                    className="w-full rounded-lg bg-gray-800 border border-white/10 pl-3 pr-10 py-2 text-sm"
+                                />
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">⌕</span>
+                            </div>
+                            <button
+                                onClick={() => setOpenItemPicker(true)}
+                                className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm hover:bg-gray-700"
+                                title="Pick Item"
+                            >
+                                Pick Item
+                            </button>
                         </div>
 
                         {/* Bulk actions */}
@@ -405,8 +406,7 @@ export default function InventoryPage() {
                     {/* Select-all toolbar for mobile */}
                     <div className="mb-2 flex items-center justify-between">
                         <label className="inline-flex items-center gap-2 text-sm text-gray-300">
-                            <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll}
-                                   onClick={stopRowNav}/>
+                            <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll} onClick={stop}/>
                             <span>Select all on page</span>
                         </label>
                         <span className="text-xs text-gray-400">
@@ -425,23 +425,20 @@ export default function InventoryPage() {
                             return (
                                 <div
                                     key={id}
-                                    className="rounded-xl border border-white/10 bg-gray-900/60 p-3 active:bg-gray-800/40"
-                                    onClick={() => goToDetails(id)}
-                                    title="Open Inventory Details"
+                                    className="rounded-xl border border-white/10 bg-gray-900/60 p-3"
+                                    title="Inventory Row"
                                 >
                                     <div className="flex items-start gap-3">
                                         <input
                                             type="checkbox"
                                             checked={!!selected[id]}
                                             onChange={() => toggleOne(id)}
-                                            onClick={stopRowNav}
+                                            onClick={stop}
                                             className="mt-1"
                                         />
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center justify-between gap-2">
-                                                <div className="font-mono text-white text-sm">
-                                                    <span className="underline decoration-dotted">{r.itemId}</span>
-                                                </div>
+                                                <div className="font-mono text-white text-sm">{r.itemId}</div>
                                                 {r.hold && (
                                                     <span
                                                         className="px-2 py-0.5 text-[10px] rounded-full bg-yellow-600/30 text-yellow-300 whitespace-nowrap">
@@ -472,6 +469,24 @@ export default function InventoryPage() {
                                                     <div className={`font-medium ${availClass}`}>{available}</div>
                                                 </div>
                                             </div>
+
+                                            {/* Row actions (mobile) — order & styling aligned with WorkOrders */}
+                                            <div className="mt-3 flex flex-wrap gap-2" onClick={stop}>
+                                                <button
+                                                    onClick={() => goToDetails(id)}
+                                                    className="px-3 py-1.5 rounded-lg bg-blue-600/20 text-blue-300 border border-blue-600/40 text-xs hover:bg-blue-600/30 hover:text-blue-200 transition"
+                                                    title="Open Inventory Details"
+                                                >
+                                                    Details
+                                                </button>
+                                                <button
+                                                    onClick={() => goToLots(id)}
+                                                    className="px-3 py-1.5 rounded-lg bg-indigo-600/20 text-indigo-300 border border-indigo-600/40 text-xs hover:bg-indigo-600/30 hover:text-indigo-200 transition"
+                                                    title="View Lots for this item"
+                                                >
+                                                    Lots
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -492,8 +507,7 @@ export default function InventoryPage() {
                         <thead className="bg-gray-900/80">
                         <tr>
                             <th className="px-4 py-3">
-                                <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll}
-                                       onClick={stopRowNav}/>
+                                <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll} onClick={stop}/>
                             </th>
                             {th("Item ID", "itemId")}
                             {th("Item", "item")}
@@ -503,6 +517,7 @@ export default function InventoryPage() {
                             {th("Allocated", "allocated", true)}
                             {th("Available", "available", true)}
                             {th("Reorder pt", "reorderPt", true)}
+                            <th className="px-4 py-3 font-semibold text-gray-300 text-right">Actions</th>
                         </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-800">
@@ -515,18 +530,11 @@ export default function InventoryPage() {
                                         ? "text-yellow-300"
                                         : "text-gray-200";
                             return (
-                                <tr
-                                    key={id}
-                                    className="hover:bg-gray-800/40 transition cursor-pointer"
-                                    onClick={() => goToDetails(id)}
-                                    title="Open Inventory Details"
-                                >
-                                    <td className="px-4 py-3" onClick={stopRowNav}>
+                                <tr key={id} className="hover:bg-gray-800/40 transition" title="Inventory Row">
+                                    <td className="px-4 py-3" onClick={stop}>
                                         <input type="checkbox" checked={!!selected[id]} onChange={() => toggleOne(id)}/>
                                     </td>
-                                    <td className="px-4 py-3 font-mono text-white">
-                                        <span className="underline decoration-dotted">{r.itemId}</span>
-                                    </td>
+                                    <td className="px-4 py-3 font-mono text-white">{r.itemId}</td>
                                     <td className="px-4 py-3 text-gray-200">{r.item}</td>
                                     <td className="px-4 py-3 text-gray-400">{r.category}</td>
                                     <td className="px-4 py-3 text-gray-400">{r.uom}</td>
@@ -534,12 +542,28 @@ export default function InventoryPage() {
                                     <td className="px-4 py-3 text-right text-gray-200">{r.allocated}</td>
                                     <td className={`px-4 py-3 text-right ${availClass}`}>{r.available}</td>
                                     <td className="px-4 py-3 text-right text-gray-200">{r.reorderPt}</td>
+                                    <td className="px-4 py-3 text-right space-x-2" onClick={stop}>
+                                        <button
+                                            onClick={() => goToDetails(id)}
+                                            className="px-3 py-1.5 rounded-lg bg-blue-600/20 text-blue-300 border border-blue-600/40 text-xs hover:bg-blue-600/30 hover:text-blue-200 transition"
+                                            title="Open Inventory Details"
+                                        >
+                                            Details
+                                        </button>
+                                        <button
+                                            onClick={() => goToLots(id)}
+                                            className="px-3 py-1.5 rounded-lg bg-indigo-600/20 text-indigo-300 border border-indigo-600/40 text-xs hover:bg-indigo-600/30 hover:text-indigo-200 transition"
+                                            title="View Lots for this item"
+                                        >
+                                            Lots
+                                        </button>
+                                    </td>
                                 </tr>
                             );
                         })}
                         {paged.length === 0 && (
                             <tr>
-                                <td className="px-4 py-6 text-center text-gray-400" colSpan={9}>
+                                <td className="px-4 py-6 text-center text-gray-400" colSpan={10}>
                                     No inventory items found.
                                 </td>
                             </tr>

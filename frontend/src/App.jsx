@@ -15,9 +15,6 @@ import {BOMDetailsPage} from "./pages/BOMDetailsPage.jsx";
 import {WorkOrdersPage} from "./pages/WorkOrdersPage.jsx";
 import {WorkOrderDetailsPage} from "./pages/WorkOrderDetailsPage.jsx";
 import InventoryPage from "./pages/InventoryPage.jsx";
-import InventoryTransferPage from "./pages/InventoryTransferPage.jsx";
-import InventoryAdjustPage from "./pages/InventoryAdjustPage.jsx";
-import InventoryReceivePage from "./pages/InventoryReceivePage.jsx";
 import PurchasingPage from "./pages/PurchasingPage.jsx";
 import {PODetailsPage} from "./pages/PODetailsPage.jsx";
 import ItemDetailsPage from "./pages/ItemDetailsPage.jsx";
@@ -125,21 +122,6 @@ export default function App() {
             <Route path="/inventory/:routeItemId/lots/:routeLotId" element={
                 <AuthenticationGuard>
                     <FullWidthLayout><InventoryLotCustomDetailsPage/></FullWidthLayout>
-                </AuthenticationGuard>
-            }/>
-            <Route path="/inventory/transfer" element={
-                <AuthenticationGuard>
-                    <FullWidthLayout><InventoryTransferPage/></FullWidthLayout>
-                </AuthenticationGuard>
-            }/>
-            <Route path="/inventory/adjust" element={
-                <AuthenticationGuard>
-                    <FullWidthLayout><InventoryAdjustPage/></FullWidthLayout>
-                </AuthenticationGuard>
-            }/>
-            <Route path="/inventory/receive" element={
-                <AuthenticationGuard>
-                    <FullWidthLayout><InventoryReceivePage/></FullWidthLayout>
                 </AuthenticationGuard>
             }/>
             <Route path="/purchasing" element={
