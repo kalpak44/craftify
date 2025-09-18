@@ -21,8 +21,7 @@ import ItemDetailsPage from "./pages/ItemDetailsPage.jsx";
 import WorkOrderOperationsPage from "./pages/WorkOrderOperationsPage.jsx";
 import {WorkOrderOperationsDetailsPage} from "./pages/WorkOrderOperationsDetailsPage.jsx";
 import CalendarPage from "./pages/CalendarPage.jsx";
-import {InventoryLotsPage} from "./pages/InventoryLotsPage.jsx";
-import InventoryLotCustomDetailsPage from "./pages/InventoryLotCustomDetailsPage.jsx";
+import InventoryDetailsPage from "./pages/InventoryDetailsPage.jsx";
 
 export default function App() {
     const {isLoading} = useAuth0();
@@ -114,14 +113,9 @@ export default function App() {
                     <FullWidthLayout><InventoryPage/></FullWidthLayout>
                 </AuthenticationGuard>
             }/>
-            <Route path="/inventory/:routeItemId/lots" element={
+            <Route path="/inventory/:routeItemId/edit" element={
                 <AuthenticationGuard>
-                    <FullWidthLayout><InventoryLotsPage/></FullWidthLayout>
-                </AuthenticationGuard>
-            }/>
-            <Route path="/inventory/:routeItemId/lots/:routeLotId" element={
-                <AuthenticationGuard>
-                    <FullWidthLayout><InventoryLotCustomDetailsPage/></FullWidthLayout>
+                    <FullWidthLayout><InventoryDetailsPage/></FullWidthLayout>
                 </AuthenticationGuard>
             }/>
             <Route path="/purchasing" element={

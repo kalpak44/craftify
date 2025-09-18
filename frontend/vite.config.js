@@ -4,7 +4,7 @@ import svgr from 'vite-plugin-svgr';
 
 
 export default defineConfig({
-    base:"./",
+    base: "./",
     optimizeDeps: {
         exclude: [],
     },
