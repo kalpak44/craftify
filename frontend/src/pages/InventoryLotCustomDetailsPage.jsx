@@ -212,7 +212,7 @@ export default function InventoryLotCustomDetailsPage() {
     };
 
     // Navigation handlers with confirm
-    const goBack = () => navigate(`/inventory/${encodeURIComponent(itemId)}`);
+    const goBack = () => navigate(`/inventory/${encodeURIComponent(itemId)}/lots`);
     const handleBack = () => {
         if (dirty) {
             pendingNavRef.current = goBack;
