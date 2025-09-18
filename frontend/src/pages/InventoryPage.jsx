@@ -4,17 +4,11 @@ import {useLocation, useNavigate} from "react-router-dom";
 /**
  * InventoryPage
  *
- * ERP-style inventory list aligned with Items/Work Orders UX.
+ * Read-only ERP-style inventory list.
  * Updates in this version:
- * - Removed row click navigation to details.
- * - Added per-row action buttons (aligned to WorkOrders): “Details” (blue) then “Lots” (indigo).
- * - Header actions remain: “+ New Item” and “Import CSV”.
- *
- * Features:
- * - Search, filter by category/UoM, sortable columns.
- * - Row selection with select-all-on-page.
- * - CSV export and print-friendly view.
- * - Pagination.
+ * - Removed all actions and their UI (header buttons, bulk actions, per-row buttons, selection checkboxes, item picker, CSV/Print helpers).
+ * - Keeps search, filters, sorting, pagination.
+ * - Row/card click navigates to Details at /inventory/:id/edit (link-like Item ID).
  */
 export default function InventoryPage() {
     const navigate = useNavigate();
@@ -30,7 +24,7 @@ export default function InventoryPage() {
             onHand: 5,
             allocated: 1,
             reorderPt: 0,
-            hold: false
+            hold: false,
         },
         {
             item: "Blue Paint (RAL5010)",
@@ -40,7 +34,7 @@ export default function InventoryPage() {
             onHand: 12,
             allocated: 2,
             reorderPt: 8,
-            hold: true
+            hold: true,
         },
         {
             item: "Chain Bracket",
@@ -50,7 +44,7 @@ export default function InventoryPage() {
             onHand: 1320,
             allocated: 800,
             reorderPt: 100,
-            hold: false
+            hold: false,
         },
         {
             item: "Front Assembly",
@@ -60,7 +54,7 @@ export default function InventoryPage() {
             onHand: 208,
             allocated: 230,
             reorderPt: 30,
-            hold: false
+            hold: false,
         },
         {
             item: "Large Widget",
@@ -70,7 +64,7 @@ export default function InventoryPage() {
             onHand: 310,
             allocated: 600,
             reorderPt: 150,
-            hold: false
+            hold: false,
         },
         {
             item: "Lion Bracket",
@@ -80,7 +74,7 @@ export default function InventoryPage() {
             onHand: 350,
             allocated: 200,
             reorderPt: 100,
-            hold: false
+            hold: false,
         },
         {
             item: "Plastic Case",
@@ -90,7 +84,7 @@ export default function InventoryPage() {
             onHand: 1350,
             allocated: 330,
             reorderPt: 200,
-            hold: false
+            hold: false,
         },
         {
             item: "Screws M3×8",
@@ -100,7 +94,7 @@ export default function InventoryPage() {
             onHand: 1500,
             allocated: 300,
             reorderPt: 1000,
-            hold: false
+            hold: false,
         },
     ];
 
@@ -111,20 +105,25 @@ export default function InventoryPage() {
     const [categoryFilter, setCategoryFilter] = useState("all");
     const [uomFilter, setUomFilter] = useState("all");
     const [sort, setSort] = useState({key: "itemId", dir: "asc"});
-    const [selected, setSelected] = useState({});
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(8);
 
     // ---- Options ----
-    const categories = useMemo(() => ["all", ...Array.from(new Set(data.map(d => d.category))).sort((a, b) => a.localeCompare(b))], [data]);
-    const uoms = useMemo(() => ["all", ...Array.from(new Set(data.map(d => d.uom))).sort((a, b) => a.localeCompare(b))], [data]);
+    const categories = useMemo(
+        () => ["all", ...Array.from(new Set(data.map((d) => d.category))).sort((a, b) => a.localeCompare(b))],
+        [data]
+    );
+    const uoms = useMemo(
+        () => ["all", ...Array.from(new Set(data.map((d) => d.uom))).sort((a, b) => a.localeCompare(b))],
+        [data]
+    );
 
     // ---- Derived rows ----
     const filtered = useMemo(() => {
         let rows = data.map((r) => ({...r, available: r.onHand - r.allocated}));
 
-        if (categoryFilter !== "all") rows = rows.filter(r => r.category === categoryFilter);
-        if (uomFilter !== "all") rows = rows.filter(r => r.uom === uomFilter);
+        if (categoryFilter !== "all") rows = rows.filter((r) => r.category === categoryFilter);
+        if (uomFilter !== "all") rows = rows.filter((r) => r.uom === uomFilter);
 
         if (query) {
             const q = query.toLowerCase();
@@ -133,7 +132,8 @@ export default function InventoryPage() {
 
         const {key, dir} = sort;
         rows = [...rows].sort((a, b) => {
-            const av = a[key], bv = b[key];
+            const av = a[key],
+                bv = b[key];
             const cmp = ["onHand", "allocated", "available", "reorderPt"].includes(key)
                 ? av - bv
                 : String(av).localeCompare(String(bv), undefined, {numeric: true, sensitivity: "base"});
@@ -148,124 +148,8 @@ export default function InventoryPage() {
     const pageStart = (page - 1) * pageSize;
     const paged = filtered.slice(pageStart, pageStart + pageSize);
 
-    // ---- Selection ----
-    const rowId = (r) => r.itemId;
-    const toggleOne = (id) => setSelected((s) => ({...s, [id]: !s[id]}));
-    const selectedIds = Object.keys(selected).filter((k) => selected[k]);
-    const selectedCount = selectedIds.length;
-    const allOnPageSelected = paged.length > 0 && paged.every((r) => selected[rowId(r)]);
-    const toggleAll = () => {
-        const next = {...selected};
-        if (allOnPageSelected) paged.forEach((r) => delete next[rowId(r)]);
-        else paged.forEach((r) => (next[rowId(r)] = true));
-        setSelected(next);
-    };
-
-    // ---- Navigation helpers (only buttons trigger navigation now) ----
+    // ---- Navigation ----
     const goToDetails = (id) => navigate(`/inventory/${encodeURIComponent(id)}/edit`);
-    const goToLots = (id) => navigate(`/inventory/${encodeURIComponent(id)}/lots`);
-    const stop = (e) => e.stopPropagation();
-
-    // ---------- Export helpers ----------
-    const rowsForExport = () => (selectedCount ? filtered.filter((r) => selectedIds.includes(r.itemId)) : filtered);
-
-    const toCSV = (dataRows) => {
-        const headers = ["Item ID", "Item", "Category", "UoM", "On hand", "Allocated", "Available", "Reorder pt"];
-        const escape = (v) => {
-            const s = String(v ?? "");
-            return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-        };
-        const lines = [headers.join(",")];
-        dataRows.forEach((r) => {
-            lines.push(
-                [
-                    escape(r.itemId),
-                    escape(r.item),
-                    escape(r.category),
-                    escape(r.uom),
-                    escape(r.onHand),
-                    escape(r.allocated),
-                    escape(r.available),
-                    escape(r.reorderPt),
-                ].join(",")
-            );
-        });
-        return lines.join("\n");
-    };
-
-    const downloadBlob = (blob, filename) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-    };
-
-    const handleExportCSV = () => {
-        const csv = toCSV(rowsForExport());
-        downloadBlob(
-            new Blob(["\ufeff" + csv], {type: "text/csv;charset=utf-8;"}),
-            `inventory_${new Date().toISOString().slice(0, 10)}.csv`
-        );
-    };
-
-    const handlePrint = () => {
-        const dataRows = rowsForExport();
-        const html = `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>Inventory Export</title>
-<style>
-  @media print { @page { size: A4 landscape; margin: 12mm; } }
-  body{ font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; color:#0f172a; }
-  h1{ font-size:20px; margin:0 0 12px; }
-  .meta{ font-size:12px; color:#475569; margin-bottom:12px; }
-  table{ width:100%; border-collapse:collapse; font-size:12px; }
-  th,td{ border:1px solid #cbd5e1; padding:6px 8px; text-align:left; }
-  th{ background:#f1f5f9; }
-  td.num{ text-align:right; }
-  td.mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-</style>
-</head>
-<body>
-<h1>Inventory</h1>
-<div class="meta">Exported ${new Date().toLocaleString()} • ${dataRows.length} rows ${selectedCount ? "(selection)" : "(filtered)"}</div>
-<table>
-  <thead>
-    <tr>
-      <th>Item ID</th><th>Item</th><th>Category</th><th>UoM</th><th>On hand</th><th>Allocated</th><th>Available</th><th>Reorder pt</th>
-    </tr>
-  </thead>
-  <tbody>
-    ${dataRows
-            .map(
-                (r) => `<tr>
-          <td class="mono">${r.itemId}</td>
-          <td>${r.item}</td>
-          <td>${r.category ?? ""}</td>
-          <td>${r.uom}</td>
-          <td class="num">${r.onHand}</td>
-          <td class="num">${r.allocated}</td>
-          <td class="num">${r.available}</td>
-          <td class="num">${r.reorderPt}</td>
-        </tr>`
-            )
-            .join("")}
-  </tbody>
-</table>
-<script>window.onload = () => { window.print(); setTimeout(() => window.close(), 250); };</script>
-</body>
-</html>`;
-        const w = window.open("", "_blank");
-        if (!w) return;
-        w.document.open();
-        w.document.write(html);
-        w.document.close();
-    };
 
     // Table header cell (sortable)
     const th = (label, key, right = false) => (
@@ -274,7 +158,9 @@ export default function InventoryPage() {
                 setSort((s) => ({key, dir: s.key === key && s.dir === "asc" ? "desc" : "asc"}));
                 setPage(1);
             }}
-            className={`px-4 py-3 font-semibold text-gray-300 select-none cursor-pointer ${right ? "text-right" : "text-left"}`}
+            className={`px-4 py-3 font-semibold text-gray-300 select-none cursor-pointer ${
+                right ? "text-right" : "text-left"
+            }`}
         >
       <span className="inline-flex items-center gap-1">
         {label}
@@ -293,22 +179,10 @@ export default function InventoryPage() {
                         <p className="mt-1 md:mt-2 text-gray-400 text-sm md:text-base">Quick view of item stock
                             levels.</p>
                     </div>
-                    <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
-                        <button
-                            className="flex-1 sm:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
-                            onClick={() => navigate("/inventory/")}
-                        >
-                            + New Item
-                        </button>
-                        <button
-                            className="flex-1 sm:flex-none px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">
-                            Import CSV
-                        </button>
-                    </div>
                 </div>
             </header>
 
-            {/* Filters / Toolbar */}
+            {/* Filters / Toolbar (read-only) */}
             <div className="mx-auto px-4 pb-4">
                 <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-3 md:p-4">
                     <div className="flex flex-col md:flex-row md:items-center gap-3">
@@ -348,52 +222,18 @@ export default function InventoryPage() {
                             </select>
                         </div>
 
-                        {/* Search + Pick */}
-                        <div className="flex-1 flex gap-2">
-                            <div className="relative flex-1">
-                                <input
-                                    placeholder="Search Item or Item ID…"
-                                    value={query}
-                                    onChange={(e) => {
-                                        setQuery(e.target.value);
-                                        setPage(1);
-                                    }}
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 pl-3 pr-10 py-2 text-sm"
-                                />
-                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">⌕</span>
-                            </div>
-                            <button
-                                onClick={() => setOpenItemPicker(true)}
-                                className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm hover:bg-gray-700"
-                                title="Pick Item"
-                            >
-                                Pick Item
-                            </button>
-                        </div>
-
-                        {/* Bulk actions */}
-                        <div className="flex items-center gap-2 md:ml-auto">
-                            <button
-                                onClick={handleExportCSV}
-                                className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm hover:bg-gray-700"
-                                title={`Export ${selectedCount ? "selected" : "filtered"} rows to CSV`}
-                            >
-                                Export CSV
-                            </button>
-                            <button
-                                onClick={handlePrint}
-                                className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm hover:bg-gray-700"
-                                title="Open print dialog (save as PDF)"
-                            >
-                                Print / PDF
-                            </button>
-                            <button
-                                disabled={!selectedCount}
-                                className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm disabled:opacity-40"
-                                title={selectedCount ? `Delete ${selectedCount} selected` : "Select rows to delete"}
-                            >
-                                Delete
-                            </button>
+                        {/* Search */}
+                        <div className="relative flex-1">
+                            <input
+                                placeholder="Search Item or Item ID…"
+                                value={query}
+                                onChange={(e) => {
+                                    setQuery(e.target.value);
+                                    setPage(1);
+                                }}
+                                className="w-full rounded-lg bg-gray-800 border border-white/10 pl-3 pr-10 py-2 text-sm"
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">⌕</span>
                         </div>
                     </div>
                 </div>
@@ -403,42 +243,29 @@ export default function InventoryPage() {
             <section className="mx-auto px-4 pb-12">
                 {/* Mobile card list */}
                 <div className="md:hidden">
-                    {/* Select-all toolbar for mobile */}
-                    <div className="mb-2 flex items-center justify-between">
-                        <label className="inline-flex items-center gap-2 text-sm text-gray-300">
-                            <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll} onClick={stop}/>
-                            <span>Select all on page</span>
-                        </label>
-                        <span className="text-xs text-gray-400">
-              {filtered.length === 0 ? 0 : pageStart + 1}–{Math.min(filtered.length, pageStart + pageSize)} of {filtered.length}
-            </span>
-                    </div>
-
                     <div className="space-y-2">
                         {paged.map((r) => {
-                            const id = rowId(r);
+                            const id = r.itemId;
                             const available = r.onHand - r.allocated;
                             const availClass =
-                                available < 0 ? "text-red-300"
-                                    : available <= (r.reorderPt || 0) ? "text-yellow-300"
+                                available < 0
+                                    ? "text-red-300"
+                                    : available <= (r.reorderPt || 0)
+                                        ? "text-yellow-300"
                                         : "text-gray-200";
                             return (
                                 <div
                                     key={id}
-                                    className="rounded-xl border border-white/10 bg-gray-900/60 p-3"
-                                    title="Inventory Row"
+                                    className="rounded-xl border border-white/10 bg-gray-900/60 p-3 active:bg-gray-800/40 cursor-pointer"
+                                    title="Open Details"
+                                    onClick={() => goToDetails(id)}
                                 >
                                     <div className="flex items-start gap-3">
-                                        <input
-                                            type="checkbox"
-                                            checked={!!selected[id]}
-                                            onChange={() => toggleOne(id)}
-                                            onClick={stop}
-                                            className="mt-1"
-                                        />
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center justify-between gap-2">
-                                                <div className="font-mono text-white text-sm">{r.itemId}</div>
+                                                <div className="font-mono text-white text-sm">
+                                                    <span className="underline decoration-dotted">{r.itemId}</span>
+                                                </div>
                                                 {r.hold && (
                                                     <span
                                                         className="px-2 py-0.5 text-[10px] rounded-full bg-yellow-600/30 text-yellow-300 whitespace-nowrap">
@@ -469,24 +296,6 @@ export default function InventoryPage() {
                                                     <div className={`font-medium ${availClass}`}>{available}</div>
                                                 </div>
                                             </div>
-
-                                            {/* Row actions (mobile) — order & styling aligned with WorkOrders */}
-                                            <div className="mt-3 flex flex-wrap gap-2" onClick={stop}>
-                                                <button
-                                                    onClick={() => goToDetails(id)}
-                                                    className="px-3 py-1.5 rounded-lg bg-blue-600/20 text-blue-300 border border-blue-600/40 text-xs hover:bg-blue-600/30 hover:text-blue-200 transition"
-                                                    title="Open Inventory Details"
-                                                >
-                                                    Details
-                                                </button>
-                                                <button
-                                                    onClick={() => goToLots(id)}
-                                                    className="px-3 py-1.5 rounded-lg bg-indigo-600/20 text-indigo-300 border border-indigo-600/40 text-xs hover:bg-indigo-600/30 hover:text-indigo-200 transition"
-                                                    title="View Lots for this item"
-                                                >
-                                                    Lots
-                                                </button>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -506,9 +315,6 @@ export default function InventoryPage() {
                     <table className="min-w-full divide-y divide-gray-800 text-sm">
                         <thead className="bg-gray-900/80">
                         <tr>
-                            <th className="px-4 py-3">
-                                <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll} onClick={stop}/>
-                            </th>
                             {th("Item ID", "itemId")}
                             {th("Item", "item")}
                             {th("Category", "category")}
@@ -517,12 +323,11 @@ export default function InventoryPage() {
                             {th("Allocated", "allocated", true)}
                             {th("Available", "available", true)}
                             {th("Reorder pt", "reorderPt", true)}
-                            <th className="px-4 py-3 font-semibold text-gray-300 text-right">Actions</th>
                         </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-800">
                         {paged.map((r) => {
-                            const id = rowId(r);
+                            const id = r.itemId;
                             const availClass =
                                 r.available < 0
                                     ? "text-red-300"
@@ -530,11 +335,15 @@ export default function InventoryPage() {
                                         ? "text-yellow-300"
                                         : "text-gray-200";
                             return (
-                                <tr key={id} className="hover:bg-gray-800/40 transition" title="Inventory Row">
-                                    <td className="px-4 py-3" onClick={stop}>
-                                        <input type="checkbox" checked={!!selected[id]} onChange={() => toggleOne(id)}/>
+                                <tr
+                                    key={id}
+                                    className="hover:bg-gray-800/40 transition cursor-pointer"
+                                    title="Open Details"
+                                    onClick={() => goToDetails(id)}
+                                >
+                                    <td className="px-4 py-3 font-mono text-white">
+                                        <span className="underline decoration-dotted">{r.itemId}</span>
                                     </td>
-                                    <td className="px-4 py-3 font-mono text-white">{r.itemId}</td>
                                     <td className="px-4 py-3 text-gray-200">{r.item}</td>
                                     <td className="px-4 py-3 text-gray-400">{r.category}</td>
                                     <td className="px-4 py-3 text-gray-400">{r.uom}</td>
@@ -542,28 +351,12 @@ export default function InventoryPage() {
                                     <td className="px-4 py-3 text-right text-gray-200">{r.allocated}</td>
                                     <td className={`px-4 py-3 text-right ${availClass}`}>{r.available}</td>
                                     <td className="px-4 py-3 text-right text-gray-200">{r.reorderPt}</td>
-                                    <td className="px-4 py-3 text-right space-x-2" onClick={stop}>
-                                        <button
-                                            onClick={() => goToDetails(id)}
-                                            className="px-3 py-1.5 rounded-lg bg-blue-600/20 text-blue-300 border border-blue-600/40 text-xs hover:bg-blue-600/30 hover:text-blue-200 transition"
-                                            title="Open Inventory Details"
-                                        >
-                                            Details
-                                        </button>
-                                        <button
-                                            onClick={() => goToLots(id)}
-                                            className="px-3 py-1.5 rounded-lg bg-indigo-600/20 text-indigo-300 border border-indigo-600/40 text-xs hover:bg-indigo-600/30 hover:text-indigo-200 transition"
-                                            title="View Lots for this item"
-                                        >
-                                            Lots
-                                        </button>
-                                    </td>
                                 </tr>
                             );
                         })}
                         {paged.length === 0 && (
                             <tr>
-                                <td className="px-4 py-6 text-center text-gray-400" colSpan={10}>
+                                <td className="px-4 py-6 text-center text-gray-400" colSpan={8}>
                                     No inventory items found.
                                 </td>
                             </tr>
@@ -586,7 +379,9 @@ export default function InventoryPage() {
                             className="rounded bg-gray-800 border border-white/10 px-2 py-1"
                         >
                             {[8, 16, 24].map((n) => (
-                                <option key={n} value={n}>{n}</option>
+                                <option key={n} value={n}>
+                                    {n}
+                                </option>
                             ))}
                         </select>
                         <span className="hidden sm:inline">•</span>
