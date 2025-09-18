@@ -114,7 +114,7 @@ export default function App() {
                     <FullWidthLayout><InventoryPage/></FullWidthLayout>
                 </AuthenticationGuard>
             }/>
-            <Route path="/inventory/:routeItemId/" element={
+            <Route path="/inventory/:routeItemId/lots" element={
                 <AuthenticationGuard>
                     <FullWidthLayout><InventoryLotsPage/></FullWidthLayout>
                 </AuthenticationGuard>

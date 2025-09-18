@@ -163,7 +163,7 @@ export default function InventoryPage() {
 
     // ---- Navigation helpers (only buttons trigger navigation now) ----
     const goToDetails = (id) => navigate(`/inventory/${encodeURIComponent(id)}/edit`);
-    const goToLots = (id) => navigate(`/inventory/${encodeURIComponent(id)}`);
+    const goToLots = (id) => navigate(`/inventory/${encodeURIComponent(id)}/lots`);
     const stop = (e) => e.stopPropagation();
 
     // ---------- Export helpers ----------
