@@ -4,6 +4,7 @@
  * Purpose:
  * - Simplified operations Kanban board for a Work Order.
  * - Mobile-first UX: horizontal scroll & snap columns, large tap targets, and a "Move" action for touch devices.
+ * - Fix (mobile Move modal): prevent header overlay/glitch by disabling sticky on mobile, using dvh, and safe-area padding.
  * - Shows a top BOM Components section with allocation & usage bars.
  * - Allows deleting operation cards with a confirmation modal.
  * - Output for Completed operations is editable via modal.
@@ -62,7 +63,7 @@ const IconTrash = (props) => (
     </svg>
 );
 
-// Minimal modal shell — responsive full-screen on mobile
+// Minimal modal shell — fixed: mobile header/foot not sticky; dvh + safe-area paddings
 function Modal({open, title, onClose, children, footer}) {
     if (!open) return null;
     return (
@@ -70,18 +71,25 @@ function Modal({open, title, onClose, children, footer}) {
             <div className="absolute inset-0 bg-black/60" onClick={onClose}/>
             <div className="absolute inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4">
                 <div
-                    className="w-full h-[92vh] sm:h-auto sm:max-h-[80vh] sm:max-w-4xl rounded-t-2xl sm:rounded-2xl border border-white/10 bg-gray-900 text-gray-200 shadow-2xl"
+                    className="w-full h-[92dvh] sm:h-auto sm:max-h-[80dvh] sm:max-w-4xl rounded-t-2xl sm:rounded-2xl border border-white/10 bg-gray-900 text-gray-200 shadow-2xl"
                 >
                     <div
-                        className="px-5 py-4 border-b border-white/10 flex items-center justify-between sticky top-0 bg-gray-900">
+                        className="px-5 py-4 border-b border-white/10 flex items-center justify-between bg-gray-900"
+                        style={{paddingTop: "env(safe-area-inset-top)"}}
+                    >
                         <h3 className="text-base sm:text-lg font-semibold">{title}</h3>
                         <button onClick={onClose}
                                 className="text-gray-400 hover:text-gray-200 text-xl leading-none">&times;</button>
                     </div>
+
+                    <div className="p-4 sm:p-5 overflow-y-auto max-h-[calc(92dvh-120px)] sm:max-h-[calc(80dvh-120px)]">
+                        {children}
+                    </div>
+
                     <div
-                        className="p-4 sm:p-5 overflow-y-auto max-h-[calc(92vh-120px)] sm:max-h-[calc(80vh-120px)]">{children}</div>
-                    <div
-                        className="px-4 sm:px-5 py-3 sm:py-4 border-t border-white/10 bg-gray-900/60 flex items-center justify-end gap-2 sticky bottom-0">
+                        className="px-4 sm:px-5 py-3 sm:py-4 border-t border-white/10 bg-gray-900/60 flex items-center justify-end gap-2"
+                        style={{paddingBottom: "env(safe-area-inset-bottom)"}}
+                    >
                         {footer}
                     </div>
                 </div>
@@ -239,7 +247,7 @@ const WorkOrderOperationsPage = () => {
         draftRows: [],
         produced: 0,
         notes: "",
-        viewOnly: false, // editable
+        viewOnly: false,
         targetStatus: "Completed",
     });
 
@@ -474,7 +482,7 @@ const WorkOrderOperationsPage = () => {
             aria-label={`${title} column`}
         >
             <div
-                className="flex items-center justify-between px-3 py-2 border-b border-gray-800/60 sticky top-0 bg-gray-900/60 backdrop-blur z-10">
+                className="flex items-center justify-between px-3 py-2 border-b border-gray-800/60 bg-gray-900/60 backdrop-blur z-10">
                 <div className="flex items-center gap-2">
           <span
               className={`h-2.5 w-2.5 rounded-full ${title === "Open" ? "bg-blue-400" : title === "In Progress" ? "bg-indigo-400" : title === "Completed" ? "bg-green-400" : "bg-yellow-400"}`}/>
@@ -1215,7 +1223,7 @@ const WorkOrderOperationsPage = () => {
                     </button>
                 }
             >
-                <div className="space-y-3">
+                <div className="space-y-4">
                     <div className="text-sm text-gray-300">Select a target column:</div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {STATUS_LIST.map(s => (
