@@ -12,6 +12,9 @@
  * - Users can drag tickets across statuses (desktop) or tap "Move" (mobile) to change statuses.
  * - Change: Increase space for the "Updated" text on cards so it stays on a single line.
  * - Change: Replace "Availability" wording with "Allocation" in the top BOM table.
+ * - Change: Remove request logs UI/logic (recent requests snapshot and logging).
+ * - Change: Use full page width (no centered max-width wrapper) and remove page background.
+ * - Change: Increase paddings in modals (header/body/footer).
  *
  * Notes:
  * - Mock data only; no backend calls.
@@ -42,7 +45,8 @@ const PRIORITY_DOT = {
 };
 
 const pill = (value, map) => (
-    <span className={`px-2 py-1 text-xs rounded-full ${map[value] || "bg-gray-600/30 text-gray-300"}`}>{value}</span>
+    <span
+        className={`px-2.5 py-1 text-xs rounded-full border border-white/10 ${map[value] || "bg-gray-600/30 text-gray-300"}`}>{value}</span>
 );
 
 // Tiny icons
@@ -63,31 +67,35 @@ const IconTrash = (props) => (
     </svg>
 );
 
-// Minimal modal shell — fixed: mobile header/foot not sticky; dvh + safe-area paddings
 function Modal({open, title, onClose, children, footer}) {
     if (!open) return null;
     return (
         <div className="fixed inset-0 z-50">
             <div className="absolute inset-0 bg-black/60" onClick={onClose}/>
-            <div className="absolute inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4">
+            <div className="absolute inset-0 flex items-end sm:items-center justify-center p-3 sm:p-6">
                 <div
-                    className="w-full h-[92dvh] sm:h-auto sm:max-h-[80dvh] sm:max-w-4xl rounded-t-2xl sm:rounded-2xl border border-white/10 bg-gray-900 text-gray-200 shadow-2xl"
+                    className="w-full h-[92dvh] sm:h-auto sm:max-h-[80dvh] sm:max-w-5xl rounded-2xl border border-white/10 bg-gray-900 text-gray-200 shadow-2xl"
                 >
                     <div
-                        className="px-5 py-4 border-b border-white/10 flex items-center justify-between bg-gray-900"
+                        className="px-6 sm:px-8 py-5 border-b border-white/10 flex items-center justify-between bg-gray-900 rounded-t-2xl"
                         style={{paddingTop: "env(safe-area-inset-top)"}}
                     >
                         <h3 className="text-base sm:text-lg font-semibold">{title}</h3>
-                        <button onClick={onClose}
-                                className="text-gray-400 hover:text-gray-200 text-xl leading-none">&times;</button>
+                        <button
+                            onClick={onClose}
+                            className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-white/10 text-gray-300 hover:text-white hover:bg-gray-800/60 text-xl leading-none"
+                            aria-label="Close modal"
+                        >
+                            &times;
+                        </button>
                     </div>
 
-                    <div className="p-4 sm:p-5 overflow-y-auto max-h-[calc(92dvh-120px)] sm:max-h-[calc(80dvh-120px)]">
+                    <div className="p-5 sm:p-8 overflow-y-auto max-h-[calc(92dvh-140px)] sm:max-h-[calc(80dvh-160px)]">
                         {children}
                     </div>
 
                     <div
-                        className="px-4 sm:px-5 py-3 sm:py-4 border-t border-white/10 bg-gray-900/60 flex items-center justify-end gap-2"
+                        className="px-6 sm:px-8 py-4 sm:py-5 border-t border-white/10 bg-gray-900/60 flex items-center justify-end gap-2 rounded-b-2xl"
                         style={{paddingBottom: "env(safe-area-inset-bottom)"}}
                     >
                         {footer}
@@ -266,8 +274,7 @@ const WorkOrderOperationsPage = () => {
     // Mobile move modal
     const [moveModal, setMoveModal] = useState({open: false, opId: null});
 
-    // Request log (mock)
-    const [requestLog, setRequestLog] = useState([]); // {opId?, itemId, qty, at}
+    // Top-level requests (per component in header section)
     const [topRequests, setTopRequests] = useState({}); // { itemId: qty }
 
     // --- Derived
@@ -461,8 +468,7 @@ const WorkOrderOperationsPage = () => {
     const submitTopRequest = (itemId) => {
         const qty = Number(topRequests[itemId] || 0);
         if (qty > 0) {
-            const at = new Date().toISOString().slice(0, 10);
-            setRequestLog(prev => [...prev, {opId: null, itemId, qty, at}]);
+            // Logs removed; just clear the input for feedback
             setTopRequests(prev => {
                 const n = {...prev};
                 delete n[itemId];
@@ -474,7 +480,7 @@ const WorkOrderOperationsPage = () => {
     // ---- Column
     const Column = ({title, items}) => (
         <div
-            className={`flex flex-col rounded-xl border border-white/10 bg-gray-900/60 min-h-[520px] md:min-h-[520px] md:w-auto w-[84%] sm:w-[70%] snap-center ${dragOverCol === title ? "ring-2 ring-blue-500/60" : ""}`}
+            className={`flex flex-col rounded-xl border border-white/10 bg-gray-900/60 min-h-[520px] md:min-h-[520px] md:w-auto w-[86%] sm:w-[72%] snap-center ${dragOverCol === title ? "ring-2 ring-blue-500/60" : ""}`}
             onDragOver={(e) => onDragOver(e, title)}
             onDragLeave={onDragLeave}
             onDrop={(e) => onDrop(e, title)}
@@ -482,13 +488,14 @@ const WorkOrderOperationsPage = () => {
             aria-label={`${title} column`}
         >
             <div
-                className="flex items-center justify-between px-3 py-2 border-b border-gray-800/60 bg-gray-900/60 backdrop-blur z-10">
+                className="flex items-center justify-between px-4 py-3 border-b border-gray-800/60 bg-gray-900/60 backdrop-blur z-10 rounded-t-xl">
                 <div className="flex items-center gap-2">
           <span
               className={`h-2.5 w-2.5 rounded-full ${title === "Open" ? "bg-blue-400" : title === "In Progress" ? "bg-indigo-400" : title === "Completed" ? "bg-green-400" : "bg-yellow-400"}`}/>
                     <h3 className="font-semibold text-gray-200 text-sm">{title}</h3>
                 </div>
-                <span className="text-xs text-gray-400">{items.length}</span>
+                <span
+                    className="text-xs text-gray-400 px-2 py-1 rounded bg-gray-800/60 border border-white/10">{items.length}</span>
             </div>
 
             <div className="flex flex-col gap-3 p-3">
@@ -497,16 +504,17 @@ const WorkOrderOperationsPage = () => {
                         key={op.id}
                         draggable
                         onDragStart={(e) => onDragStart(e, op.id)}
-                        className={`group border-l-4 ${PRIORITY_BORDER[op.priority]} rounded-lg bg-gray-800/70 border border-gray-800/80 hover:bg-gray-800 transition shadow-sm`}
+                        className={`group border-l-4 ${PRIORITY_BORDER[op.priority]} rounded-xl bg-gray-800/70 border border-gray-800/80 hover:bg-gray-800 transition shadow-sm`}
                         role="listitem"
                         aria-label={`${op.id} card`}
                     >
-                        <div className="flex items-start gap-3 p-3">
+                        <div className="flex items-start gap-3 p-3.5">
                             <div className="flex-1 space-y-2">
                                 {/* Header: ID + Title (click to open details) + Priority */}
                                 <div className="flex items-center justify-between gap-2">
                                     <div className="flex items-center gap-2 min-w-0">
-                                        <span className="font-mono text-white shrink-0">{op.id}</span>
+                                        <span
+                                            className="font-mono text-white shrink-0 px-1.5 py-0.5 rounded bg-gray-900/60 border border-white/10">{op.id}</span>
                                         <span className="text-xs text-gray-500 shrink-0">•</span>
                                         <button
                                             className="text-sm text-blue-200 hover:underline truncate"
@@ -545,7 +553,7 @@ const WorkOrderOperationsPage = () => {
 
                                         {op.status === "Hold" && (
                                             <button
-                                                className="px-2.5 py-1 rounded bg-gray-900/60 border border-white/10 text-xs hover:bg-gray-800 flex items-center gap-1"
+                                                className="px-2.5 py-1.5 rounded-lg bg-gray-900/60 border border-white/10 text-xs hover:bg-gray-800 flex items-center gap-1"
                                                 title="View Hold reason/history"
                                                 onClick={() => setHoldModal({
                                                     open: true,
@@ -561,7 +569,7 @@ const WorkOrderOperationsPage = () => {
                                         {/* Output only for Completed */}
                                         {op.status === "Completed" && (
                                             <button
-                                                className="px-2.5 py-1 rounded bg-gray-900/60 border border-white/10 text-xs hover:bg-gray-800 flex items-center gap-1"
+                                                className="px-2.5 py-1.5 rounded-lg bg-gray-900/60 border border-white/10 text-xs hover:bg-gray-800 flex items-center gap-1"
                                                 title="Production & materials"
                                                 onClick={() => {
                                                     const rows = (op.bom || []).map(r => ({...r}));
@@ -584,7 +592,7 @@ const WorkOrderOperationsPage = () => {
                                     <div className="flex items-center gap-2">
                                         {/* Mobile: Move button (tap to change status) */}
                                         <button
-                                            className="sm:hidden px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white text-xs"
+                                            className="sm:hidden px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs"
                                             onClick={() => setMoveModal({open: true, opId: op.id})}
                                             title="Move card"
                                         >
@@ -593,7 +601,7 @@ const WorkOrderOperationsPage = () => {
 
                                         {/* Remove with confirmation */}
                                         <button
-                                            className="px-2.5 py-1 rounded bg-gray-900/60 border border-white/10 text-xs hover:bg-gray-800 text-red-300 flex items-center gap-1"
+                                            className="px-2.5 py-1.5 rounded-lg bg-gray-900/60 border border-white/10 text-xs hover:bg-gray-800 text-red-300 flex items-center gap-1"
                                             onClick={() => requestDeleteOp(op.id)}
                                             title="Remove operation"
                                         >
@@ -606,16 +614,18 @@ const WorkOrderOperationsPage = () => {
                     </div>
                 ))}
                 {items.length === 0 && (
-                    <div className="text-sm text-gray-500 px-2 py-4 text-center">No operations here.</div>
+                    <div
+                        className="text-sm text-gray-500 px-3 py-6 text-center rounded-lg border border-dashed border-white/10">No
+                        operations here.</div>
                 )}
             </div>
         </div>
     );
 
     return (
-        <div className="bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200 min-h-screen">
+        <div className="text-gray-200 min-h-screen">
             {/* Header */}
-            <header className="mx-auto px-4 pt-8 sm:pt-10 pb-4 sm:pb-6">
+            <header className="w-full mx-auto px-4 pt-8 sm:pt-10 pb-4 sm:pb-6">
                 <div className="flex items-end justify-between gap-4 flex-wrap">
                     <div className="min-w-0">
                         <h1 className="text-2xl sm:text-3xl font-bold text-white truncate">Operations • {woId}</h1>
@@ -624,27 +634,27 @@ const WorkOrderOperationsPage = () => {
                     </div>
                     <div className="flex gap-2 sm:gap-3 items-center w-full sm:w-auto">
                         <button
-                            className="flex-1 sm:flex-none px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm"
+                            className="flex-1 sm:flex-none px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm shadow-sm"
                             onClick={handleRelease}
                             title="Release Work Order"
                         >
                             Release
                         </button>
                         <button
-                            className="flex-1 sm:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
+                            className="flex-1 sm:flex-none px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm shadow-sm"
                             onClick={gotoNew}
                             title="Create a new operation"
                         >
                             + New
                         </button>
                         <button
-                            className="hidden sm:inline-flex px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                            className="hidden sm:inline-flex px-4 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
                             onClick={() => navigate(`/work-orders/${woId}/edit`)}
                         >
                             Edit Work Order
                         </button>
                         <button
-                            className="hidden sm:inline-flex px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                            className="hidden sm:inline-flex px-4 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
                             onClick={() => navigate("/work-orders")}
                         >
                             Back to List
@@ -654,15 +664,15 @@ const WorkOrderOperationsPage = () => {
             </header>
 
             {/* Work Order Plan + Output + BOM Allocation */}
-            <div className="mx-auto px-4 pb-4">
-                <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4 space-y-5">
+            <div className="w-full mx-auto px-4 pb-4">
+                <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-5 sm:p-6 space-y-5">
                     {/* Top badges: dates & item */}
                     <div className="flex flex-wrap items-center gap-2 text-xs">
-            <span className="px-2 py-1 rounded bg-gray-800 border border-white/10">Start: <span
+            <span className="px-2.5 py-1 rounded-lg bg-gray-800 border border-white/10">Start: <span
                 className="text-gray-200">{woPlan.startDate}</span></span>
-                        <span className="px-2 py-1 rounded bg-gray-800 border border-white/10">Due: <span
+                        <span className="px-2.5 py-1 rounded-lg bg-gray-800 border border-white/10">Due: <span
                             className="text-gray-200">{woPlan.dueDate}</span></span>
-                        <span className="px-2 py-1 rounded bg-gray-800 border border-white/10">
+                        <span className="px-2.5 py-1 rounded-lg bg-gray-800 border border-white/10">
               Item: <span className="font-mono text-gray-100">{woPlan.itemId}</span> — <span
                             className="text-gray-200">{woPlan.itemName}</span>
             </span>
@@ -676,7 +686,7 @@ const WorkOrderOperationsPage = () => {
                         </div>
                         <div className="text-xs text-gray-400">{outputPct}% of expected output</div>
                     </div>
-                    <div className="w-full h-2 rounded-full bg-gray-800 border border-white/10 overflow-hidden">
+                    <div className="w-full h-2.5 rounded-full bg-gray-800 border border-white/10 overflow-hidden">
                         <div className="h-full bg-sky-500/80" style={{width: `${outputPct}%`}}
                              title={`${outputPct}% of expected quantity`}/>
                     </div>
@@ -706,7 +716,7 @@ const WorkOrderOperationsPage = () => {
                                     const remain = Math.max(0, reserve - used);
                                     const pct = reserve > 0 ? Math.min(100, Math.round((used / reserve) * 100)) : 0;
                                     return (
-                                        <tr key={r.itemId}>
+                                        <tr key={r.itemId} className="hover:bg-gray-900/40">
                                             <td className="px-4 py-2 font-mono">{r.itemId}</td>
                                             <td className="px-4 py-2">{r.name}</td>
                                             <td className="px-4 py-2 font-mono">{reserve}</td>
@@ -718,7 +728,7 @@ const WorkOrderOperationsPage = () => {
                                                     className="text-gray-200 font-mono">{remain}</span>
                                                 </div>
                                                 <div
-                                                    className="w-full h-2 rounded-full bg-gray-800 border border-white/10 overflow-hidden"
+                                                    className="w-full h-2.5 rounded-full bg-gray-800 border border-white/10 overflow-hidden"
                                                     title={`${pct}% of allocation used`}>
                                                     <div className="h-full bg-emerald-500/80"
                                                          style={{width: `${pct}%`}}/>
@@ -728,7 +738,7 @@ const WorkOrderOperationsPage = () => {
                                                 <div className="flex items-center gap-2">
                                                     <input
                                                         inputMode="decimal"
-                                                        className="w-28 rounded bg-gray-800 border border-white/10 px-2 py-1"
+                                                        className="w-28 rounded-lg bg-gray-800 border border-white/10 px-2.5 py-1.5"
                                                         placeholder="Qty"
                                                         value={topRequests[r.itemId] ?? ""}
                                                         onChange={(e) => setTopReqQty(r.itemId, e.target.value)}
@@ -736,7 +746,7 @@ const WorkOrderOperationsPage = () => {
                                                     <button
                                                         onClick={() => submitTopRequest(r.itemId)}
                                                         disabled={!(Number(topRequests[r.itemId]) > 0)}
-                                                        className="px-2.5 py-1 rounded bg-sky-600 hover:bg-sky-700 text-white text-xs disabled:opacity-50"
+                                                        className="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs disabled:opacity-50"
                                                     >
                                                         Request
                                                     </button>
@@ -754,57 +764,32 @@ const WorkOrderOperationsPage = () => {
                             </table>
                         </div>
                         <div className="px-4 py-2 text-[11px] text-gray-400 border-t border-white/10">
-                            Requests here are general (not tied to a specific operation). See recent requests below.
+                            Requests here are general (not tied to a specific operation).
                         </div>
                     </div>
 
-                    {/* Recent Requests Snapshot */}
-                    <div className="rounded-xl bg-gray-900/40 border border-white/10 overflow-hidden">
-                        <div className="px-4 py-2 border-b border-white/10 text-sm font-semibold">Recent Component
-                            Requests
-                        </div>
-                        <div className="max-h-40 overflow-y-auto">
-                            <table className="min-w-full divide-y divide-gray-800 text-xs">
-                                <thead className="bg-gray-900/80">
-                                <tr>
-                                    <th className="px-3 py-2 text-left">When</th>
-                                    <th className="px-3 py-2 text-left">Operation</th>
-                                    <th className="px-3 py-2 text-left">Component</th>
-                                    <th className="px-3 py-2 text-left">Qty</th>
-                                </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-800">
-                                {requestLog.slice().reverse().slice(0, 8).map((r, i) => (
-                                    <tr key={i}>
-                                        <td className="px-3 py-2">{r.at}</td>
-                                        <td className="px-3 py-2 font-mono">{r.opId ||
-                                            <span className="text-gray-500">—</span>}</td>
-                                        <td className="px-3 py-2 font-mono">{r.itemId}</td>
-                                        <td className="px-3 py-2">{r.qty}</td>
-                                    </tr>
-                                ))}
-                                {requestLog.length === 0 && (
-                                    <tr>
-                                        <td className="px-3 py-3 text-gray-500" colSpan={4}>No requests yet.</td>
-                                    </tr>
-                                )}
-                                </tbody>
-                            </table>
-                        </div>
+                    {/* Usage summary badges */}
+                    <div className="flex flex-wrap gap-2 text-xs">
+                        <span
+                            className="px-2.5 py-1 rounded-lg bg-gray-800/60 border border-white/10">Total Consumed: <span
+                            className="font-mono text-gray-100">{usageTotals.consumed}</span></span>
+                        <span
+                            className="px-2.5 py-1 rounded-lg bg-gray-800/60 border border-white/10">Total Scrap: <span
+                            className="font-mono text-gray-100">{usageTotals.scrap}</span></span>
                     </div>
                 </div>
             </div>
 
             {/* Toolbar */}
-            <div className="mx-auto px-4 pb-4">
-                <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
+            <div className="w-full mx-auto px-4 pb-4">
+                <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4 sm:p-5">
                     <div className="flex flex-col md:flex-row md:items-center gap-3">
                         <div className="relative flex-1">
                             <input
                                 placeholder="Search operations by ID, title, or assignee…"
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
-                                className="w-full rounded-lg bg-gray-800 border border-white/10 pl-3 pr-10 py-2 text-sm"
+                                className="w-full rounded-xl bg-gray-800 border border-white/10 pl-3 pr-10 py-2.5 text-sm"
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">⌕</span>
                         </div>
@@ -813,7 +798,7 @@ const WorkOrderOperationsPage = () => {
                             <select
                                 value={priorityFilter}
                                 onChange={(e) => setPriorityFilter(e.target.value)}
-                                className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                className="rounded-xl bg-gray-800 border border-white/10 px-3 py-2.5 text-sm"
                             >
                                 <option value="all">All Priorities</option>
                                 {["Low", "Medium", "High", "Rush"].map((p) => (
@@ -824,7 +809,7 @@ const WorkOrderOperationsPage = () => {
                             <select
                                 value={assigneeFilter}
                                 onChange={(e) => setAssigneeFilter(e.target.value)}
-                                className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                className="rounded-xl bg-gray-800 border border-white/10 px-3 py-2.5 text-sm"
                             >
                                 <option value="all">All Assignees</option>
                                 {assignees.map((a) => (
@@ -837,7 +822,7 @@ const WorkOrderOperationsPage = () => {
             </div>
 
             {/* Kanban — horizontal scroll on mobile, grid on desktop */}
-            <section className="mx-auto w-full px-4 pb-16 sm:pb-12">
+            <section className="w-full mx-auto px-4 pb-16 sm:pb-12">
                 <div
                     className="flex md:grid md:grid-cols-2 xl:grid-cols-4 gap-4 overflow-x-auto snap-x snap-mandatory [-webkit-overflow-scrolling:touch] scrollbar-thin">
                     {STATUS_LIST.map((s) => (
@@ -861,7 +846,7 @@ const WorkOrderOperationsPage = () => {
                     holdModal.viewOnly ? (
                         <button
                             onClick={() => setHoldModal({open: false, opId: null, reason: "", viewOnly: false})}
-                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                            className="px-4 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
                         >
                             Close
                         </button>
@@ -869,14 +854,14 @@ const WorkOrderOperationsPage = () => {
                         <>
                             <button
                                 onClick={() => setHoldModal({open: false, opId: null, reason: "", viewOnly: false})}
-                                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                                className="px-4 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={saveHold}
                                 disabled={!holdModal.reason.trim()}
-                                className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-sm disabled:opacity-50"
+                                className="px-4 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-sm disabled:opacity-50"
                             >
                                 Save & Hold
                             </button>
@@ -885,10 +870,10 @@ const WorkOrderOperationsPage = () => {
                 }
             >
                 {holdModal.viewOnly ? (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         <div className="text-sm">
                             <div className="text-gray-400 mb-1">Current reason</div>
-                            <div className="px-3 py-2 rounded-lg bg-gray-800/60 border border-white/10 text-gray-200">
+                            <div className="px-4 py-3 rounded-lg bg-gray-800/60 border border-white/10 text-gray-200">
                                 {holdModal.reason || <span className="text-gray-500">No reason stored.</span>}
                             </div>
                         </div>
@@ -920,15 +905,15 @@ const WorkOrderOperationsPage = () => {
                         </div>
                     </div>
                 ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                         <label className="block text-xs text-gray-400">Reason</label>
                         <textarea
-                            rows={4}
+                            rows={5}
                             autoFocus
                             value={holdModal.reason}
                             onChange={(e) => setHoldModal(h => ({...h, reason: e.target.value}))}
                             placeholder="Explain why this operation must be on hold…"
-                            className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                            className="w-full rounded-lg bg-gray-800 border border-white/10 px-4 py-3 text-sm"
                         />
                         <div className="text-xs text-gray-500">This reason will be stored and visible in history.</div>
                     </div>
@@ -960,52 +945,52 @@ const WorkOrderOperationsPage = () => {
                                 viewOnly: false,
                                 targetStatus: "Completed"
                             })}
-                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                            className="px-4 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
                         >
                             Cancel
                         </button>
                         <button
                             onClick={saveComplete}
                             disabled={Number(completeModal.produced) < 0}
-                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm disabled:opacity-50"
+                            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm disabled:opacity-50"
                         >
                             Save
                         </button>
                     </>
                 }
             >
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 gap-5">
                     {/* Materials table */}
                     <div className="rounded-xl bg-gray-900/40 border border-white/10 overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-800 text-sm">
                             <thead className="bg-gray-900/80">
                             <tr>
-                                <th className="px-3 py-2 text-left">Component</th>
-                                <th className="px-3 py-2 text-left">Per FG</th>
-                                <th className="px-3 py-2 text-left">Consumed</th>
-                                <th className="px-3 py-2 text-left">Scrap</th>
+                                <th className="px-4 py-2 text-left">Component</th>
+                                <th className="px-4 py-2 text-left">Per FG</th>
+                                <th className="px-4 py-2 text-left">Consumed</th>
+                                <th className="px-4 py-2 text-left">Scrap</th>
                             </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-800">
                             {completeModal.draftRows.map((r, idx) => (
                                 <tr key={r.itemId}>
-                                    <td className="px-3 py-2">
+                                    <td className="px-4 py-2">
                                         <div className="font-mono">{r.itemId}</div>
                                         <div className="text-[11px] text-gray-400">{r.name || ""}</div>
                                     </td>
-                                    <td className="px-3 py-2">{r.per}</td>
-                                    <td className="px-3 py-2">
+                                    <td className="px-4 py-2">{r.per}</td>
+                                    <td className="px-4 py-2">
                                         <input
                                             inputMode="decimal"
-                                            className="w-28 rounded bg-gray-800 border border-white/10 px-2 py-1"
+                                            className="w-28 rounded-lg bg-gray-800 border border-white/10 px-3 py-2"
                                             value={r.consumed ?? 0}
                                             onChange={(e) => updateRow(idx, "consumed", e.target.value)}
                                         />
                                     </td>
-                                    <td className="px-3 py-2">
+                                    <td className="px-4 py-2">
                                         <input
                                             inputMode="decimal"
-                                            className="w-28 rounded bg-gray-800 border border-white/10 px-2 py-1"
+                                            className="w-28 rounded-lg bg-gray-800 border border-white/10 px-3 py-2"
                                             value={r.scrap ?? 0}
                                             onChange={(e) => updateRow(idx, "scrap", e.target.value)}
                                         />
@@ -1017,7 +1002,7 @@ const WorkOrderOperationsPage = () => {
                     </div>
 
                     {/* Output confirmation */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-end">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                         <div>
                             <label className="block text-xs text-gray-400 mb-1">Produced</label>
                             <input
@@ -1033,7 +1018,7 @@ const WorkOrderOperationsPage = () => {
                     <div>
                         <label className="block text-xs text-gray-400 mb-1">Notes</label>
                         <textarea
-                            rows={3}
+                            rows={4}
                             value={completeModal.notes}
                             onChange={(e) => setCompleteModal(m => ({...m, notes: e.target.value}))}
                             placeholder="Optional notes"
@@ -1052,13 +1037,13 @@ const WorkOrderOperationsPage = () => {
                     <>
                         <button
                             onClick={() => setDeleteModal({open: false, opId: null})}
-                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                            className="px-4 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
                         >
                             Cancel
                         </button>
                         <button
                             onClick={confirmDeleteOp}
-                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm"
+                            className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm"
                         >
                             Delete
                         </button>
@@ -1096,7 +1081,7 @@ const WorkOrderOperationsPage = () => {
                                 releaseQty: 0,
                                 expiryDate: ""
                             })}
-                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                            className="px-4 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
                         >
                             Cancel
                         </button>
@@ -1114,7 +1099,7 @@ const WorkOrderOperationsPage = () => {
                                 });
                             }}
                             disabled={!releaseModal.expiryDate || Number(releaseModal.releaseQty) <= 0}
-                            className={`px-4 py-2 rounded-lg text-sm disabled:opacity-50 ${releaseModal.variant === "warn" ? "bg-amber-600 hover:bg-amber-700 text-white" : "bg-emerald-600 hover:bg-emerald-700 text-white"}`}
+                            className={`px-4 py-2.5 rounded-lg text-sm disabled:opacity-50 ${releaseModal.variant === "warn" ? "bg-amber-600 hover:bg-amber-700 text-white" : "bg-emerald-600 hover:bg-emerald-700 text-white"}`}
                             title={!releaseModal.expiryDate ? "Expiration date required" : undefined}
                         >
                             {releaseModal.proceedLabel || "Confirm"}
@@ -1122,10 +1107,10 @@ const WorkOrderOperationsPage = () => {
                     </>
                 }
             >
-                <div className="space-y-4">
+                <div className="space-y-5">
                     {releaseModal.pending.length > 0 && (
                         <div
-                            className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-100">
+                            className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-100">
                             <div className="font-medium mb-2 flex items-center gap-2">
                                 <IconInfo className="h-4 w-4 text-amber-300"/> Not all operations are completed. Review
                                 what’s pending:
@@ -1163,7 +1148,7 @@ const WorkOrderOperationsPage = () => {
                         <div className="px-4 py-3 border-b border-white/10 text-sm font-semibold">Output (Finished
                             Good)
                         </div>
-                        <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-1">
                                 <div className="text-xs text-gray-400">Item ID</div>
                                 <div
@@ -1217,7 +1202,7 @@ const WorkOrderOperationsPage = () => {
                 footer={
                     <button
                         onClick={() => setMoveModal({open: false, opId: null})}
-                        className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                        className="px-4 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
                     >
                         Close
                     </button>
