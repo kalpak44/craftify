@@ -305,16 +305,6 @@ export const ItemsPage = () => {
             >
                 Search in Inventory
             </button>
-            <button
-                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-800"
-                onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/purchasing?query=${encodeURIComponent(id)}`);
-                    onDone?.();
-                }}
-            >
-                Search in PO
-            </button>
             <div className="my-1 border-t border-white/10" />
             <button
                 className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-950/40 hover:text-red-300"

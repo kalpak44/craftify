@@ -15,8 +15,6 @@ import {BOMDetailsPage} from "./pages/BOMDetailsPage.jsx";
 import {WorkOrdersPage} from "./pages/WorkOrdersPage.jsx";
 import {WorkOrderDetailsPage} from "./pages/WorkOrderDetailsPage.jsx";
 import InventoryPage from "./pages/InventoryPage.jsx";
-import PurchasingPage from "./pages/PurchasingPage.jsx";
-import {PODetailsPage} from "./pages/PODetailsPage.jsx";
 import ItemDetailsPage from "./pages/ItemDetailsPage.jsx";
 import WorkOrderOperationsPage from "./pages/WorkOrderOperationsPage.jsx";
 import {WorkOrderOperationsDetailsPage} from "./pages/WorkOrderOperationsDetailsPage.jsx";
@@ -116,16 +114,6 @@ export default function App() {
             <Route path="/inventory/:routeItemId/edit" element={
                 <AuthenticationGuard>
                     <FullWidthLayout><InventoryDetailsPage/></FullWidthLayout>
-                </AuthenticationGuard>
-            }/>
-            <Route path="/purchasing" element={
-                <AuthenticationGuard>
-                    <FullWidthLayout><PurchasingPage/></FullWidthLayout>
-                </AuthenticationGuard>
-            }/>
-            <Route path="/purchasing/new" element={
-                <AuthenticationGuard>
-                    <FullWidthLayout><PODetailsPage/></FullWidthLayout>
                 </AuthenticationGuard>
             }/>
             <Route
