@@ -1,25 +1,25 @@
-import React, {useMemo, useState} from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useNavigate} from "react-router-dom";
 
 /**
  * ItemsPage
  *
  * ERP-style Items list built with React + Tailwind (raw JS).
- * Updates in this version:
- * - Fully responsive UI with a dedicated mobile card list (shown on < md) and desktop table (>= md).
- * - Solid background (gradient removed).
  *
- * Features (unchanged):
+ * Update in this version:
+ * - Per-row desktop/menu actions use an ellipsis "…" trigger with dropdown (desktop) and bottom sheet (mobile).
+ * - Actions include: "Open details", "Search in Inventory", "Search in PO", and "Delete".
+ * - Removed the "Edit" option from the per-row actions menu (row/card click still opens Edit).
+ *
+ * Core features:
  * - Search, filters (status/category/UoM), sortable columns.
  * - Pagination with selectable rows and bulk actions.
  * - CSV export and print-friendly view.
  * - Row selection with bulk delete + confirmation modal.
- * - Per-row actions: “Search in Inventory” and “Search in PO”.
- * - Each row/card opens the Edit view at /items/:id/edit.
+ * - Clicking a row/card opens Edit view at /items/:id/edit.
  *
  * Notes:
  * - Mock data intentionally minimal (id, name, status, category, uom).
- * - No price/on-hand/allocated/reorder/shelf-life columns or fields.
  */
 export const ItemsPage = () => {
     // Mocked data (simplified)
@@ -46,7 +46,19 @@ export const ItemsPage = () => {
     const [selected, setSelected] = useState({});
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(8);
+
+    // Bulk deletion modal
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+    // Single-row deletion modal
+    const [deleteOneId, setDeleteOneId] = useState(null);
+
+    // Desktop dropdown menu: { id, x, y } or null
+    const [menu, setMenu] = useState(null);
+    const menuRef = useRef(null);
+
+    // Mobile action sheet: id or null
+    const [sheetId, setSheetId] = useState(null);
 
     const navigate = useNavigate();
 
@@ -196,7 +208,7 @@ export const ItemsPage = () => {
         </th>
     );
 
-    // Delete
+    // Delete (bulk)
     const openDeleteModal = () => {
         if (!selectedCount) return;
         setShowDeleteModal(true);
@@ -210,17 +222,112 @@ export const ItemsPage = () => {
         const keep = rows.filter((r) => !selectedIds.includes(r.id));
         setRows(keep);
         setSelected({});
-        // ensure page index within range after deletion
         const newTotal = Math.max(1, Math.ceil(Math.max(0, keep.length) / pageSize));
         setPage((p) => Math.min(p, newTotal));
         setShowDeleteModal(false);
     };
 
-    // Navigate to row edit
+    // Delete single row
+    const confirmDeleteOne = () => {
+        if (!deleteOneId) return;
+        const keep = rows.filter((r) => r.id !== deleteOneId);
+        setRows(keep);
+        setSelected((s) => {
+            const next = {...s};
+            delete next[deleteOneId];
+            return next;
+        });
+        const newTotal = Math.max(1, Math.ceil(Math.max(0, keep.length) / pageSize));
+        setPage((p) => Math.min(p, newTotal));
+        setDeleteOneId(null);
+    };
+
+    // Navigate
     const goToEdit = (id) => navigate(`/items/${encodeURIComponent(id)}/edit`);
 
     // Utility to stop row navigation when interacting with controls
     const stopRowNav = (e) => e.stopPropagation();
+
+    // Desktop menu helpers
+    const openDesktopMenu = (e, id) => {
+        e.stopPropagation();
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = Math.min(rect.left, window.innerWidth - 220);
+        const y = rect.bottom + 6;
+        setMenu({id, x, y});
+    };
+    const closeDesktopMenu = () => setMenu(null);
+
+    useEffect(() => {
+        const onDoc = (ev) => {
+            if (!menuRef.current) return;
+            if (!menuRef.current.contains(ev.target)) {
+                closeDesktopMenu();
+            }
+        };
+        const onEsc = (ev) => {
+            if (ev.key === "Escape") closeDesktopMenu();
+        };
+        if (menu) {
+            document.addEventListener("mousedown", onDoc);
+            window.addEventListener("resize", closeDesktopMenu);
+            window.addEventListener("scroll", closeDesktopMenu, true);
+            document.addEventListener("keydown", onEsc);
+        }
+        return () => {
+            document.removeEventListener("mousedown", onDoc);
+            window.removeEventListener("resize", closeDesktopMenu);
+            window.removeEventListener("scroll", closeDesktopMenu, true);
+            document.removeEventListener("keydown", onEsc);
+        };
+    }, [menu]);
+
+    // Shared actions for menus (Edit removed)
+    const MenuItems = ({id, onDone}) => (
+        <div className="py-1">
+            <button
+                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-800"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    goToEdit(id);
+                    onDone?.();
+                }}
+            >
+                Open details
+            </button>
+            <button
+                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-800"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/inventory?query=${encodeURIComponent(id)}`);
+                    onDone?.();
+                }}
+            >
+                Search in Inventory
+            </button>
+            <button
+                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-800"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/purchasing?query=${encodeURIComponent(id)}`);
+                    onDone?.();
+                }}
+            >
+                Search in PO
+            </button>
+            <div className="my-1 border-t border-white/10" />
+            <button
+                className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-950/40 hover:text-red-300"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteOneId(id);
+                    onDone?.();
+                }}
+            >
+                Delete
+            </button>
+        </div>
+    );
 
     return (
         <div className="min-h-[calc(100vh-140px)] bg-gray-950 text-gray-200">
@@ -229,8 +336,7 @@ export const ItemsPage = () => {
                 <div className="flex items-start md:items-end justify-between gap-4 flex-wrap">
                     <div>
                         <h1 className="text-2xl md:text-3xl font-bold text-white">Items</h1>
-                        <p className="mt-1 md:mt-2 text-gray-400 text-sm md:text-base">Search, filter, and manage
-                            SKUs.</p>
+                        <p className="mt-1 md:mt-2 text-gray-400 text-sm md:text-base">Search, filter, and manage SKUs.</p>
                     </div>
                     <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
                         <button
@@ -346,8 +452,7 @@ export const ItemsPage = () => {
                     {/* Select-all toolbar for mobile */}
                     <div className="mb-2 flex items-center justify-between">
                         <label className="inline-flex items-center gap-2 text-sm text-gray-300">
-                            <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll}
-                                   onClick={stopRowNav}/>
+                            <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll} onClick={stopRowNav}/>
                             <span>Select all on page</span>
                         </label>
                         <span className="text-xs text-gray-400">
@@ -372,51 +477,41 @@ export const ItemsPage = () => {
                                         className="mt-1"
                                     />
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-center justify-between gap-2">
+                                        <div className="flex items-start justify-between gap-2">
                                             <div className="font-mono text-white text-sm">
                                                 <span className="underline decoration-dotted">{item.id}</span>
                                             </div>
-                                            <span
-                                                className={`px-2 py-0.5 text-[10px] rounded-full whitespace-nowrap ${
-                                                    item.status === "Active"
-                                                        ? "bg-green-600/30 text-green-400"
-                                                        : item.status === "Hold"
-                                                            ? "bg-yellow-600/30 text-yellow-400"
-                                                            : "bg-gray-600/30 text-gray-400"
-                                                }`}
+                                            {/* Mobile actions trigger */}
+                                            <button
+                                                className="shrink-0 px-2 py-1 rounded-md hover:bg-gray-800/60 text-gray-300"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSheetId(item.id);
+                                                }}
+                                                aria-label="Actions"
+                                                title="Actions"
                                             >
-                        {item.status}
-                      </span>
+                                                …
+                                            </button>
                                         </div>
                                         <div className="mt-1 text-gray-200 text-sm line-clamp-2">{item.name}</div>
                                         <div className="mt-1 text-xs text-gray-400 flex items-center gap-2">
                                             <span className="truncate">{item.category}</span>
                                             <span>•</span>
                                             <span>{item.uom}</span>
+                                            <span className={`ml-auto px-2 py-0.5 text-[10px] rounded-full whitespace-nowrap ${
+                                                item.status === "Active" ? "bg-green-600/30 text-green-400"
+                                                    : item.status === "Hold" ? "bg-yellow-600/30 text-yellow-400"
+                                                        : "bg-gray-600/30 text-gray-400"}`}>
+                        {item.status}
+                      </span>
                                         </div>
                                     </div>
-                                </div>
-                                <div className="mt-3 flex flex-wrap gap-2" onClick={stopRowNav}>
-                                    <button
-                                        onClick={() => navigate(`/inventory?query=${encodeURIComponent(item.id)}`)}
-                                        className="px-3 py-1.5 rounded-lg bg-blue-600/20 text-blue-300 border border-blue-600/40 text-xs hover:bg-blue-600/30 hover:text-blue-200 transition"
-                                        title="Search this item in Inventory"
-                                    >
-                                        Search in Inventory
-                                    </button>
-                                    <button
-                                        onClick={() => navigate(`/purchasing?query=${encodeURIComponent(item.id)}`)}
-                                        className="px-3 py-1.5 rounded-lg bg-indigo-600/20 text-indigo-300 border border-indigo-600/40 text-xs hover:bg-indigo-600/30 hover:text-indigo-200 transition"
-                                        title="Search this item in Purchase Orders"
-                                    >
-                                        Search in PO
-                                    </button>
                                 </div>
                             </div>
                         ))}
                         {paged.length === 0 && (
-                            <div
-                                className="rounded-xl border border-white/10 bg-gray-900/60 p-6 text-center text-gray-400">
+                            <div className="rounded-xl border border-white/10 bg-gray-900/60 p-6 text-center text-gray-400">
                                 No items found.
                             </div>
                         )}
@@ -429,8 +524,7 @@ export const ItemsPage = () => {
                         <thead className="bg-gray-900/80">
                         <tr>
                             <th className="px-4 py-3">
-                                <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll}
-                                       onClick={stopRowNav}/>
+                                <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll} onClick={stopRowNav}/>
                             </th>
                             {th("ID", "id")}
                             {th("Product name", "name")}
@@ -449,42 +543,36 @@ export const ItemsPage = () => {
                                 title="Open Edit"
                             >
                                 <td className="px-4 py-3" onClick={stopRowNav}>
-                                    <input type="checkbox" checked={!!selected[item.id]}
-                                           onChange={() => toggleOne(item.id)}/>
+                                    <input type="checkbox" checked={!!selected[item.id]} onChange={() => toggleOne(item.id)}/>
                                 </td>
                                 <td className="px-4 py-3 font-mono text-white">
                                     <span className="underline decoration-dotted">{item.id}</span>
                                 </td>
                                 <td className="px-4 py-3 text-gray-200">{item.name}</td>
                                 <td className="px-4 py-3">
-                    <span
-                        className={`px-2 py-1 text-xs rounded-full ${
-                            item.status === "Active"
-                                ? "bg-green-600/30 text-green-400"
-                                : item.status === "Hold"
-                                    ? "bg-yellow-600/30 text-yellow-400"
-                                    : "bg-gray-600/30 text-gray-400"
-                        }`}
-                    >
-                      {item.status}
-                    </span>
+                  <span
+                      className={`px-2 py-1 text-xs rounded-full ${
+                          item.status === "Active"
+                              ? "bg-green-600/30 text-green-400"
+                              : item.status === "Hold"
+                                  ? "bg-yellow-600/30 text-yellow-400"
+                                  : "bg-gray-600/30 text-gray-400"
+                      }`}
+                  >
+                    {item.status}
+                  </span>
                                 </td>
                                 <td className="px-4 py-3 text-gray-400">{item.category}</td>
                                 <td className="px-4 py-3 text-gray-400">{item.uom}</td>
-                                <td className="px-4 py-3 text-right space-x-2" onClick={stopRowNav}>
+                                <td className="px-4 py-3 text-right" onClick={stopRowNav}>
+                                    {/* Desktop actions trigger */}
                                     <button
-                                        onClick={() => navigate(`/inventory?query=${encodeURIComponent(item.id)}`)}
-                                        className="px-3 py-1.5 rounded-lg bg-blue-600/20 text-blue-300 border border-blue-600/40 text-xs hover:bg-blue-600/30 hover:text-blue-200 transition"
-                                        title="Search this item in Inventory"
+                                        className="inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-800/60 text-gray-300"
+                                        aria-label="Actions"
+                                        title="Actions"
+                                        onClick={(e) => openDesktopMenu(e, item.id)}
                                     >
-                                        Search in Inventory
-                                    </button>
-                                    <button
-                                        onClick={() => navigate(`/purchasing?query=${encodeURIComponent(item.id)}`)}
-                                        className="px-3 py-1.5 rounded-lg bg-indigo-600/20 text-indigo-300 border border-indigo-600/40 text-xs hover:bg-indigo-600/30 hover:text-indigo-200 transition"
-                                        title="Search this item in Purchase Orders"
-                                    >
-                                        Search in PO
+                                        …
                                     </button>
                                 </td>
                             </tr>
@@ -501,8 +589,7 @@ export const ItemsPage = () => {
                 </div>
 
                 {/* Footer / Pagination */}
-                <div
-                    className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-gray-400">
+                <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-gray-400">
                     <div className="flex items-center gap-2 flex-wrap">
                         <span>Rows per page</span>
                         <select
@@ -548,12 +635,45 @@ export const ItemsPage = () => {
                 </div>
             </section>
 
-            {/* Deletion Confirmation Modal */}
+            {/* Desktop Dropdown Menu */}
+            {menu && (
+                <div
+                    ref={menuRef}
+                    className="fixed z-50 min-w-[200px] rounded-xl border border-white/10 bg-gray-900 shadow-2xl"
+                    style={{left: `${menu.x}px`, top: `${menu.y}px`}}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <MenuItems id={menu.id} onDone={closeDesktopMenu} />
+                </div>
+            )}
+
+            {/* Mobile Action Sheet */}
+            {sheetId && (
+                <div className="fixed inset-0 z-50">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => setSheetId(null)} />
+                    <div className="absolute inset-x-0 bottom-0 rounded-t-2xl border border-white/10 bg-gray-900 p-2 pt-3 shadow-2xl">
+                        <div className="mx-auto h-1 w-10 rounded-full bg-white/20 mb-1.5" />
+                        <div className="px-2 pb-2">
+                            <div className="text-xs text-gray-400 mb-2 px-1">Actions for <span className="font-mono text-gray-300">{sheetId}</span></div>
+                            <div className="rounded-xl overflow-hidden border border-white/10 divide-y divide-white/10">
+                                <MenuItems id={sheetId} onDone={() => setSheetId(null)} />
+                            </div>
+                            <button
+                                className="mt-2 w-full px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                                onClick={() => setSheetId(null)}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Deletion Confirmation Modal (Bulk) */}
             {showDeleteModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/60" onClick={() => setShowDeleteModal(false)}/>
-                    <div
-                        className="relative z-10 w-[92%] sm:w-[80%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
+                    <div className="relative z-10 w-[92%] sm:w-[80%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
                         <h2 className="text-lg font-semibold text-white">Confirm deletion</h2>
                         <p className="mt-2 text-sm text-gray-300">
                             You are about to delete <span className="font-medium text-white">{selectedCount}</span>{" "}
@@ -568,6 +688,33 @@ export const ItemsPage = () => {
                             </button>
                             <button
                                 onClick={confirmDelete}
+                                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Deletion Confirmation Modal (Single) */}
+            {deleteOneId && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => setDeleteOneId(null)} />
+                    <div className="relative z-10 w-[92%] sm:w-[80%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
+                        <h2 className="text-lg font-semibold text-white">Delete item</h2>
+                        <p className="mt-2 text-sm text-gray-300">
+                            You are about to delete <span className="font-mono text-white">{deleteOneId}</span>. This action cannot be undone.
+                        </p>
+                        <div className="mt-4 flex flex-col sm:flex-row justify-end gap-2">
+                            <button
+                                onClick={() => setDeleteOneId(null)}
+                                className="px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDeleteOne}
                                 className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm"
                             >
                                 Delete

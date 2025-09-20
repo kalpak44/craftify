@@ -1,19 +1,21 @@
-import React, {useMemo, useState} from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useNavigate} from "react-router-dom";
 
 /**
  * WorkOrdersPage
  *
  * ERP-style Work Orders registry built with React + Tailwind (raw JS).
- * Updates in this version:
- * - Fully responsive UI with a mobile card list (< md) and desktop table (>= md).
- * - Solid background (gradient removed).
  *
- * Features (unchanged):
+ * Update in this version:
+ * - Per-row actions switched to an ellipsis "…" trigger with dropdown (desktop) and bottom sheet (mobile).
+ * - Actions include: "Details", "Operations", and "Delete".
+ * - Added single-row deletion confirmation modal (bulk delete remains).
+ * - Underlined ID styling on rows for consistency across pages.
+ *
+ * Core features:
  * - Search, filters (status/assignee/priority), sortable columns.
  * - Pagination with selection, bulk delete + confirmation modal.
- * - Per-row actions: “Details” and “Operations”.
- * - Each row/card opens the Edit view at /work-orders/:id/edit.
+ * - Clicking a row/card opens Edit view at /work-orders/:id/edit.
  */
 export const WorkOrdersPage = () => {
     const initialData = [
@@ -136,6 +138,16 @@ export const WorkOrdersPage = () => {
     const [pageSize, setPageSize] = useState(8);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+    // Single-row delete
+    const [deleteOneId, setDeleteOneId] = useState(null);
+
+    // Desktop menu
+    const [menu, setMenu] = useState(null); // { id, x, y }
+    const menuRef = useRef(null);
+
+    // Mobile action sheet
+    const [sheetId, setSheetId] = useState(null);
+
     // --- Derived
     const assignees = useMemo(() => Array.from(new Set(rows.map((r) => r.assignee))).sort(), [rows]);
 
@@ -218,7 +230,7 @@ export const WorkOrdersPage = () => {
     const handleRowClick = (woId) => navigate(`/work-orders/${woId}/edit`);
     const stop = (e) => e.stopPropagation();
 
-    // --- Delete modal control (aligned with Items/BOMs)
+    // --- Delete (bulk)
     const openDeleteModal = () => {
         if (!selectedCount) return;
         setShowDeleteModal(true);
@@ -235,6 +247,92 @@ export const WorkOrdersPage = () => {
         setPage((p) => Math.min(p, newTotal));
         setShowDeleteModal(false);
     };
+
+    // --- Delete (single)
+    const confirmDeleteOne = () => {
+        if (!deleteOneId) return;
+        const keep = rows.filter((r) => r.id !== deleteOneId);
+        setRows(keep);
+        setSelected((s) => {
+            const next = {...s};
+            delete next[deleteOneId];
+            return next;
+        });
+        const newTotal = Math.max(1, Math.ceil(keep.length / pageSize));
+        setPage((p) => Math.min(p, newTotal));
+        setDeleteOneId(null);
+    };
+
+    // --- Desktop menu helpers
+    const openDesktopMenu = (e, id) => {
+        e.stopPropagation();
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = Math.min(rect.left, window.innerWidth - 220);
+        const y = rect.bottom + 6;
+        setMenu({id, x, y});
+    };
+    const closeDesktopMenu = () => setMenu(null);
+
+    useEffect(() => {
+        const onDoc = (ev) => {
+            if (!menuRef.current) return;
+            if (!menuRef.current.contains(ev.target)) {
+                closeDesktopMenu();
+            }
+        };
+        const onEsc = (ev) => {
+            if (ev.key === "Escape") closeDesktopMenu();
+        };
+        if (menu) {
+            document.addEventListener("mousedown", onDoc);
+            window.addEventListener("resize", closeDesktopMenu);
+            window.addEventListener("scroll", closeDesktopMenu, true);
+            document.addEventListener("keydown", onEsc);
+        }
+        return () => {
+            document.removeEventListener("mousedown", onDoc);
+            window.removeEventListener("resize", closeDesktopMenu);
+            window.removeEventListener("scroll", closeDesktopMenu, true);
+            document.removeEventListener("keydown", onEsc);
+        };
+    }, [menu]);
+
+    // --- Shared per-row actions
+    const MenuItems = ({id, onDone}) => (
+        <div className="py-1">
+            <button
+                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-800"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/work-orders/${id}/edit`);
+                    onDone?.();
+                }}
+            >
+                Open details
+            </button>
+            <button
+                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-800"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/work-orders/${id}/operations`);
+                    onDone?.();
+                }}
+            >
+                Operations
+            </button>
+            <div className="my-1 border-t border-white/10"/>
+            <button
+                className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-950/40 hover:text-red-300"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteOneId(id);
+                    onDone?.();
+                }}
+            >
+                Delete
+            </button>
+        </div>
+    );
 
     return (
         <div className="min-h-[calc(100vh-140px)] bg-gray-950 text-gray-200">
@@ -276,9 +374,7 @@ export const WorkOrdersPage = () => {
                             >
                                 <option value="all">All Statuses</option>
                                 {STATUSES.map((s) => (
-                                    <option key={s} value={s}>
-                                        {s}
-                                    </option>
+                                    <option key={s} value={s}>{s}</option>
                                 ))}
                             </select>
 
@@ -292,9 +388,7 @@ export const WorkOrdersPage = () => {
                             >
                                 <option value="all">All Assignees</option>
                                 {assignees.map((a) => (
-                                    <option key={a} value={a}>
-                                        {a}
-                                    </option>
+                                    <option key={a} value={a}>{a}</option>
                                 ))}
                             </select>
 
@@ -308,9 +402,7 @@ export const WorkOrdersPage = () => {
                             >
                                 <option value="all">All Priorities</option>
                                 {PRIORITIES.map((p) => (
-                                    <option key={p} value={p}>
-                                        {p}
-                                    </option>
+                                    <option key={p} value={p}>{p}</option>
                                 ))}
                             </select>
                         </div>
@@ -383,14 +475,21 @@ export const WorkOrdersPage = () => {
                                         aria-label={`Select ${wo.id}`}
                                     />
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-center justify-between gap-2">
+                                        <div className="flex items-start justify-between gap-2">
                                             <div
                                                 className="font-mono text-white text-sm underline decoration-dotted">{wo.id}</div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="whitespace-nowrap">{pill(wo.status, STATUS_CLS)}</span>
-                                                <span
-                                                    className="whitespace-nowrap">{pill(wo.priority, PRIORITY_CLS)}</span>
-                                            </div>
+                                            {/* Mobile actions trigger */}
+                                            <button
+                                                className="shrink-0 px-2 py-1 rounded-md hover:bg-gray-800/60 text-gray-300"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSheetId(wo.id);
+                                                }}
+                                                aria-label="Actions"
+                                                title="Actions"
+                                            >
+                                                …
+                                            </button>
                                         </div>
                                         <div className="mt-1 text-gray-200 text-sm line-clamp-2">{wo.product}</div>
                                         <div className="mt-1 text-xs text-gray-400 flex items-center gap-2 flex-wrap">
@@ -401,20 +500,10 @@ export const WorkOrdersPage = () => {
                                             <span>Due {wo.due}</span>
                                             <span>•</span>
                                             <span>Upd. {wo.updated}</span>
-                                        </div>
-                                        <div className="mt-3 flex flex-wrap gap-2" onClick={stop}>
-                                            <button
-                                                className="px-3 py-1.5 rounded-lg bg-blue-600/20 text-blue-300 border border-blue-600/40 text-xs hover:bg-blue-600/30 hover:text-blue-200 transition"
-                                                onClick={() => navigate(`/work-orders/${wo.id}/edit`)}
-                                            >
-                                                Details
-                                            </button>
-                                            <button
-                                                className="px-3 py-1.5 rounded-lg bg-indigo-600/20 text-indigo-300 border border-indigo-600/40 text-xs hover:bg-indigo-600/30 hover:text-indigo-200 transition"
-                                                onClick={() => navigate(`/work-orders/${wo.id}/operations`)}
-                                            >
-                                                Operations
-                                            </button>
+                                            <span className="ml-auto inline-flex items-center gap-1">
+                        {pill(wo.status, STATUS_CLS)}
+                                                {pill(wo.priority, PRIORITY_CLS)}
+                      </span>
                                         </div>
                                     </div>
                                 </div>
@@ -435,7 +524,7 @@ export const WorkOrdersPage = () => {
                         <thead className="bg-gray-900/80">
                         <tr>
                             <th className="px-4 py-3">
-                                <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll}/>
+                                <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll} onClick={stop}/>
                             </th>
                             {th("WO ID", "id")}
                             {th("Product", "product")}
@@ -469,11 +558,8 @@ export const WorkOrdersPage = () => {
                                         aria-label={`Select ${wo.id}`}
                                     />
                                 </td>
-                                <td className="px-4 py-3 font-mono text-white underline" onClick={stop}>
-                                    <button className="hover:text-blue-300"
-                                            onClick={() => navigate(`/work-orders/${wo.id}/edit`)}>
-                                        {wo.id}
-                                    </button>
+                                <td className="px-4 py-3 font-mono text-white">
+                                    <span className="underline decoration-dotted">{wo.id}</span>
                                 </td>
                                 <td className="px-4 py-3 text-gray-200">{wo.product}</td>
                                 <td className="px-4 py-3 text-gray-400">{wo.itemId}</td>
@@ -482,18 +568,15 @@ export const WorkOrdersPage = () => {
                                 <td className="px-4 py-3">{pill(wo.priority, PRIORITY_CLS)}</td>
                                 <td className="px-4 py-3 text-gray-400">{wo.due}</td>
                                 <td className="px-4 py-3 text-gray-400">{wo.updated}</td>
-                                <td className="px-4 py-3 text-right space-x-2" onClick={stop}>
+                                <td className="px-4 py-3 text-right" onClick={stop}>
+                                    {/* Desktop actions trigger */}
                                     <button
-                                        className="px-3 py-1.5 rounded-lg bg-blue-600/20 text-blue-300 border border-blue-600/40 text-xs hover:bg-blue-600/30 hover:text-blue-200 transition"
-                                        onClick={() => navigate(`/work-orders/${wo.id}/edit`)}
+                                        className="inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-800/60 text-gray-300"
+                                        aria-label="Actions"
+                                        title="Actions"
+                                        onClick={(e) => openDesktopMenu(e, wo.id)}
                                     >
-                                        Details
-                                    </button>
-                                    <button
-                                        className="px-3 py-1.5 rounded-lg bg-indigo-600/20 text-indigo-300 border border-indigo-600/40 text-xs hover:bg-indigo-600/30 hover:text-indigo-200 transition"
-                                        onClick={() => navigate(`/work-orders/${wo.id}/operations`)}
-                                    >
-                                        Operations
+                                        …
                                     </button>
                                 </td>
                             </tr>
@@ -523,9 +606,7 @@ export const WorkOrdersPage = () => {
                             className="rounded bg-gray-800 border border-white/10 px-2 py-1"
                         >
                             {[8, 16, 24].map((n) => (
-                                <option key={n} value={n}>
-                                    {n}
-                                </option>
+                                <option key={n} value={n}>{n}</option>
                             ))}
                         </select>
                         <span className="hidden sm:inline">•</span>
@@ -555,7 +636,43 @@ export const WorkOrdersPage = () => {
                 </div>
             </section>
 
-            {/* Deletion Confirmation Modal (aligned styling) */}
+            {/* Desktop Dropdown Menu */}
+            {menu && (
+                <div
+                    ref={menuRef}
+                    className="fixed z-50 min-w-[200px] rounded-xl border border-white/10 bg-gray-900 shadow-2xl"
+                    style={{left: `${menu.x}px`, top: `${menu.y}px`}}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <MenuItems id={menu.id} onDone={closeDesktopMenu}/>
+                </div>
+            )}
+
+            {/* Mobile Action Sheet */}
+            {sheetId && (
+                <div className="fixed inset-0 z-50">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => setSheetId(null)}/>
+                    <div
+                        className="absolute inset-x-0 bottom-0 rounded-t-2xl border border-white/10 bg-gray-900 p-2 pt-3 shadow-2xl">
+                        <div className="mx-auto h-1 w-10 rounded-full bg-white/20 mb-1.5"/>
+                        <div className="px-2 pb-2">
+                            <div className="text-xs text-gray-400 mb-2 px-1">Actions for <span
+                                className="font-mono text-gray-300">{sheetId}</span></div>
+                            <div className="rounded-xl overflow-hidden border border-white/10 divide-y divide-white/10">
+                                <MenuItems id={sheetId} onDone={() => setSheetId(null)}/>
+                            </div>
+                            <button
+                                className="mt-2 w-full px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                                onClick={() => setSheetId(null)}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Deletion Confirmation Modal (Bulk) */}
             {showDeleteModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/60" onClick={() => setShowDeleteModal(false)}/>
@@ -575,6 +692,35 @@ export const WorkOrdersPage = () => {
                             </button>
                             <button
                                 onClick={confirmDelete}
+                                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Deletion Confirmation Modal (Single) */}
+            {deleteOneId && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => setDeleteOneId(null)}/>
+                    <div
+                        className="relative z-10 w-[92%] sm:w-[80%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
+                        <h2 className="text-lg font-semibold text-white">Delete Work Order</h2>
+                        <p className="mt-2 text-sm text-gray-300">
+                            You are about to delete <span className="font-mono text-white">{deleteOneId}</span>. This
+                            action cannot be undone.
+                        </p>
+                        <div className="mt-4 flex flex-col sm:flex-row justify-end gap-2">
+                            <button
+                                onClick={() => setDeleteOneId(null)}
+                                className="px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDeleteOne}
                                 className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm"
                             >
                                 Delete

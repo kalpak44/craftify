@@ -1626,6 +1626,12 @@ export default function InventoryDetailsPage() {
                         </div>
                     </div>
 
+                    {/* Attachments placeholder */}
+                    <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
+                        <h2 className="text-lg font-semibold text-white mb-1">Attachments</h2>
+                        <div className="text-sm text-gray-400">Upload drawings/specs later. (Placeholder)</div>
+                    </div>
+
                     {/* Error summary */}
                     {errors.length > 0 && (
                         <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm">

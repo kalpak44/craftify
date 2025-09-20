@@ -1,21 +1,24 @@
-import React, {useMemo, useState} from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useLocation, useNavigate} from "react-router-dom";
 
 /**
  * InventoryPage
  *
- * Read-only ERP-style inventory list.
- * Updates in this version:
- * - Removed all actions and their UI (header buttons, bulk actions, per-row buttons, selection checkboxes, item picker, CSV/Print helpers).
- * - Keeps search, filters, sorting, pagination.
- * - Row/card click navigates to Details at /inventory/:id/edit (link-like Item ID).
+ * Read-only ERP-style inventory list with aligned per-row actions.
+ *
+ * Update in this version:
+ * - Added per-row "…" actions: "Open details" and "Delete" (desktop dropdown + mobile bottom sheet).
+ * - Added single-row deletion confirmation modal.
+ * - Kept link-like, underlined Item ID and underlined styling consistency across rows.
+ * - Still no bulk selection or header actions; retains search, filters, sorting, pagination.
+ * - Row/card click navigates to Details at /inventory/:id/edit.
  */
 export default function InventoryPage() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // ---- Inventory rows (one per item) ----
-    const data = [
+    // ---- Inventory rows (stateful for single-row delete) ----
+    const initialRows = [
         {
             item: "Assembly Kit 10",
             itemId: "ITM-010",
@@ -24,7 +27,7 @@ export default function InventoryPage() {
             onHand: 5,
             allocated: 1,
             reorderPt: 0,
-            hold: false,
+            hold: false
         },
         {
             item: "Blue Paint (RAL5010)",
@@ -34,7 +37,7 @@ export default function InventoryPage() {
             onHand: 12,
             allocated: 2,
             reorderPt: 8,
-            hold: true,
+            hold: true
         },
         {
             item: "Chain Bracket",
@@ -44,7 +47,7 @@ export default function InventoryPage() {
             onHand: 1320,
             allocated: 800,
             reorderPt: 100,
-            hold: false,
+            hold: false
         },
         {
             item: "Front Assembly",
@@ -54,7 +57,7 @@ export default function InventoryPage() {
             onHand: 208,
             allocated: 230,
             reorderPt: 30,
-            hold: false,
+            hold: false
         },
         {
             item: "Large Widget",
@@ -64,7 +67,7 @@ export default function InventoryPage() {
             onHand: 310,
             allocated: 600,
             reorderPt: 150,
-            hold: false,
+            hold: false
         },
         {
             item: "Lion Bracket",
@@ -74,7 +77,7 @@ export default function InventoryPage() {
             onHand: 350,
             allocated: 200,
             reorderPt: 100,
-            hold: false,
+            hold: false
         },
         {
             item: "Plastic Case",
@@ -84,7 +87,7 @@ export default function InventoryPage() {
             onHand: 1350,
             allocated: 330,
             reorderPt: 200,
-            hold: false,
+            hold: false
         },
         {
             item: "Screws M3×8",
@@ -94,9 +97,10 @@ export default function InventoryPage() {
             onHand: 1500,
             allocated: 300,
             reorderPt: 1000,
-            hold: false,
+            hold: false
         },
     ];
+    const [rows, setRows] = useState(initialRows);
 
     // ---- State ----
     const params = new URLSearchParams(location.search);
@@ -108,40 +112,45 @@ export default function InventoryPage() {
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(8);
 
+    // Per-row menus (aligned with other pages)
+    const [menu, setMenu] = useState(null); // { id, x, y }
+    const menuRef = useRef(null);
+    const [sheetId, setSheetId] = useState(null); // mobile action sheet id
+    const [deleteOneId, setDeleteOneId] = useState(null); // single delete modal
+
     // ---- Options ----
     const categories = useMemo(
-        () => ["all", ...Array.from(new Set(data.map((d) => d.category))).sort((a, b) => a.localeCompare(b))],
-        [data]
+        () => ["all", ...Array.from(new Set(rows.map((d) => d.category))).sort((a, b) => a.localeCompare(b))],
+        [rows]
     );
     const uoms = useMemo(
-        () => ["all", ...Array.from(new Set(data.map((d) => d.uom))).sort((a, b) => a.localeCompare(b))],
-        [data]
+        () => ["all", ...Array.from(new Set(rows.map((d) => d.uom))).sort((a, b) => a.localeCompare(b))],
+        [rows]
     );
 
     // ---- Derived rows ----
     const filtered = useMemo(() => {
-        let rows = data.map((r) => ({...r, available: r.onHand - r.allocated}));
+        let list = rows.map((r) => ({...r, available: r.onHand - r.allocated}));
 
-        if (categoryFilter !== "all") rows = rows.filter((r) => r.category === categoryFilter);
-        if (uomFilter !== "all") rows = rows.filter((r) => r.uom === uomFilter);
+        if (categoryFilter !== "all") list = list.filter((r) => r.category === categoryFilter);
+        if (uomFilter !== "all") list = list.filter((r) => r.uom === uomFilter);
 
         if (query) {
             const q = query.toLowerCase();
-            rows = rows.filter((r) => r.item.toLowerCase().includes(q) || r.itemId.toLowerCase().includes(q));
+            list = list.filter((r) => r.item.toLowerCase().includes(q) || r.itemId.toLowerCase().includes(q));
         }
 
         const {key, dir} = sort;
-        rows = [...rows].sort((a, b) => {
-            const av = a[key],
-                bv = b[key];
+        list = [...list].sort((a, b) => {
+            const av = a[key], bv = b[key];
             const cmp = ["onHand", "allocated", "available", "reorderPt"].includes(key)
                 ? av - bv
                 : String(av).localeCompare(String(bv), undefined, {numeric: true, sensitivity: "base"});
             return dir === "asc" ? cmp : -cmp;
         });
 
-        return rows;
-    }, [data, query, categoryFilter, uomFilter, sort]);
+        return list;
+    }, [rows, query, categoryFilter, uomFilter, sort]);
 
     // ---- Paging ----
     const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -150,6 +159,49 @@ export default function InventoryPage() {
 
     // ---- Navigation ----
     const goToDetails = (id) => navigate(`/inventory/${encodeURIComponent(id)}/edit`);
+    const stop = (e) => e.stopPropagation();
+
+    // ---- Desktop menu helpers ----
+    const openDesktopMenu = (e, id) => {
+        e.stopPropagation();
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = Math.min(rect.left, window.innerWidth - 220);
+        const y = rect.bottom + 6;
+        setMenu({id, x, y});
+    };
+    const closeDesktopMenu = () => setMenu(null);
+
+    useEffect(() => {
+        const onDoc = (ev) => {
+            if (!menuRef.current) return;
+            if (!menuRef.current.contains(ev.target)) closeDesktopMenu();
+        };
+        const onEsc = (ev) => {
+            if (ev.key === "Escape") closeDesktopMenu();
+        };
+        if (menu) {
+            document.addEventListener("mousedown", onDoc);
+            document.addEventListener("keydown", onEsc);
+            window.addEventListener("resize", closeDesktopMenu);
+            window.addEventListener("scroll", closeDesktopMenu, true);
+        }
+        return () => {
+            document.removeEventListener("mousedown", onDoc);
+            document.removeEventListener("keydown", onEsc);
+            window.removeEventListener("resize", closeDesktopMenu);
+            window.removeEventListener("scroll", closeDesktopMenu, true);
+        };
+    }, [menu]);
+
+    // ---- Delete single row ----
+    const confirmDeleteOne = () => {
+        if (!deleteOneId) return;
+        const keep = rows.filter((r) => r.itemId !== deleteOneId);
+        setRows(keep);
+        const newTotal = Math.max(1, Math.ceil(keep.length / pageSize));
+        setPage((p) => Math.min(p, newTotal));
+        setDeleteOneId(null);
+    };
 
     // Table header cell (sortable)
     const th = (label, key, right = false) => (
@@ -158,15 +210,40 @@ export default function InventoryPage() {
                 setSort((s) => ({key, dir: s.key === key && s.dir === "asc" ? "desc" : "asc"}));
                 setPage(1);
             }}
-            className={`px-4 py-3 font-semibold text-gray-300 select-none cursor-pointer ${
-                right ? "text-right" : "text-left"
-            }`}
+            className={`px-4 py-3 font-semibold text-gray-300 select-none cursor-pointer ${right ? "text-right" : "text-left"}`}
         >
       <span className="inline-flex items-center gap-1">
         {label}
           {sort.key === key && <span className="text-gray-500">{sort.dir === "asc" ? "▲" : "▼"}</span>}
       </span>
         </th>
+    );
+
+    // Shared per-row actions
+    const MenuItems = ({id, onDone}) => (
+        <div className="py-1">
+            <button
+                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-800"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    goToDetails(id);
+                    onDone?.();
+                }}
+            >
+                Open details
+            </button>
+            <div className="my-1 border-t border-white/10"/>
+            <button
+                className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-950/40 hover:text-red-300"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteOneId(id);
+                    onDone?.();
+                }}
+            >
+                Delete
+            </button>
+        </div>
     );
 
     return (
@@ -198,9 +275,7 @@ export default function InventoryPage() {
                                 title="Filter by category"
                             >
                                 {categories.map((c) => (
-                                    <option key={c} value={c}>
-                                        {c === "all" ? "All Categories" : c}
-                                    </option>
+                                    <option key={c} value={c}>{c === "all" ? "All Categories" : c}</option>
                                 ))}
                             </select>
 
@@ -215,9 +290,7 @@ export default function InventoryPage() {
                                 title="Filter by unit of measure"
                             >
                                 {uoms.map((u) => (
-                                    <option key={u} value={u}>
-                                        {u === "all" ? "All UoM" : u}
-                                    </option>
+                                    <option key={u} value={u}>{u === "all" ? "All UoM" : u}</option>
                                 ))}
                             </select>
                         </div>
@@ -248,11 +321,8 @@ export default function InventoryPage() {
                             const id = r.itemId;
                             const available = r.onHand - r.allocated;
                             const availClass =
-                                available < 0
-                                    ? "text-red-300"
-                                    : available <= (r.reorderPt || 0)
-                                        ? "text-yellow-300"
-                                        : "text-gray-200";
+                                available < 0 ? "text-red-300" :
+                                    available <= (r.reorderPt || 0) ? "text-yellow-300" : "text-gray-200";
                             return (
                                 <div
                                     key={id}
@@ -266,12 +336,18 @@ export default function InventoryPage() {
                                                 <div className="font-mono text-white text-sm">
                                                     <span className="underline decoration-dotted">{r.itemId}</span>
                                                 </div>
-                                                {r.hold && (
-                                                    <span
-                                                        className="px-2 py-0.5 text-[10px] rounded-full bg-yellow-600/30 text-yellow-300 whitespace-nowrap">
-                            Hold
-                          </span>
-                                                )}
+                                                {/* Mobile actions trigger */}
+                                                <button
+                                                    className="shrink-0 px-2 py-1 rounded-md hover:bg-gray-800/60 text-gray-300"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSheetId(id);
+                                                    }}
+                                                    aria-label="Actions"
+                                                    title="Actions"
+                                                >
+                                                    …
+                                                </button>
                                             </div>
                                             <div className="mt-1 text-gray-200 text-sm line-clamp-2">{r.item}</div>
                                             <div
@@ -281,6 +357,13 @@ export default function InventoryPage() {
                                                 <span>{r.uom}</span>
                                                 <span>•</span>
                                                 <span className="truncate">Reorder {r.reorderPt}</span>
+                                                {r.hold && (
+                                                    <>
+                                                        <span>•</span>
+                                                        <span
+                                                            className="px-2 py-0.5 text-[10px] rounded-full bg-yellow-600/30 text-yellow-300">Hold</span>
+                                                    </>
+                                                )}
                                             </div>
                                             <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
                                                 <div className="rounded-lg border border-white/10 bg-gray-800/40 p-2">
@@ -323,17 +406,16 @@ export default function InventoryPage() {
                             {th("Allocated", "allocated", true)}
                             {th("Available", "available", true)}
                             {th("Reorder pt", "reorderPt", true)}
+                            <th className="px-4 py-3 text-right font-semibold text-gray-300">Actions</th>
                         </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-800">
                         {paged.map((r) => {
                             const id = r.itemId;
                             const availClass =
-                                r.available < 0
-                                    ? "text-red-300"
-                                    : r.available <= (r.reorderPt || 0)
-                                        ? "text-yellow-300"
-                                        : "text-gray-200";
+                                (r.onHand - r.allocated) < 0 ? "text-red-300" :
+                                    (r.onHand - r.allocated) <= (r.reorderPt || 0) ? "text-yellow-300" : "text-gray-200";
+                            const available = r.onHand - r.allocated;
                             return (
                                 <tr
                                     key={id}
@@ -349,14 +431,25 @@ export default function InventoryPage() {
                                     <td className="px-4 py-3 text-gray-400">{r.uom}</td>
                                     <td className="px-4 py-3 text-right text-gray-200">{r.onHand}</td>
                                     <td className="px-4 py-3 text-right text-gray-200">{r.allocated}</td>
-                                    <td className={`px-4 py-3 text-right ${availClass}`}>{r.available}</td>
+                                    <td className={`px-4 py-3 text-right ${availClass}`}>{available}</td>
                                     <td className="px-4 py-3 text-right text-gray-200">{r.reorderPt}</td>
+                                    <td className="px-4 py-3 text-right" onClick={stop}>
+                                        {/* Desktop actions trigger */}
+                                        <button
+                                            className="inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-800/60 text-gray-300"
+                                            aria-label="Actions"
+                                            title="Actions"
+                                            onClick={(e) => openDesktopMenu(e, id)}
+                                        >
+                                            …
+                                        </button>
+                                    </td>
                                 </tr>
                             );
                         })}
                         {paged.length === 0 && (
                             <tr>
-                                <td className="px-4 py-6 text-center text-gray-400" colSpan={8}>
+                                <td className="px-4 py-6 text-center text-gray-400" colSpan={9}>
                                     No inventory items found.
                                 </td>
                             </tr>
@@ -379,9 +472,7 @@ export default function InventoryPage() {
                             className="rounded bg-gray-800 border border-white/10 px-2 py-1"
                         >
                             {[8, 16, 24].map((n) => (
-                                <option key={n} value={n}>
-                                    {n}
-                                </option>
+                                <option key={n} value={n}>{n}</option>
                             ))}
                         </select>
                         <span className="hidden sm:inline">•</span>
@@ -399,9 +490,7 @@ export default function InventoryPage() {
                         >
                             Prev
                         </button>
-                        <span className="px-2">
-              {page} / {totalPages}
-            </span>
+                        <span className="px-2">{page} / {totalPages}</span>
                         <button
                             disabled={page === totalPages}
                             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
@@ -412,6 +501,71 @@ export default function InventoryPage() {
                     </div>
                 </div>
             </section>
+
+            {/* Desktop Dropdown Menu */}
+            {menu && (
+                <div
+                    ref={menuRef}
+                    className="fixed z-50 min-w-[200px] rounded-xl border border-white/10 bg-gray-900 shadow-2xl"
+                    style={{left: `${menu.x}px`, top: `${menu.y}px`}}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <MenuItems id={menu.id} onDone={closeDesktopMenu}/>
+                </div>
+            )}
+
+            {/* Mobile Action Sheet */}
+            {sheetId && (
+                <div className="fixed inset-0 z-50">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => setSheetId(null)}/>
+                    <div
+                        className="absolute inset-x-0 bottom-0 rounded-t-2xl border border-white/10 bg-gray-900 p-2 pt-3 shadow-2xl">
+                        <div className="mx-auto h-1 w-10 rounded-full bg-white/20 mb-1.5"/>
+                        <div className="px-2 pb-2">
+                            <div className="text-xs text-gray-400 mb-2 px-1">Actions for <span
+                                className="font-mono text-gray-300">{sheetId}</span></div>
+                            <div className="rounded-xl overflow-hidden border border-white/10 divide-y divide-white/10">
+                                <MenuItems id={sheetId} onDone={() => setSheetId(null)}/>
+                            </div>
+                            <button
+                                className="mt-2 w-full px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                                onClick={() => setSheetId(null)}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Deletion Confirmation Modal (Single) */}
+            {deleteOneId && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => setDeleteOneId(null)}/>
+                    <div
+                        className="relative z-10 w-[92%] sm:w-[80%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
+                        <h2 className="text-lg font-semibold text-white">Delete inventory item</h2>
+                        <p className="mt-2 text-sm text-gray-300">
+                            You are about to delete <span className="font-mono text-white">{deleteOneId}</span>. This
+                            action cannot be undone.
+                        </p>
+                        <div className="mt-4 flex flex-col sm:flex-row justify-end gap-2">
+                            <button
+                                onClick={() => setDeleteOneId(null)}
+                                className="px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDeleteOne}
+                                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

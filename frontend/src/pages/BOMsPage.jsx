@@ -1,19 +1,22 @@
-import React, {useMemo, useState} from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useNavigate} from "react-router-dom";
 
 /**
  * BOMsPage
  *
  * ERP-style Bill of Materials registry built with React + Tailwind (raw JS).
- * Updates in this version:
- * - Fully responsive UI with a mobile card list (< md) and desktop table (>= md).
- * - Solid background (gradient removed).
  *
- * Features (unchanged):
+ * Update in this version:
+ * - Added per-row actions via an ellipsis "…" trigger:
+ *   - Desktop: dropdown menu anchored to the trigger.
+ *   - Mobile: bottom sheet action panel.
+ * - Actions kept minimal per request: "Open details" and "Delete".
+ * - Added single-row deletion confirmation modal (bulk delete unchanged).
+ *
+ * Core features (unchanged):
  * - Search, filter by status, sortable columns, pagination.
  * - Row selection (checkboxes) with bulk delete + confirmation modal.
- * - Consistent styling with ItemsPage (red Delete button, same modal look & feel).
- * - Each row/card opens the BOM Details view at /boms/:id/edit (unchanged route).
+ * - Each row/card click navigates to /boms/:id/edit.
  *
  * Notes:
  * - Uses mocked data stored in component state for client-side ops.
@@ -125,6 +128,16 @@ export const BOMsPage = () => {
     const [pageSize, setPageSize] = useState(8);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+    // Single-row deletion modal
+    const [deleteOneId, setDeleteOneId] = useState(null);
+
+    // Desktop dropdown menu anchor/state: { id, x, y } or null
+    const [menu, setMenu] = useState(null);
+    const menuRef = useRef(null);
+
+    // Mobile action sheet: id or null
+    const [sheetId, setSheetId] = useState(null);
+
     // --- Derived rows ---
     const filtered = useMemo(() => {
         let data = rows;
@@ -184,7 +197,7 @@ export const BOMsPage = () => {
     const goToDetails = (id) => navigate(`/boms/${encodeURIComponent(id)}/edit`);
     const stopRowNav = (e) => e.stopPropagation();
 
-    // --- Delete modal control ---
+    // --- Delete modal control (bulk) ---
     const openDeleteModal = () => {
         if (!selectedCount) return;
         setShowDeleteModal(true);
@@ -201,6 +214,82 @@ export const BOMsPage = () => {
         setPage((p) => Math.min(p, newTotalPages));
         setShowDeleteModal(false);
     };
+
+    // --- Delete single row ---
+    const confirmDeleteOne = () => {
+        if (!deleteOneId) return;
+        const keep = rows.filter((r) => r.id !== deleteOneId);
+        setRows(keep);
+        setSelected((s) => {
+            const next = {...s};
+            delete next[deleteOneId];
+            return next;
+        });
+        const newTotalPages = Math.max(1, Math.ceil(keep.length / pageSize));
+        setPage((p) => Math.min(p, newTotalPages));
+        setDeleteOneId(null);
+    };
+
+    // --- Desktop menu helpers ---
+    const openDesktopMenu = (e, id) => {
+        e.stopPropagation();
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = Math.min(rect.left, window.innerWidth - 220);
+        const y = rect.bottom + 6;
+        setMenu({id, x, y});
+    };
+    const closeDesktopMenu = () => setMenu(null);
+
+    useEffect(() => {
+        const onDoc = (ev) => {
+            if (!menuRef.current) return;
+            if (!menuRef.current.contains(ev.target)) {
+                closeDesktopMenu();
+            }
+        };
+        const onEsc = (ev) => {
+            if (ev.key === "Escape") closeDesktopMenu();
+        };
+        if (menu) {
+            document.addEventListener("mousedown", onDoc);
+            window.addEventListener("resize", closeDesktopMenu);
+            window.addEventListener("scroll", closeDesktopMenu, true);
+            document.addEventListener("keydown", onEsc);
+        }
+        return () => {
+            document.removeEventListener("mousedown", onDoc);
+            window.removeEventListener("resize", closeDesktopMenu);
+            window.removeEventListener("scroll", closeDesktopMenu, true);
+            document.removeEventListener("keydown", onEsc);
+        };
+    }, [menu]);
+
+    // --- Shared menu items (only Open details & Delete) ---
+    const MenuItems = ({id, onDone}) => (
+        <div className="py-1">
+            <button
+                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-800"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    goToDetails(id);
+                    onDone?.();
+                }}
+            >
+                Open details
+            </button>
+            <div className="my-1 border-t border-white/10"/>
+            <button
+                className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-950/40 hover:text-red-300"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteOneId(id);
+                    onDone?.();
+                }}
+            >
+                Delete
+            </button>
+        </div>
+    );
 
     return (
         <div className="min-h-[calc(100vh-140px)] bg-gray-950 text-gray-200">
@@ -314,23 +403,22 @@ export const BOMsPage = () => {
                                         className="mt-1"
                                     />
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-center justify-between gap-2">
+                                        <div className="flex items-start justify-between gap-2">
                                             <div className="font-mono text-white text-sm">
                                                 <span className="underline decoration-dotted">{bom.id}</span>
                                             </div>
-                                            <span
-                                                className={`px-2 py-0.5 text-[10px] rounded-full whitespace-nowrap ${
-                                                    bom.status === "Active"
-                                                        ? "bg-green-600/30 text-green-400"
-                                                        : bom.status === "Draft"
-                                                            ? "bg-blue-600/30 text-blue-300"
-                                                            : bom.status === "Hold"
-                                                                ? "bg-yellow-600/30 text-yellow-400"
-                                                                : "bg-gray-600/30 text-gray-400"
-                                                }`}
+                                            {/* Mobile actions trigger */}
+                                            <button
+                                                className="shrink-0 px-2 py-1 rounded-md hover:bg-gray-800/60 text-gray-300"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSheetId(bom.id);
+                                                }}
+                                                aria-label="Actions"
+                                                title="Actions"
                                             >
-                        {bom.status}
-                      </span>
+                                                …
+                                            </button>
                                         </div>
                                         <div className="mt-1 text-gray-200 text-sm line-clamp-2">{bom.product}</div>
                                         <div className="mt-1 text-xs text-gray-400 flex items-center gap-2 flex-wrap">
@@ -341,6 +429,14 @@ export const BOMsPage = () => {
                                             <span className="truncate">{bom.components} components</span>
                                             <span>•</span>
                                             <span>{bom.lastUpdated}</span>
+                                            <span
+                                                className={`ml-auto px-2 py-0.5 text-[10px] rounded-full whitespace-nowrap ${
+                                                    bom.status === "Active" ? "bg-green-600/30 text-green-400"
+                                                        : bom.status === "Draft" ? "bg-blue-600/30 text-blue-300"
+                                                            : bom.status === "Hold" ? "bg-yellow-600/30 text-yellow-400"
+                                                                : "bg-gray-600/30 text-gray-400"}`}>
+                        {bom.status}
+                      </span>
                                         </div>
                                     </div>
                                 </div>
@@ -371,6 +467,7 @@ export const BOMsPage = () => {
                             {th("Status", "status")}
                             {th("# Components", "components", true)}
                             {th("Last Updated", "lastUpdated")}
+                            <th className="px-4 py-3 font-semibold text-gray-300 text-right">Actions</th>
                         </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-800">
@@ -392,27 +489,38 @@ export const BOMsPage = () => {
                                 <td className="px-4 py-3 text-gray-400">{bom.productId}</td>
                                 <td className="px-4 py-3 text-gray-400">{bom.revision}</td>
                                 <td className="px-4 py-3">
-                    <span
-                        className={`px-2 py-1 text-xs rounded-full ${
-                            bom.status === "Active"
-                                ? "bg-green-600/30 text-green-400"
-                                : bom.status === "Draft"
-                                    ? "bg-blue-600/30 text-blue-300"
-                                    : bom.status === "Hold"
-                                        ? "bg-yellow-600/30 text-yellow-400"
-                                        : "bg-gray-600/30 text-gray-400"
-                        }`}
-                    >
-                      {bom.status}
-                    </span>
+                  <span
+                      className={`px-2 py-1 text-xs rounded-full ${
+                          bom.status === "Active"
+                              ? "bg-green-600/30 text-green-400"
+                              : bom.status === "Draft"
+                                  ? "bg-blue-600/30 text-blue-300"
+                                  : bom.status === "Hold"
+                                      ? "bg-yellow-600/30 text-yellow-400"
+                                      : "bg-gray-600/30 text-gray-400"
+                      }`}
+                  >
+                    {bom.status}
+                  </span>
                                 </td>
                                 <td className="px-4 py-3 text-right text-gray-200">{bom.components}</td>
                                 <td className="px-4 py-3 text-gray-400">{bom.lastUpdated}</td>
+                                <td className="px-4 py-3 text-right" onClick={stopRowNav}>
+                                    {/* Desktop actions trigger */}
+                                    <button
+                                        className="inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-800/60 text-gray-300"
+                                        aria-label="Actions"
+                                        title="Actions"
+                                        onClick={(e) => openDesktopMenu(e, bom.id)}
+                                    >
+                                        …
+                                    </button>
+                                </td>
                             </tr>
                         ))}
                         {paged.length === 0 && (
                             <tr>
-                                <td className="px-4 py-6 text-center text-gray-400" colSpan={8}>
+                                <td className="px-4 py-6 text-center text-gray-400" colSpan={9}>
                                     No BOMs found.
                                 </td>
                             </tr>
@@ -469,7 +577,43 @@ export const BOMsPage = () => {
                 </div>
             </section>
 
-            {/* Deletion Confirmation Modal */}
+            {/* Desktop Dropdown Menu */}
+            {menu && (
+                <div
+                    ref={menuRef}
+                    className="fixed z-50 min-w-[200px] rounded-xl border border-white/10 bg-gray-900 shadow-2xl"
+                    style={{left: `${menu.x}px`, top: `${menu.y}px`}}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <MenuItems id={menu.id} onDone={closeDesktopMenu}/>
+                </div>
+            )}
+
+            {/* Mobile Action Sheet */}
+            {sheetId && (
+                <div className="fixed inset-0 z-50">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => setSheetId(null)}/>
+                    <div
+                        className="absolute inset-x-0 bottom-0 rounded-t-2xl border border-white/10 bg-gray-900 p-2 pt-3 shadow-2xl">
+                        <div className="mx-auto h-1 w-10 rounded-full bg-white/20 mb-1.5"/>
+                        <div className="px-2 pb-2">
+                            <div className="text-xs text-gray-400 mb-2 px-1">Actions for <span
+                                className="font-mono text-gray-300">{sheetId}</span></div>
+                            <div className="rounded-xl overflow-hidden border border-white/10 divide-y divide-white/10">
+                                <MenuItems id={sheetId} onDone={() => setSheetId(null)}/>
+                            </div>
+                            <button
+                                className="mt-2 w-full px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                                onClick={() => setSheetId(null)}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Deletion Confirmation Modal (Bulk) */}
             {showDeleteModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/60" onClick={() => setShowDeleteModal(false)}/>
@@ -489,6 +633,35 @@ export const BOMsPage = () => {
                             </button>
                             <button
                                 onClick={confirmDelete}
+                                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Deletion Confirmation Modal (Single) */}
+            {deleteOneId && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => setDeleteOneId(null)}/>
+                    <div
+                        className="relative z-10 w-[92%] sm:w-[80%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
+                        <h2 className="text-lg font-semibold text-white">Delete BOM</h2>
+                        <p className="mt-2 text-sm text-gray-300">
+                            You are about to delete <span className="font-mono text-white">{deleteOneId}</span>. This
+                            action cannot be undone.
+                        </p>
+                        <div className="mt-4 flex flex-col sm:flex-row justify-end gap-2">
+                            <button
+                                onClick={() => setDeleteOneId(null)}
+                                className="px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDeleteOne}
                                 className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm"
                             >
                                 Delete
