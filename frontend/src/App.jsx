@@ -111,6 +111,11 @@ export default function App() {
                     <FullWidthLayout><InventoryPage/></FullWidthLayout>
                 </AuthenticationGuard>
             }/>
+            <Route path="/inventory/new" element={
+                <AuthenticationGuard>
+                    <FullWidthLayout><InventoryDetailsPage/></FullWidthLayout>
+                </AuthenticationGuard>
+            }/>
             <Route path="/inventory/:routeItemId/edit" element={
                 <AuthenticationGuard>
                     <FullWidthLayout><InventoryDetailsPage/></FullWidthLayout>
