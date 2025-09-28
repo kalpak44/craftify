@@ -2,6 +2,7 @@ import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 import {useAuthFetch} from "../hooks/useAuthFetch";
 import {getItem, createItem, updateItem} from "../api/items";
+import {listCategories, createCategory as apiCreateCategory, renameCategory as apiRenameCategory, deleteCategory as apiDeleteCategory} from "../api/categories";
 
 /**
  * ItemDetailsPage — React + Tailwind
@@ -594,6 +595,10 @@ export default function ItemDetailsPage() {
     const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
     const [category, setCategory] = useState("Component");
 
+    // Categories backend cache (objects)
+    const [catObjs, setCatObjs] = useState([]);
+    const nameToId = useMemo(() => Object.fromEntries(catObjs.map(c => [c.name, c.id])), [catObjs]);
+
     const [openCategoryPicker, setOpenCategoryPicker] = useState(false);
     const [uomRows, setUomRows] = useState([emptyUomRow()]);
 
@@ -602,6 +607,29 @@ export default function ItemDetailsPage() {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
     const [version, setVersion] = useState(null);
+
+    // Load categories from backend
+    useEffect(() => {
+        let ignore = false;
+        (async () => {
+            try {
+                const page = await listCategories(authFetch, { page: 0, size: 200, sort: "name,asc" });
+                if (ignore) return;
+                const objs = page?.content || [];
+                setCatObjs(objs);
+                const names = objs.map(c => c.name).filter(Boolean).sort((a,b)=>a.localeCompare(b));
+                setCategories((prev) => {
+                    // merge with any defaults without duplicates
+                    const set = new Set([...(prev||[]), ...names]);
+                    return Array.from(set).sort((a,b)=>a.localeCompare(b));
+                });
+                // if current category not present, keep as is; otherwise nothing
+            } catch (e) {
+                // silent; fallback to defaults
+            }
+        })();
+        return () => { ignore = true; };
+    }, [authFetch]);
 
     // Load existing item for edit
     useEffect(() => {
@@ -774,14 +802,20 @@ export default function ItemDetailsPage() {
         navigate("/items");
     };
 
-    // Category create: add & select
-    const createCategory = (val) => {
-        setCategories((prev) => {
-            const exists = prev.some((c) => c.toLowerCase() === val.toLowerCase());
-            const next = exists ? prev : [...prev, val];
-            return next.sort((a, b) => a.localeCompare(b));
-        });
-        setCategory(val);
+    // Category create: via backend, then add & select
+    const createCategory = async (val) => {
+        try {
+            const created = await apiCreateCategory(authFetch, val.trim());
+            setCatObjs((prev) => [...prev, created]);
+            setCategories((prev) => {
+                const exists = prev.some((c) => c.toLowerCase() === created.name.toLowerCase());
+                const next = exists ? prev : [...prev, created.name];
+                return next.sort((a, b) => a.localeCompare(b));
+            });
+            setCategory(created.name);
+        } catch (e) {
+            alert(e?.message || "Failed to create category");
+        }
     };
 
     return (
@@ -1282,9 +1316,37 @@ export default function ItemDetailsPage() {
                     setCategory(cat);
                     setOpenCategoryPicker(false);
                 }}
-                onCreate={(val) => {
-                    createCategory(val);
+                onCreate={async (val) => {
+                    await createCategory(val);
                     setOpenCategoryPicker(false);
+                }}
+                onRename={async (from, to) => {
+                    try {
+                        const id = nameToId[from] || (catObjs.find(c => c.name.toLowerCase() === from.toLowerCase())?.id);
+                        if (!id) throw new Error("Category not found");
+                        const updated = await apiRenameCategory(authFetch, id, to.trim());
+                        setCatObjs(prev => prev.map(c => c.id === id ? updated : c));
+                        setCategories(prev => {
+                            const next = prev.map(n => n === from ? updated.name : n);
+                            // ensure uniqueness and sort
+                            return Array.from(new Set(next)).sort((a,b)=>a.localeCompare(b));
+                        });
+                        setCategory(cur => (cur === from ? updated.name : cur));
+                    } catch (e) {
+                        alert(e?.message || "Failed to rename category");
+                    }
+                }}
+                onDelete={async (name) => {
+                    try {
+                        const id = nameToId[name] || (catObjs.find(c => c.name.toLowerCase() === name.toLowerCase())?.id);
+                        if (!id) throw new Error("Category not found");
+                        await apiDeleteCategory(authFetch, id, true);
+                        setCatObjs(prev => prev.filter(c => c.id !== id));
+                        setCategories(prev => prev.filter(n => n !== name));
+                        setCategory(cur => (cur === name ? "" : cur));
+                    } catch (e) {
+                        alert(e?.message || "Failed to delete category");
+                    }
                 }}
             />
         </div>
