@@ -586,7 +586,7 @@ export default function ItemDetailsPage() {
 
     // ---------- Form state ----------
     const isEdit = !!routeId;
-    const [itemId] = useState(isEdit ? routeId : nextItemId());
+    const [itemId] = useState(isEdit ? routeId : "ITM-NEW");
     const [name, setName] = useState("");
     const [status, setStatus] = useState(isEdit ? "Active" : "Draft");
     const [baseUom, setBaseUom] = useState("");
@@ -752,8 +752,7 @@ export default function ItemDetailsPage() {
     const [openConfirmLeave, setOpenConfirmLeave] = useState(false);
 
     const buildPayload = () => {
-        return {
-            code: itemId,
+        const base = {
             name: name.trim(),
             status,
             categoryName: category.trim(),
@@ -761,6 +760,9 @@ export default function ItemDetailsPage() {
             description: description || "",
             uoms: validUoms.map(r => ({ uom: r.uom.trim(), coef: Number(r.coef), notes: r.notes || undefined })),
         };
+        // Only include code on update; for create let backend generate the code
+        if (isEdit) base.code = itemId;
+        return base;
     };
 
     const handleSave = async () => {
