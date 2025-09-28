@@ -1,5 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
+import {useAuthFetch} from "../hooks/useAuthFetch";
+import {getItem, createItem, updateItem} from "../api/items";
 
 /**
  * ItemDetailsPage — React + Tailwind
@@ -579,6 +581,7 @@ const emptyUomRow = () => ({
 export default function ItemDetailsPage() {
     const navigate = useNavigate();
     const {id: routeId} = useParams();
+    const authFetch = useAuthFetch();
 
     // ---------- Form state ----------
     const isEdit = !!routeId;
@@ -593,6 +596,43 @@ export default function ItemDetailsPage() {
 
     const [openCategoryPicker, setOpenCategoryPicker] = useState(false);
     const [uomRows, setUomRows] = useState([emptyUomRow()]);
+
+    // Backend integration state
+    const [loading, setLoading] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState("");
+    const [version, setVersion] = useState(null);
+
+    // Load existing item for edit
+    useEffect(() => {
+        if (!isEdit) return;
+        let ignore = false;
+        (async () => {
+            try {
+                setLoading(true);
+                setError("");
+                const it = await getItem(authFetch, routeId);
+                if (ignore) return;
+                setName(it.name || "");
+                setStatus(it.status || "Active");
+                setBaseUom(it.uomBase || "");
+                setDescription(it.description || "");
+                const cat = it.categoryName || "Component";
+                setCategory(cat);
+                setCategories((prev) => (prev.includes(cat) ? prev : [...prev, cat].sort((a,b)=>a.localeCompare(b))));
+                const uoms = Array.isArray(it.uoms) ? it.uoms : [];
+                setUomRows(uoms.length ? uoms.map(u => ({ key: uid(), uom: u.uom || "", coef: String(u.coef ?? ""), notes: u.notes || "" })) : [emptyUomRow()]);
+                setVersion(typeof it.version === 'number' ? it.version : 0);
+                // just loaded -> not dirty
+                setDirty(false);
+            } catch (e) {
+                if (!ignore) setError(e?.message || "Failed to load item");
+            } finally {
+                if (!ignore) setLoading(false);
+            }
+        })();
+        return () => { ignore = true; };
+    }, [isEdit, routeId, authFetch]);
 
     // ---------- Change tracking (dirty) ----------
     const [dirty, setDirty] = useState(false);
@@ -680,18 +720,50 @@ export default function ItemDetailsPage() {
         [uomRows, baseUom]
     );
 
-    // ---------- Actions (mock) ----------
+    // ---------- Actions ----------
     const [openConfirmLeave, setOpenConfirmLeave] = useState(false);
 
-    const mockSaveAndGo = () => {
-        alert(isEdit ? "Item updated (mock)." : "Item created (mock).");
-        setDirty(false);
-        navigate("/items");
+    const buildPayload = () => {
+        return {
+            code: itemId,
+            name: name.trim(),
+            status,
+            categoryName: category.trim(),
+            uomBase: baseUom.trim(),
+            description: description || "",
+            uoms: validUoms.map(r => ({ uom: r.uom.trim(), coef: Number(r.coef), notes: r.notes || undefined })),
+        };
     };
 
-    const handleSave = () => {
-        // Placeholder save intentionally does not block on validation.
-        mockSaveAndGo();
+    const handleSave = async () => {
+        // Minimal validation gate
+        if (!name.trim() || !baseUom.trim() || !category.trim()) {
+            alert("Please fill in Product name, Category, and Base UoM.");
+            return;
+        }
+        try {
+            setSaving(true);
+            setError("");
+            const payload = buildPayload();
+            if (isEdit) {
+                const updated = await updateItem(authFetch, itemId, payload, version ?? 0);
+                setVersion(typeof updated?.version === 'number' ? updated.version : (version ?? 0));
+            } else {
+                const created = await createItem(authFetch, payload);
+                // adopt assigned id/code if backend generated
+                if (created?.id && created.id !== itemId) {
+                    // no-op for now; we navigate away
+                }
+            }
+            setDirty(false);
+            navigate("/items");
+        } catch (e) {
+            const msg = e?.message || "Failed to save item";
+            setError(msg);
+            alert(msg);
+        } finally {
+            setSaving(false);
+        }
     };
 
     const handleCancel = () => {
@@ -737,10 +809,11 @@ export default function ItemDetailsPage() {
                     <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
                         <button
                             onClick={handleSave}
-                            className="w-28 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm flex-1 sm:flex-none"
-                            title="Save (mock)"
+                            disabled={saving || loading}
+                            className="w-28 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-sm flex-1 sm:flex-none"
+                            title="Save"
                         >
-                            Save
+                            {saving ? "Saving…" : "Save"}
                         </button>
                         <button
                             onClick={handleCancel}
@@ -764,6 +837,14 @@ export default function ItemDetailsPage() {
           </span>
                 </div>
             </header>
+
+            {error && (
+                <div className="mx-auto px-4 mb-4">
+                    <div className="rounded-xl border border-red-500/40 bg-red-950/40 text-red-200 px-4 py-3 text-sm">
+                        {error}
+                    </div>
+                </div>
+            )}
 
             {/* Content */}
             <section className="mx-auto px-4 pb-[112px] md:pb-16 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
@@ -1159,9 +1240,10 @@ export default function ItemDetailsPage() {
                     </button>
                     <button
                         onClick={handleSave}
-                        className="flex-1 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm"
+                        disabled={saving || loading}
+                        className="flex-1 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm"
                     >
-                        Save
+                        {saving ? "Saving…" : "Save"}
                     </button>
                 </div>
             </div>
