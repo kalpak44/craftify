@@ -60,6 +60,8 @@ springdoc:
     tagsSorter: alpha
 
 app:
+  security:
+    disabled: false
   cors:
     allowed-origins:
       - http://localhost:5173
