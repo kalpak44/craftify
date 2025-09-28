@@ -1,0 +1,122 @@
+package com.craftify.backend.api.model;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
+import java.io.Serializable;
+import java.util.Objects;
+import java.util.UUID;
+
+/**
+ * Category
+ */
+
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", comments = "Generator version: 7.15.0")
+public class Category implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    private UUID id;
+
+    private String name;
+
+    public Category() {
+        super();
+    }
+
+    /**
+     * Constructor with only required parameters
+     */
+    public Category(UUID id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    public Category id(UUID id) {
+        this.id = id;
+        return this;
+    }
+
+    /**
+     * Get id
+     *
+     * @return id
+     */
+    @NotNull
+    @Valid
+    @Schema(name = "id", requiredMode = Schema.RequiredMode.REQUIRED)
+    @JsonProperty("id")
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public Category name(String name) {
+        this.name = name;
+        return this;
+    }
+
+    /**
+     * Get name
+     *
+     * @return name
+     */
+    @NotNull
+    @Size(min = 1, max = 100)
+    @Schema(name = "name", requiredMode = Schema.RequiredMode.REQUIRED)
+    @JsonProperty("name")
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Category category = (Category) o;
+        return Objects.equals(this.id, category.id) &&
+                Objects.equals(this.name, category.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("class Category {\n");
+        sb.append("    id: ").append(toIndentedString(id)).append("\n");
+        sb.append("    name: ").append(toIndentedString(name)).append("\n");
+        sb.append("}");
+        return sb.toString();
+    }
+
+    /**
+     * Convert the given object to string with each line indented by 4 spaces
+     * (except the first line).
+     */
+    private String toIndentedString(Object o) {
+        if (o == null) {
+            return "null";
+        }
+        return o.toString().replace("\n", "\n    ");
+    }
+}
+

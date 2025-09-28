@@ -1,5 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useNavigate} from "react-router-dom";
+import {useAuthFetch} from "../hooks/useAuthFetch";
+import {listItems, getItem, deleteItem} from "../api/items";
 
 /**
  * ItemsPage
@@ -22,23 +24,10 @@ import {useNavigate} from "react-router-dom";
  * - Mock data intentionally minimal (id, name, status, category, uom).
  */
 export const ItemsPage = () => {
-    // Mocked data (simplified)
-    const initialData = [
-        {id: "ITM-001", name: "Warm Yellow LED", status: "Active", category: "Component", uom: "pcs"},
-        {id: "ITM-002", name: "Large Widget", status: "Active", category: "Assembly", uom: "pcs"},
-        {id: "ITM-003", name: "Plastic Case", status: "Active", category: "Component", uom: "pcs"},
-        {id: "ITM-004", name: "Lion Bracket", status: "Active", category: "Fabrication", uom: "pcs"},
-        {id: "ITM-005", name: "Chain Bracket", status: "Active", category: "Component", uom: "pcs"},
-        {id: "ITM-006", name: "Front Assembly", status: "Active", category: "Finished Good", uom: "ea"},
-        {id: "ITM-007", name: "Steel Frame", status: "Active", category: "Fabrication", uom: "pcs"},
-        {id: "ITM-008", name: "Blue Paint (RAL5010)", status: "Hold", category: "Consumable", uom: "L"},
-        {id: "ITM-009", name: "Screws M3x8", status: "Active", category: "Hardware", uom: "ea"},
-        {id: "ITM-010", name: "Assembly Kit 10", status: "Discontinued", category: "Kit", uom: "kit"}
-    ];
-
-    // State
-    const [rows, setRows] = useState(initialData);
+    // Backend-backed data
+    const [rows, setRows] = useState([]);
     const [query, setQuery] = useState("");
+    const [queryDebounced, setQueryDebounced] = useState("");
     const [status, setStatus] = useState("all");
     const [category, setCategory] = useState("all");
     const [uom, setUom] = useState("all");
@@ -47,11 +36,20 @@ export const ItemsPage = () => {
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(8);
 
+    // Server paging
+    const [serverTotalPages, setServerTotalPages] = useState(1);
+    const [serverTotalElements, setServerTotalElements] = useState(0);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+
     // Bulk deletion modal
     const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     // Single-row deletion modal
     const [deleteOneId, setDeleteOneId] = useState(null);
+
+    // Reload tick to refetch after mutations
+    const [reloadTick, setReloadTick] = useState(0);
 
     // Desktop dropdown menu: { id, x, y } or null
     const [menu, setMenu] = useState(null);
@@ -61,21 +59,60 @@ export const ItemsPage = () => {
     const [sheetId, setSheetId] = useState(null);
 
     const navigate = useNavigate();
+    const authFetch = useAuthFetch();
 
-    // Options
-    const categories = useMemo(() => ["all", ...new Set(rows.map((d) => d.category))], [rows]);
-    const uoms = useMemo(() => ["all", ...new Set(rows.map((d) => d.uom))], [rows]);
+    // Options (category uses categoryName, uom uses uomBase)
+    const categories = useMemo(() => ["all", ...new Set(rows.map((d) => d.categoryName).filter(Boolean))], [rows]);
+    const uoms = useMemo(() => ["all", ...new Set(rows.map((d) => d.uomBase).filter(Boolean))], [rows]);
 
-    // Filtering + sorting
+    // Debounce search input for server queries
+    useEffect(() => {
+        const t = setTimeout(() => setQueryDebounced(query.trim()), 250);
+        return () => clearTimeout(t);
+    }, [query]);
+
+    // Fetch from backend when filters/page/sort/query change (debounced)
+    useEffect(() => {
+        let ignore = false;
+        (async () => {
+            try {
+                setLoading(true);
+                setError("");
+                const serverSortKey = sort.key === "id" ? "code" : (sort.key === "name" ? "name" : "name");
+                const res = await listItems(authFetch, {
+                    page: Math.max(0, (page || 1) - 1),
+                    size: pageSize,
+                    sort: `${serverSortKey},${sort.dir}`,
+                    q: queryDebounced || undefined,
+                    status: status !== "all" ? status : undefined,
+                    // category filter (by id) not wired from UI names in this sample
+                    uom: uom !== "all" ? uom : undefined,
+                });
+                if (ignore) return;
+                setRows(res.content || []);
+                setServerTotalPages(res.totalPages || 1);
+                setServerTotalElements(typeof res.totalElements === "number" ? res.totalElements : (res.content?.length || 0));
+            } catch (e) {
+                if (!ignore) setError(e?.message || "Failed to load items");
+            } finally {
+                if (!ignore) setLoading(false);
+            }
+        })();
+        return () => {
+            ignore = true;
+        };
+    }, [authFetch, page, pageSize, sort, queryDebounced, status, uom, reloadTick]);
+
+    // Filtering + sorting (client-side adjustments on current page)
     const filtered = useMemo(() => {
         let data = rows;
-        if (query) {
-            const q = query.toLowerCase();
-            data = data.filter((r) => r.name.toLowerCase().includes(q) || r.id.toLowerCase().includes(q));
+        if (queryDebounced) {
+            const q = queryDebounced.toLowerCase();
+            data = data.filter((r) => r.name?.toLowerCase().includes(q) || r.id?.toLowerCase().includes(q));
         }
         if (status !== "all") data = data.filter((r) => r.status === status);
-        if (category !== "all") data = data.filter((r) => r.category === category);
-        if (uom !== "all") data = data.filter((r) => r.uom === uom);
+        if (category !== "all") data = data.filter((r) => r.categoryName === category);
+        if (uom !== "all") data = data.filter((r) => r.uomBase === uom);
 
         const {key, dir} = sort;
         data = [...data].sort((a, b) => {
@@ -84,16 +121,15 @@ export const ItemsPage = () => {
             const cmp =
                 typeof av === "number" && typeof bv === "number"
                     ? av - bv
-                    : String(av).localeCompare(String(bv), undefined, {numeric: true, sensitivity: "base"});
+                    : String(av ?? "").localeCompare(String(bv ?? ""), undefined, {numeric: true, sensitivity: "base"});
             return dir === "asc" ? cmp : -cmp;
         });
         return data;
-    }, [rows, query, status, category, uom, sort]);
+    }, [rows, queryDebounced, status, category, uom, sort]);
 
-    // Paging
-    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-    const pageStart = (page - 1) * pageSize;
-    const paged = filtered.slice(pageStart, pageStart + pageSize);
+    // Paging (server-driven total pages; client shows current page slice which already reflects server page)
+    const totalPages = serverTotalPages;
+    const paged = filtered;
 
     // Selection
     const selectedIds = Object.keys(selected).filter((k) => selected[k]);
@@ -123,7 +159,7 @@ export const ItemsPage = () => {
         };
         const lines = [headers.join(",")];
         data.forEach((r) => {
-            lines.push([escape(r.id), escape(r.name), escape(r.status), escape(r.category), escape(r.uom)].join(","));
+            lines.push([escape(r.id), escape(r.name), escape(r.status), escape(r.categoryName || ""), escape(r.uomBase || "")].join(","));
         });
         return lines.join("\n");
     };
@@ -179,8 +215,8 @@ export const ItemsPage = () => {
           <td>${r.id}</td>
           <td>${r.name}</td>
           <td>${r.status}</td>
-          <td>${r.category}</td>
-          <td>${r.uom}</td>
+          <td>${r.categoryName ?? ""}</td>
+          <td>${r.uomBase ?? ""}</td>
         </tr>`
             )
             .join("")}
@@ -214,32 +250,52 @@ export const ItemsPage = () => {
         setShowDeleteModal(true);
     };
 
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
         if (!selectedCount) {
             setShowDeleteModal(false);
             return;
         }
-        const keep = rows.filter((r) => !selectedIds.includes(r.id));
-        setRows(keep);
-        setSelected({});
-        const newTotal = Math.max(1, Math.ceil(Math.max(0, keep.length) / pageSize));
-        setPage((p) => Math.min(p, newTotal));
-        setShowDeleteModal(false);
+        try {
+            setLoading(true);
+            const results = await Promise.allSettled(
+                selectedIds.map(async (id) => {
+                    const detail = await getItem(authFetch, id);
+                    await deleteItem(authFetch, id, detail.version);
+                })
+            );
+            const failures = results.filter(r => r.status === 'rejected');
+            if (failures.length) {
+                alert(`Failed to delete ${failures.length} of ${selectedCount} items.`);
+            }
+            setSelected({});
+            setShowDeleteModal(false);
+            setReloadTick((t) => t + 1);
+        } catch (e) {
+            alert(e?.message || 'Failed to delete items');
+        } finally {
+            setLoading(false);
+        }
     };
 
     // Delete single row
-    const confirmDeleteOne = () => {
+    const confirmDeleteOne = async () => {
         if (!deleteOneId) return;
-        const keep = rows.filter((r) => r.id !== deleteOneId);
-        setRows(keep);
-        setSelected((s) => {
-            const next = {...s};
-            delete next[deleteOneId];
-            return next;
-        });
-        const newTotal = Math.max(1, Math.ceil(Math.max(0, keep.length) / pageSize));
-        setPage((p) => Math.min(p, newTotal));
-        setDeleteOneId(null);
+        try {
+            setLoading(true);
+            const detail = await getItem(authFetch, deleteOneId);
+            await deleteItem(authFetch, deleteOneId, detail.version);
+            setSelected((s) => {
+                const next = {...s};
+                delete next[deleteOneId];
+                return next;
+            });
+            setDeleteOneId(null);
+            setReloadTick((t) => t + 1);
+        } catch (e) {
+            alert(e?.message || 'Failed to delete item');
+        } finally {
+            setLoading(false);
+        }
     };
 
     // Navigate
@@ -446,7 +502,7 @@ export const ItemsPage = () => {
                             <span>Select all on page</span>
                         </label>
                         <span className="text-xs text-gray-400">
-              {filtered.length === 0 ? 0 : pageStart + 1}–{Math.min(filtered.length, pageStart + pageSize)} of {filtered.length}
+              {paged.length === 0 ? 0 : ((page - 1) * pageSize + 1)}–{((page - 1) * pageSize) + paged.length} of {serverTotalElements}
             </span>
                     </div>
 
@@ -486,9 +542,9 @@ export const ItemsPage = () => {
                                         </div>
                                         <div className="mt-1 text-gray-200 text-sm line-clamp-2">{item.name}</div>
                                         <div className="mt-1 text-xs text-gray-400 flex items-center gap-2">
-                                            <span className="truncate">{item.category}</span>
+                                            <span className="truncate">{item.categoryName || ""}</span>
                                             <span>•</span>
-                                            <span>{item.uom}</span>
+                                            <span>{item.uomBase || ""}</span>
                                             <span className={`ml-auto px-2 py-0.5 text-[10px] rounded-full whitespace-nowrap ${
                                                 item.status === "Active" ? "bg-green-600/30 text-green-400"
                                                     : item.status === "Hold" ? "bg-yellow-600/30 text-yellow-400"
@@ -519,8 +575,8 @@ export const ItemsPage = () => {
                             {th("ID", "id")}
                             {th("Product name", "name")}
                             {th("Status", "status")}
-                            {th("Category", "category")}
-                            {th("UoM", "uom")}
+                            {th("Category", "categoryName")}
+                            {th("UoM", "uomBase")}
                             <th className="px-4 py-3 font-semibold text-gray-300 text-right">Actions</th>
                         </tr>
                         </thead>
@@ -552,8 +608,8 @@ export const ItemsPage = () => {
                     {item.status}
                   </span>
                                 </td>
-                                <td className="px-4 py-3 text-gray-400">{item.category}</td>
-                                <td className="px-4 py-3 text-gray-400">{item.uom}</td>
+                                <td className="px-4 py-3 text-gray-400">{item.categoryName || ""}</td>
+                                <td className="px-4 py-3 text-gray-400">{item.uomBase || ""}</td>
                                 <td className="px-4 py-3 text-right" onClick={stopRowNav}>
                                     {/* Desktop actions trigger */}
                                     <button
@@ -598,9 +654,9 @@ export const ItemsPage = () => {
                         </select>
                         <span className="hidden sm:inline">•</span>
                         <span>
-              Showing <span className="text-gray-300">{filtered.length === 0 ? 0 : pageStart + 1}</span>–
-              <span className="text-gray-300">{Math.min(filtered.length, pageStart + pageSize)}</span> of
-              <span className="text-gray-300"> {filtered.length}</span>
+              Showing <span className="text-gray-300">{paged.length === 0 ? 0 : ((page - 1) * pageSize + 1)}</span>–
+              <span className="text-gray-300">{((page - 1) * pageSize) + paged.length}</span> of
+              <span className="text-gray-300"> {serverTotalElements}</span>
             </span>
                     </div>
                     <div className="flex items-center gap-2">
