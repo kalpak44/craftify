@@ -1,5 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useNavigate} from "react-router-dom";
+import {useAuthFetch} from "../hooks/useAuthFetch";
+import {listBoms, getBom, deleteBom} from "../api/boms";
 
 /**
  * BOMsPage
@@ -22,111 +24,25 @@ import {useNavigate} from "react-router-dom";
  * - Uses mocked data stored in component state for client-side ops.
  */
 export const BOMsPage = () => {
-    // --- Mocked BOMs (stateful for deletion) ---
-    const initialData = [
-        {
-            id: "BOM-001",
-            product: "Front Assembly",
-            productId: "ITM-006",
-            revision: "v3",
-            status: "Active",
-            components: 12,
-            lastUpdated: "2025-02-14"
-        },
-        {
-            id: "BOM-002",
-            product: "Large Widget",
-            productId: "ITM-002",
-            revision: "v1",
-            status: "Active",
-            components: 7,
-            lastUpdated: "2025-02-10"
-        },
-        {
-            id: "BOM-003",
-            product: "Assembly Kit 10",
-            productId: "ITM-010",
-            revision: "v5",
-            status: "Obsolete",
-            components: 18,
-            lastUpdated: "2024-12-02"
-        },
-        {
-            id: "BOM-004",
-            product: "Steel Frame",
-            productId: "ITM-007",
-            revision: "v2",
-            status: "Active",
-            components: 9,
-            lastUpdated: "2025-01-29"
-        },
-        {
-            id: "BOM-005",
-            product: "Lion Bracket",
-            productId: "ITM-004",
-            revision: "v1",
-            status: "Draft",
-            components: 5,
-            lastUpdated: "2025-02-18"
-        },
-        {
-            id: "BOM-006",
-            product: "Chain Bracket",
-            productId: "ITM-005",
-            revision: "v4",
-            status: "Active",
-            components: 11,
-            lastUpdated: "2025-01-12"
-        },
-        {
-            id: "BOM-007",
-            product: "Plastic Case",
-            productId: "ITM-003",
-            revision: "v2",
-            status: "Active",
-            components: 6,
-            lastUpdated: "2025-02-01"
-        },
-        {
-            id: "BOM-008",
-            product: "Warm Yellow LED Kit",
-            productId: "ITM-001",
-            revision: "v1",
-            status: "Draft",
-            components: 4,
-            lastUpdated: "2025-02-17"
-        },
-        {
-            id: "BOM-009",
-            product: "Blue Paint Pack",
-            productId: "ITM-008",
-            revision: "v3",
-            status: "Hold",
-            components: 3,
-            lastUpdated: "2025-01-22"
-        },
-        {
-            id: "BOM-010",
-            product: "Screws Pack M3x8",
-            productId: "ITM-009",
-            revision: "v2",
-            status: "Active",
-            components: 2,
-            lastUpdated: "2025-02-03"
-        }
-    ];
-
-    const [rows, setRows] = useState(initialData);
+    // Backend-backed data
+    const [rows, setRows] = useState([]);
 
     const navigate = useNavigate();
     // --- State ---
     const [query, setQuery] = useState("");
+    const [queryDebounced, setQueryDebounced] = useState("");
     const [status, setStatus] = useState("all");
     const [sort, setSort] = useState({key: "product", dir: "asc"});
     const [selected, setSelected] = useState({});
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(8);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+    // Server paging state
+    const [serverTotalPages, setServerTotalPages] = useState(1);
+    const [serverTotalElements, setServerTotalElements] = useState(0);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
     // Single-row deletion modal
     const [deleteOneId, setDeleteOneId] = useState(null);
@@ -138,11 +54,62 @@ export const BOMsPage = () => {
     // Mobile action sheet: id or null
     const [sheetId, setSheetId] = useState(null);
 
-    // --- Derived rows ---
+    // Auth + reload tick
+    const authFetch = useAuthFetch();
+    const [reloadTick, setReloadTick] = useState(0);
+
+    // Debounce search
+    useEffect(() => {
+        const t = setTimeout(() => setQueryDebounced(query.trim()), 250);
+        return () => clearTimeout(t);
+    }, [query]);
+
+    // Fetch from backend
+    useEffect(() => {
+        let ignore = false;
+        (async () => {
+            try {
+                setLoading(true);
+                setError("");
+                const serverSortKey =
+                    sort.key === "id" ? "id" : (sort.key === "productId" ? "productId" : "productName");
+                const res = await listBoms(authFetch, {
+                    page: Math.max(0, (page || 1) - 1),
+                    size: pageSize,
+                    sort: `${serverSortKey},${sort.dir}`,
+                    q: queryDebounced || undefined,
+                    status: status !== "all" ? status : undefined,
+                });
+                if (ignore) return;
+                // Map backend rows to UI shape
+                const mapped = (res.content || []).map((b) => ({
+                    id: b.id,
+                    product: b.productName || "",
+                    productId: b.productId || "",
+                    revision: b.revision || "",
+                    status: b.status || "",
+                    components: typeof b.componentsCount === "number" ? b.componentsCount : 0,
+                    lastUpdated: b.updatedAt ? new Date(b.updatedAt).toISOString().slice(0, 10) : "",
+                }));
+                setRows(mapped);
+                setServerTotalPages(res.totalPages || 1);
+                setServerTotalElements(typeof res.totalElements === "number" ? res.totalElements : mapped.length);
+            } catch (e) {
+                if (!ignore) setError(e?.message || "Failed to load BOMs");
+            } finally {
+                if (!ignore) setLoading(false);
+            }
+        })();
+        return () => {
+            ignore = true;
+        };
+    }, [authFetch, page, pageSize, sort, queryDebounced, status, reloadTick]);
+
+    // --- Derived rows (client-side sort as safety on current page) ---
     const filtered = useMemo(() => {
         let data = rows;
-        if (query) {
-            const q = query.toLowerCase();
+        if (queryDebounced) {
+            const q = queryDebounced.toLowerCase();
             data = data.filter(
                 (r) =>
                     r.id.toLowerCase().includes(q) ||
@@ -156,14 +123,14 @@ export const BOMsPage = () => {
         data = [...data].sort((a, b) => {
             const av = a[key];
             const bv = b[key];
-            const cmp = key === "components" ? av - bv : String(av).localeCompare(String(bv), undefined, {numeric: true});
+            const cmp = key === "components" ? (Number(av) - Number(bv)) : String(av).localeCompare(String(bv), undefined, {numeric: true});
             return dir === "asc" ? cmp : -cmp;
         });
         return data;
-    }, [rows, query, status, sort]);
+    }, [rows, queryDebounced, status, sort]);
 
     // --- Paging ---
-    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+    const totalPages = serverTotalPages || Math.max(1, Math.ceil(filtered.length / pageSize));
     const pageStart = (page - 1) * pageSize;
     const paged = filtered.slice(pageStart, pageStart + pageSize);
 
@@ -202,32 +169,48 @@ export const BOMsPage = () => {
         if (!selectedCount) return;
         setShowDeleteModal(true);
     };
-    const confirmDelete = () => {
-        if (!selectedCount) {
+    const confirmDelete = async () => {
+        try {
+            if (!selectedCount) {
+                setShowDeleteModal(false);
+                return;
+            }
+            // Delete selected on server with version check
+            for (const id of selectedIds) {
+                try {
+                    const detail = await getBom(authFetch, id);
+                    await deleteBom(authFetch, id, detail.version ?? 0);
+                } catch (e) {
+                    // swallow per-row errors to try others; could surface a toast in real app
+                    // eslint-disable-next-line no-console
+                    console.warn("Failed to delete BOM", id, e);
+                }
+            }
+            setSelected({});
+            setReloadTick((n) => n + 1);
+        } finally {
             setShowDeleteModal(false);
-            return;
         }
-        const keep = rows.filter((r) => !selectedIds.includes(r.id));
-        setRows(keep);
-        setSelected({});
-        const newTotalPages = Math.max(1, Math.ceil(keep.length / pageSize));
-        setPage((p) => Math.min(p, newTotalPages));
-        setShowDeleteModal(false);
     };
 
     // --- Delete single row ---
-    const confirmDeleteOne = () => {
+    const confirmDeleteOne = async () => {
         if (!deleteOneId) return;
-        const keep = rows.filter((r) => r.id !== deleteOneId);
-        setRows(keep);
-        setSelected((s) => {
-            const next = {...s};
-            delete next[deleteOneId];
-            return next;
-        });
-        const newTotalPages = Math.max(1, Math.ceil(keep.length / pageSize));
-        setPage((p) => Math.min(p, newTotalPages));
-        setDeleteOneId(null);
+        try {
+            const detail = await getBom(authFetch, deleteOneId);
+            await deleteBom(authFetch, deleteOneId, detail.version ?? 0);
+            setReloadTick((n) => n + 1);
+        } catch (e) {
+            // eslint-disable-next-line no-console
+            console.warn("Failed to delete BOM", deleteOneId, e);
+        } finally {
+            setSelected((s) => {
+                const next = {...s};
+                delete next[deleteOneId];
+                return next;
+            });
+            setDeleteOneId(null);
+        }
     };
 
     // --- Desktop menu helpers ---
