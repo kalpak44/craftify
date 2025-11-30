@@ -362,7 +362,8 @@ export default function BOMDetailsPage() {
             const payload = {
                 id: bomId || undefined,
                 productId: parentItemId,
-                productName: undefined,
+                // Persist the parent item name so the BOM list can render it immediately
+                productName: parentItem ? parentItem.name : undefined,
                 revision,
                 status,
                 description: description || null,
