@@ -31,7 +31,7 @@ springdoc:
 
 app:
   security:
-    disabled: true
+    disabled: false
   cors:
     allowed-origins:
       - http://localhost:5173
