@@ -1,21 +1,13 @@
 package com.craftify.backend.config;
 
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-
 import java.util.List;
 
-/**
- * Unified configuration for managing allowed origins for CORS and WebSocket endpoints.
- */
 @Configuration
 @ConfigurationProperties(prefix = "app.cors")
 public class CrossOriginConfig {
 
-    /**
-     * List of allowed origins for both HTTP and WebSocket connections.
-     */
     private List<String> allowedOrigins;
 
     public List<String> getAllowedOrigins() {
