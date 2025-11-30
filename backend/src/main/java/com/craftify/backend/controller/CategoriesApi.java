@@ -22,6 +22,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import java.util.Optional;
+import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -34,320 +36,422 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.context.request.NativeWebRequest;
 
-import java.util.Optional;
-import java.util.UUID;
-
 @Validated
 @Tag(name = "Categories", description = "the Categories API")
 public interface CategoriesApi {
 
-    default Optional<NativeWebRequest> getRequest() {
-        return Optional.empty();
-    }
+  default Optional<NativeWebRequest> getRequest() {
+    return Optional.empty();
+  }
 
-    public static final String PATH_CATEGORIES_GET = "/categories";
+  public static final String PATH_CATEGORIES_GET = "/categories";
 
-    /**
-     * GET /categories : List/search categories (pageable)
-     *
-     * @param page (optional, default to 0)
-     * @param size (optional, default to 8)
-     * @param sort Sort by name,asc|desc (optional)
-     * @param q    Case-insensitive substring on name (optional)
-     * @return Paged categories (status code 200)
-     */
-    @Operation(
-            operationId = "categoriesGet",
-            summary = "List/search categories (pageable)",
-            tags = {"Categories"},
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Paged categories", content = {
-                            @Content(mediaType = "application/json", schema = @Schema(implementation = CategoryPage.class))
-                    })
-            },
-            security = {
-                    @SecurityRequirement(name = "bearerAuth")
-            }
-    )
-    @RequestMapping(
-            method = RequestMethod.GET,
-            value = CategoriesApi.PATH_CATEGORIES_GET,
-            produces = {"application/json"}
-    )
-
-    default ResponseEntity<CategoryPage> categoriesGet(
-            @Min(0) @Parameter(name = "page", description = "", in = ParameterIn.QUERY) @Valid @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
-            @Min(1) @Max(200) @Parameter(name = "size", description = "", in = ParameterIn.QUERY) @Valid @RequestParam(value = "size", required = false, defaultValue = "8") Integer size,
-            @Parameter(name = "sort", description = "Sort by name,asc|desc", in = ParameterIn.QUERY) @Valid @RequestParam(value = "sort", required = false) @Nullable String sort,
-            @Parameter(name = "q", description = "Case-insensitive substring on name", in = ParameterIn.QUERY) @Valid @RequestParam(value = "q", required = false) @Nullable String q
-    ) {
-        getRequest().ifPresent(request -> {
-            for (MediaType mediaType : MediaType.parseMediaTypes(request.getHeader("Accept"))) {
+  /**
+   * GET /categories : List/search categories (pageable)
+   *
+   * @param page (optional, default to 0)
+   * @param size (optional, default to 8)
+   * @param sort Sort by name,asc|desc (optional)
+   * @param q Case-insensitive substring on name (optional)
+   * @return Paged categories (status code 200)
+   */
+  @Operation(
+      operationId = "categoriesGet",
+      summary = "List/search categories (pageable)",
+      tags = {"Categories"},
+      responses = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Paged categories",
+            content = {
+              @Content(
+                  mediaType = "application/json",
+                  schema = @Schema(implementation = CategoryPage.class))
+            })
+      },
+      security = {@SecurityRequirement(name = "bearerAuth")})
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = CategoriesApi.PATH_CATEGORIES_GET,
+      produces = {"application/json"})
+  default ResponseEntity<CategoryPage> categoriesGet(
+      @Min(0)
+          @Parameter(name = "page", description = "", in = ParameterIn.QUERY)
+          @Valid
+          @RequestParam(value = "page", required = false, defaultValue = "0")
+          Integer page,
+      @Min(1)
+          @Max(200)
+          @Parameter(name = "size", description = "", in = ParameterIn.QUERY)
+          @Valid
+          @RequestParam(value = "size", required = false, defaultValue = "8")
+          Integer size,
+      @Parameter(name = "sort", description = "Sort by name,asc|desc", in = ParameterIn.QUERY)
+          @Valid
+          @RequestParam(value = "sort", required = false)
+          @Nullable
+          String sort,
+      @Parameter(
+              name = "q",
+              description = "Case-insensitive substring on name",
+              in = ParameterIn.QUERY)
+          @Valid
+          @RequestParam(value = "q", required = false)
+          @Nullable
+          String q) {
+    getRequest()
+        .ifPresent(
+            request -> {
+              for (MediaType mediaType : MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                    String exampleString = "{ \"size\" : 1, \"totalPages\" : 1, \"page\" : 0, \"sort\" : [ \"name\", \"name\" ], \"content\" : [ { \"name\" : \"name\", \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" }, { \"name\" : \"name\", \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" } ], \"totalElements\" : 0 }";
-                    ApiUtil.setExampleResponse(request, "application/json", exampleString);
-                    break;
+                  String exampleString =
+                      "{ \"size\" : 1, \"totalPages\" : 1, \"page\" : 0, \"sort\" : [ \"name\", \"name\" ], \"content\" : [ { \"name\" : \"name\", \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" }, { \"name\" : \"name\", \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" } ], \"totalElements\" : 0 }";
+                  ApiUtil.setExampleResponse(request, "application/json", exampleString);
+                  break;
                 }
-            }
-        });
-        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+              }
+            });
+    return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+  }
 
-    }
+  public static final String PATH_CATEGORIES_ID_DELETE = "/categories/{id}";
 
-
-    public static final String PATH_CATEGORIES_ID_DELETE = "/categories/{id}";
-
-    /**
-     * DELETE /categories/{id} : Delete category
-     *
-     * @param id    Category id (UUID) (required)
-     * @param force Force delete even if in use (implementation-defined) (optional, default to false)
-     * @return No Content (status code 204)
-     * or Problem Details (RFC-7807) (status code 404)
-     * or Problem Details (RFC-7807) (status code 409)
-     */
-    @Operation(
-            operationId = "categoriesIdDelete",
-            summary = "Delete category",
-            tags = {"Categories"},
-            responses = {
-                    @ApiResponse(responseCode = "204", description = "No Content"),
-                    @ApiResponse(responseCode = "404", description = "Problem Details (RFC-7807)", content = {
-                            @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
-                    }),
-                    @ApiResponse(responseCode = "409", description = "Problem Details (RFC-7807)", content = {
-                            @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
-                    })
-            },
-            security = {
-                    @SecurityRequirement(name = "bearerAuth")
-            }
-    )
-    @RequestMapping(
-            method = RequestMethod.DELETE,
-            value = CategoriesApi.PATH_CATEGORIES_ID_DELETE,
-            produces = {"application/problem+json"}
-    )
-
-    default ResponseEntity<Void> categoriesIdDelete(
-            @Parameter(name = "id", description = "Category id (UUID)", required = true, in = ParameterIn.PATH) @PathVariable("id") UUID id,
-            @Parameter(name = "force", description = "Force delete even if in use (implementation-defined)", in = ParameterIn.QUERY) @Valid @RequestParam(value = "force", required = false, defaultValue = "false") Boolean force
-    ) {
-        getRequest().ifPresent(request -> {
-            for (MediaType mediaType : MediaType.parseMediaTypes(request.getHeader("Accept"))) {
+  /**
+   * DELETE /categories/{id} : Delete category
+   *
+   * @param id Category id (UUID) (required)
+   * @param force Force delete even if in use (implementation-defined) (optional, default to false)
+   * @return No Content (status code 204) or Problem Details (RFC-7807) (status code 404) or Problem
+   *     Details (RFC-7807) (status code 409)
+   */
+  @Operation(
+      operationId = "categoriesIdDelete",
+      summary = "Delete category",
+      tags = {"Categories"},
+      responses = {
+        @ApiResponse(responseCode = "204", description = "No Content"),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Problem Details (RFC-7807)",
+            content = {
+              @Content(
+                  mediaType = "application/problem+json",
+                  schema = @Schema(implementation = ProblemDetail.class))
+            }),
+        @ApiResponse(
+            responseCode = "409",
+            description = "Problem Details (RFC-7807)",
+            content = {
+              @Content(
+                  mediaType = "application/problem+json",
+                  schema = @Schema(implementation = ProblemDetail.class))
+            })
+      },
+      security = {@SecurityRequirement(name = "bearerAuth")})
+  @RequestMapping(
+      method = RequestMethod.DELETE,
+      value = CategoriesApi.PATH_CATEGORIES_ID_DELETE,
+      produces = {"application/problem+json"})
+  default ResponseEntity<Void> categoriesIdDelete(
+      @Parameter(
+              name = "id",
+              description = "Category id (UUID)",
+              required = true,
+              in = ParameterIn.PATH)
+          @PathVariable("id")
+          UUID id,
+      @Parameter(
+              name = "force",
+              description = "Force delete even if in use (implementation-defined)",
+              in = ParameterIn.QUERY)
+          @Valid
+          @RequestParam(value = "force", required = false, defaultValue = "false")
+          Boolean force) {
+    getRequest()
+        .ifPresent(
+            request -> {
+              for (MediaType mediaType : MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/problem+json"))) {
-                    String exampleString = "Custom MIME type example not yet supported: application/problem+json";
-                    ApiUtil.setExampleResponse(request, "application/problem+json", exampleString);
-                    break;
+                  String exampleString =
+                      "Custom MIME type example not yet supported: application/problem+json";
+                  ApiUtil.setExampleResponse(request, "application/problem+json", exampleString);
+                  break;
                 }
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/problem+json"))) {
-                    String exampleString = "Custom MIME type example not yet supported: application/problem+json";
-                    ApiUtil.setExampleResponse(request, "application/problem+json", exampleString);
-                    break;
+                  String exampleString =
+                      "Custom MIME type example not yet supported: application/problem+json";
+                  ApiUtil.setExampleResponse(request, "application/problem+json", exampleString);
+                  break;
                 }
-            }
-        });
-        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+              }
+            });
+    return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+  }
 
-    }
+  public static final String PATH_CATEGORIES_ID_GET = "/categories/{id}";
 
-
-    public static final String PATH_CATEGORIES_ID_GET = "/categories/{id}";
-
-    /**
-     * GET /categories/{id} : Get category
-     *
-     * @param id Category id (UUID) (required)
-     * @return OK (status code 200)
-     * or Problem Details (RFC-7807) (status code 404)
-     */
-    @Operation(
-            operationId = "categoriesIdGet",
-            summary = "Get category",
-            tags = {"Categories"},
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "OK", content = {
-                            @Content(mediaType = "application/json", schema = @Schema(implementation = Category.class)),
-                            @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Category.class))
-                    }),
-                    @ApiResponse(responseCode = "404", description = "Problem Details (RFC-7807)", content = {
-                            @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetail.class)),
-                            @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
-                    })
-            },
-            security = {
-                    @SecurityRequirement(name = "bearerAuth")
-            }
-    )
-    @RequestMapping(
-            method = RequestMethod.GET,
-            value = CategoriesApi.PATH_CATEGORIES_ID_GET,
-            produces = {"application/json", "application/problem+json"}
-    )
-
-    default ResponseEntity<Category> categoriesIdGet(
-            @Parameter(name = "id", description = "Category id (UUID)", required = true, in = ParameterIn.PATH) @PathVariable("id") UUID id
-    ) {
-        getRequest().ifPresent(request -> {
-            for (MediaType mediaType : MediaType.parseMediaTypes(request.getHeader("Accept"))) {
+  /**
+   * GET /categories/{id} : Get category
+   *
+   * @param id Category id (UUID) (required)
+   * @return OK (status code 200) or Problem Details (RFC-7807) (status code 404)
+   */
+  @Operation(
+      operationId = "categoriesIdGet",
+      summary = "Get category",
+      tags = {"Categories"},
+      responses = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "OK",
+            content = {
+              @Content(
+                  mediaType = "application/json",
+                  schema = @Schema(implementation = Category.class)),
+              @Content(
+                  mediaType = "application/problem+json",
+                  schema = @Schema(implementation = Category.class))
+            }),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Problem Details (RFC-7807)",
+            content = {
+              @Content(
+                  mediaType = "application/json",
+                  schema = @Schema(implementation = ProblemDetail.class)),
+              @Content(
+                  mediaType = "application/problem+json",
+                  schema = @Schema(implementation = ProblemDetail.class))
+            })
+      },
+      security = {@SecurityRequirement(name = "bearerAuth")})
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = CategoriesApi.PATH_CATEGORIES_ID_GET,
+      produces = {"application/json", "application/problem+json"})
+  default ResponseEntity<Category> categoriesIdGet(
+      @Parameter(
+              name = "id",
+              description = "Category id (UUID)",
+              required = true,
+              in = ParameterIn.PATH)
+          @PathVariable("id")
+          UUID id) {
+    getRequest()
+        .ifPresent(
+            request -> {
+              for (MediaType mediaType : MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                    String exampleString = "{ \"name\" : \"name\", \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" }";
-                    ApiUtil.setExampleResponse(request, "application/json", exampleString);
-                    break;
+                  String exampleString =
+                      "{ \"name\" : \"name\", \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" }";
+                  ApiUtil.setExampleResponse(request, "application/json", exampleString);
+                  break;
                 }
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/problem+json"))) {
-                    String exampleString = "Custom MIME type example not yet supported: application/problem+json";
-                    ApiUtil.setExampleResponse(request, "application/problem+json", exampleString);
-                    break;
+                  String exampleString =
+                      "Custom MIME type example not yet supported: application/problem+json";
+                  ApiUtil.setExampleResponse(request, "application/problem+json", exampleString);
+                  break;
                 }
-            }
-        });
-        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+              }
+            });
+    return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+  }
 
-    }
+  public static final String PATH_CATEGORIES_ID_PATCH = "/categories/{id}";
 
-
-    public static final String PATH_CATEGORIES_ID_PATCH = "/categories/{id}";
-
-    /**
-     * PATCH /categories/{id} : Rename category
-     *
-     * @param id                    Category id (UUID) (required)
-     * @param renameCategoryRequest (required)
-     * @return Renamed (status code 200)
-     * or Problem Details (RFC-7807) (status code 400)
-     * or Problem Details (RFC-7807) (status code 404)
-     * or Problem Details (RFC-7807) (status code 409)
-     */
-    @Operation(
-            operationId = "categoriesIdPatch",
-            summary = "Rename category",
-            tags = {"Categories"},
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Renamed", content = {
-                            @Content(mediaType = "application/json", schema = @Schema(implementation = Category.class)),
-                            @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Category.class))
-                    }),
-                    @ApiResponse(responseCode = "400", description = "Problem Details (RFC-7807)", content = {
-                            @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetail.class)),
-                            @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
-                    }),
-                    @ApiResponse(responseCode = "404", description = "Problem Details (RFC-7807)", content = {
-                            @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetail.class)),
-                            @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
-                    }),
-                    @ApiResponse(responseCode = "409", description = "Problem Details (RFC-7807)", content = {
-                            @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetail.class)),
-                            @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
-                    })
-            },
-            security = {
-                    @SecurityRequirement(name = "bearerAuth")
-            }
-    )
-    @RequestMapping(
-            method = RequestMethod.PATCH,
-            value = CategoriesApi.PATH_CATEGORIES_ID_PATCH,
-            produces = {"application/json", "application/problem+json"},
-            consumes = {"application/json"}
-    )
-
-    default ResponseEntity<Category> categoriesIdPatch(
-            @Parameter(name = "id", description = "Category id (UUID)", required = true, in = ParameterIn.PATH) @PathVariable("id") UUID id,
-            @Parameter(name = "RenameCategoryRequest", description = "", required = true) @Valid @RequestBody RenameCategoryRequest renameCategoryRequest
-    ) {
-        getRequest().ifPresent(request -> {
-            for (MediaType mediaType : MediaType.parseMediaTypes(request.getHeader("Accept"))) {
+  /**
+   * PATCH /categories/{id} : Rename category
+   *
+   * @param id Category id (UUID) (required)
+   * @param renameCategoryRequest (required)
+   * @return Renamed (status code 200) or Problem Details (RFC-7807) (status code 400) or Problem
+   *     Details (RFC-7807) (status code 404) or Problem Details (RFC-7807) (status code 409)
+   */
+  @Operation(
+      operationId = "categoriesIdPatch",
+      summary = "Rename category",
+      tags = {"Categories"},
+      responses = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Renamed",
+            content = {
+              @Content(
+                  mediaType = "application/json",
+                  schema = @Schema(implementation = Category.class)),
+              @Content(
+                  mediaType = "application/problem+json",
+                  schema = @Schema(implementation = Category.class))
+            }),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Problem Details (RFC-7807)",
+            content = {
+              @Content(
+                  mediaType = "application/json",
+                  schema = @Schema(implementation = ProblemDetail.class)),
+              @Content(
+                  mediaType = "application/problem+json",
+                  schema = @Schema(implementation = ProblemDetail.class))
+            }),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Problem Details (RFC-7807)",
+            content = {
+              @Content(
+                  mediaType = "application/json",
+                  schema = @Schema(implementation = ProblemDetail.class)),
+              @Content(
+                  mediaType = "application/problem+json",
+                  schema = @Schema(implementation = ProblemDetail.class))
+            }),
+        @ApiResponse(
+            responseCode = "409",
+            description = "Problem Details (RFC-7807)",
+            content = {
+              @Content(
+                  mediaType = "application/json",
+                  schema = @Schema(implementation = ProblemDetail.class)),
+              @Content(
+                  mediaType = "application/problem+json",
+                  schema = @Schema(implementation = ProblemDetail.class))
+            })
+      },
+      security = {@SecurityRequirement(name = "bearerAuth")})
+  @RequestMapping(
+      method = RequestMethod.PATCH,
+      value = CategoriesApi.PATH_CATEGORIES_ID_PATCH,
+      produces = {"application/json", "application/problem+json"},
+      consumes = {"application/json"})
+  default ResponseEntity<Category> categoriesIdPatch(
+      @Parameter(
+              name = "id",
+              description = "Category id (UUID)",
+              required = true,
+              in = ParameterIn.PATH)
+          @PathVariable("id")
+          UUID id,
+      @Parameter(name = "RenameCategoryRequest", description = "", required = true)
+          @Valid
+          @RequestBody
+          RenameCategoryRequest renameCategoryRequest) {
+    getRequest()
+        .ifPresent(
+            request -> {
+              for (MediaType mediaType : MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                    String exampleString = "{ \"name\" : \"name\", \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" }";
-                    ApiUtil.setExampleResponse(request, "application/json", exampleString);
-                    break;
+                  String exampleString =
+                      "{ \"name\" : \"name\", \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" }";
+                  ApiUtil.setExampleResponse(request, "application/json", exampleString);
+                  break;
                 }
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/problem+json"))) {
-                    String exampleString = "Custom MIME type example not yet supported: application/problem+json";
-                    ApiUtil.setExampleResponse(request, "application/problem+json", exampleString);
-                    break;
+                  String exampleString =
+                      "Custom MIME type example not yet supported: application/problem+json";
+                  ApiUtil.setExampleResponse(request, "application/problem+json", exampleString);
+                  break;
                 }
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/problem+json"))) {
-                    String exampleString = "Custom MIME type example not yet supported: application/problem+json";
-                    ApiUtil.setExampleResponse(request, "application/problem+json", exampleString);
-                    break;
+                  String exampleString =
+                      "Custom MIME type example not yet supported: application/problem+json";
+                  ApiUtil.setExampleResponse(request, "application/problem+json", exampleString);
+                  break;
                 }
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/problem+json"))) {
-                    String exampleString = "Custom MIME type example not yet supported: application/problem+json";
-                    ApiUtil.setExampleResponse(request, "application/problem+json", exampleString);
-                    break;
+                  String exampleString =
+                      "Custom MIME type example not yet supported: application/problem+json";
+                  ApiUtil.setExampleResponse(request, "application/problem+json", exampleString);
+                  break;
                 }
-            }
-        });
-        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+              }
+            });
+    return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+  }
 
-    }
+  public static final String PATH_CATEGORIES_POST = "/categories";
 
-
-    public static final String PATH_CATEGORIES_POST = "/categories";
-
-    /**
-     * POST /categories : Create category
-     *
-     * @param createCategoryRequest (required)
-     * @return Created (status code 201)
-     * or Problem Details (RFC-7807) (status code 400)
-     * or Problem Details (RFC-7807) (status code 409)
-     */
-    @Operation(
-            operationId = "categoriesPost",
-            summary = "Create category",
-            tags = {"Categories"},
-            responses = {
-                    @ApiResponse(responseCode = "201", description = "Created", content = {
-                            @Content(mediaType = "application/json", schema = @Schema(implementation = Category.class)),
-                            @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Category.class))
-                    }),
-                    @ApiResponse(responseCode = "400", description = "Problem Details (RFC-7807)", content = {
-                            @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetail.class)),
-                            @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
-                    }),
-                    @ApiResponse(responseCode = "409", description = "Problem Details (RFC-7807)", content = {
-                            @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetail.class)),
-                            @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
-                    })
-            },
-            security = {
-                    @SecurityRequirement(name = "bearerAuth")
-            }
-    )
-    @RequestMapping(
-            method = RequestMethod.POST,
-            value = CategoriesApi.PATH_CATEGORIES_POST,
-            produces = {"application/json", "application/problem+json"},
-            consumes = {"application/json"}
-    )
-
-    default ResponseEntity<Category> categoriesPost(
-            @Parameter(name = "CreateCategoryRequest", description = "", required = true) @Valid @RequestBody CreateCategoryRequest createCategoryRequest
-    ) {
-        getRequest().ifPresent(request -> {
-            for (MediaType mediaType : MediaType.parseMediaTypes(request.getHeader("Accept"))) {
+  /**
+   * POST /categories : Create category
+   *
+   * @param createCategoryRequest (required)
+   * @return Created (status code 201) or Problem Details (RFC-7807) (status code 400) or Problem
+   *     Details (RFC-7807) (status code 409)
+   */
+  @Operation(
+      operationId = "categoriesPost",
+      summary = "Create category",
+      tags = {"Categories"},
+      responses = {
+        @ApiResponse(
+            responseCode = "201",
+            description = "Created",
+            content = {
+              @Content(
+                  mediaType = "application/json",
+                  schema = @Schema(implementation = Category.class)),
+              @Content(
+                  mediaType = "application/problem+json",
+                  schema = @Schema(implementation = Category.class))
+            }),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Problem Details (RFC-7807)",
+            content = {
+              @Content(
+                  mediaType = "application/json",
+                  schema = @Schema(implementation = ProblemDetail.class)),
+              @Content(
+                  mediaType = "application/problem+json",
+                  schema = @Schema(implementation = ProblemDetail.class))
+            }),
+        @ApiResponse(
+            responseCode = "409",
+            description = "Problem Details (RFC-7807)",
+            content = {
+              @Content(
+                  mediaType = "application/json",
+                  schema = @Schema(implementation = ProblemDetail.class)),
+              @Content(
+                  mediaType = "application/problem+json",
+                  schema = @Schema(implementation = ProblemDetail.class))
+            })
+      },
+      security = {@SecurityRequirement(name = "bearerAuth")})
+  @RequestMapping(
+      method = RequestMethod.POST,
+      value = CategoriesApi.PATH_CATEGORIES_POST,
+      produces = {"application/json", "application/problem+json"},
+      consumes = {"application/json"})
+  default ResponseEntity<Category> categoriesPost(
+      @Parameter(name = "CreateCategoryRequest", description = "", required = true)
+          @Valid
+          @RequestBody
+          CreateCategoryRequest createCategoryRequest) {
+    getRequest()
+        .ifPresent(
+            request -> {
+              for (MediaType mediaType : MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                    String exampleString = "{ \"name\" : \"name\", \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" }";
-                    ApiUtil.setExampleResponse(request, "application/json", exampleString);
-                    break;
+                  String exampleString =
+                      "{ \"name\" : \"name\", \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" }";
+                  ApiUtil.setExampleResponse(request, "application/json", exampleString);
+                  break;
                 }
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/problem+json"))) {
-                    String exampleString = "Custom MIME type example not yet supported: application/problem+json";
-                    ApiUtil.setExampleResponse(request, "application/problem+json", exampleString);
-                    break;
+                  String exampleString =
+                      "Custom MIME type example not yet supported: application/problem+json";
+                  ApiUtil.setExampleResponse(request, "application/problem+json", exampleString);
+                  break;
                 }
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/problem+json"))) {
-                    String exampleString = "Custom MIME type example not yet supported: application/problem+json";
-                    ApiUtil.setExampleResponse(request, "application/problem+json", exampleString);
-                    break;
+                  String exampleString =
+                      "Custom MIME type example not yet supported: application/problem+json";
+                  ApiUtil.setExampleResponse(request, "application/problem+json", exampleString);
+                  break;
                 }
-            }
-        });
-        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
-
-    }
-
+              }
+            });
+    return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+  }
 }

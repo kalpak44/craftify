@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,81 +29,101 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Optional;
-
 @Validated
 @Tag(name = "Items", description = "the Items API")
 public interface ItemsImportApi {
 
-    default Optional<NativeWebRequest> getRequest() {
-        return Optional.empty();
-    }
+  default Optional<NativeWebRequest> getRequest() {
+    return Optional.empty();
+  }
 
-    public static final String PATH_ITEMS_IMPORT_POST = "/items:import";
+  public static final String PATH_ITEMS_IMPORT_POST = "/items:import";
 
-    /**
-     * POST /items:import : Import items via CSV
-     *
-     * @param file (required)
-     * @param mode Import behavior (optional, default to upsert)
-     * @return Import result (status code 200)
-     * or Problem Details (RFC-7807) (status code 400)
-     * or Problem Details (RFC-7807) (status code 422)
-     */
-    @Operation(
-            operationId = "itemsImportPost",
-            summary = "Import items via CSV",
-            tags = {"Items"},
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Import result", content = {
-                            @Content(mediaType = "application/json", schema = @Schema(implementation = ImportResult.class)),
-                            @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ImportResult.class))
-                    }),
-                    @ApiResponse(responseCode = "400", description = "Problem Details (RFC-7807)", content = {
-                            @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetail.class)),
-                            @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
-                    }),
-                    @ApiResponse(responseCode = "422", description = "Problem Details (RFC-7807)", content = {
-                            @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetail.class)),
-                            @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
-                    })
-            },
-            security = {
-                    @SecurityRequirement(name = "bearerAuth")
-            }
-    )
-    @RequestMapping(
-            method = RequestMethod.POST,
-            value = ItemsImportApi.PATH_ITEMS_IMPORT_POST,
-            produces = {"application/json", "application/problem+json"},
-            consumes = {"multipart/form-data"}
-    )
-
-    default ResponseEntity<ImportResult> itemsImportPost(
-            @Parameter(name = "file", description = "", required = true) @RequestPart(value = "file", required = true) MultipartFile file,
-            @Parameter(name = "mode", description = "Import behavior", in = ParameterIn.QUERY) @Valid @RequestParam(value = "mode", required = false, defaultValue = "upsert") String mode
-    ) {
-        getRequest().ifPresent(request -> {
-            for (MediaType mediaType : MediaType.parseMediaTypes(request.getHeader("Accept"))) {
+  /**
+   * POST /items:import : Import items via CSV
+   *
+   * @param file (required)
+   * @param mode Import behavior (optional, default to upsert)
+   * @return Import result (status code 200) or Problem Details (RFC-7807) (status code 400) or
+   *     Problem Details (RFC-7807) (status code 422)
+   */
+  @Operation(
+      operationId = "itemsImportPost",
+      summary = "Import items via CSV",
+      tags = {"Items"},
+      responses = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Import result",
+            content = {
+              @Content(
+                  mediaType = "application/json",
+                  schema = @Schema(implementation = ImportResult.class)),
+              @Content(
+                  mediaType = "application/problem+json",
+                  schema = @Schema(implementation = ImportResult.class))
+            }),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Problem Details (RFC-7807)",
+            content = {
+              @Content(
+                  mediaType = "application/json",
+                  schema = @Schema(implementation = ProblemDetail.class)),
+              @Content(
+                  mediaType = "application/problem+json",
+                  schema = @Schema(implementation = ProblemDetail.class))
+            }),
+        @ApiResponse(
+            responseCode = "422",
+            description = "Problem Details (RFC-7807)",
+            content = {
+              @Content(
+                  mediaType = "application/json",
+                  schema = @Schema(implementation = ProblemDetail.class)),
+              @Content(
+                  mediaType = "application/problem+json",
+                  schema = @Schema(implementation = ProblemDetail.class))
+            })
+      },
+      security = {@SecurityRequirement(name = "bearerAuth")})
+  @RequestMapping(
+      method = RequestMethod.POST,
+      value = ItemsImportApi.PATH_ITEMS_IMPORT_POST,
+      produces = {"application/json", "application/problem+json"},
+      consumes = {"multipart/form-data"})
+  default ResponseEntity<ImportResult> itemsImportPost(
+      @Parameter(name = "file", description = "", required = true)
+          @RequestPart(value = "file", required = true)
+          MultipartFile file,
+      @Parameter(name = "mode", description = "Import behavior", in = ParameterIn.QUERY)
+          @Valid
+          @RequestParam(value = "mode", required = false, defaultValue = "upsert")
+          String mode) {
+    getRequest()
+        .ifPresent(
+            request -> {
+              for (MediaType mediaType : MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                    String exampleString = "{ \"created\" : 0, \"updated\" : 0, \"errors\" : [ { \"field\" : \"field\", \"row\" : 1, \"message\" : \"message\" }, { \"field\" : \"field\", \"row\" : 1, \"message\" : \"message\" } ] }";
-                    ApiUtil.setExampleResponse(request, "application/json", exampleString);
-                    break;
+                  String exampleString =
+                      "{ \"created\" : 0, \"updated\" : 0, \"errors\" : [ { \"field\" : \"field\", \"row\" : 1, \"message\" : \"message\" }, { \"field\" : \"field\", \"row\" : 1, \"message\" : \"message\" } ] }";
+                  ApiUtil.setExampleResponse(request, "application/json", exampleString);
+                  break;
                 }
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/problem+json"))) {
-                    String exampleString = "Custom MIME type example not yet supported: application/problem+json";
-                    ApiUtil.setExampleResponse(request, "application/problem+json", exampleString);
-                    break;
+                  String exampleString =
+                      "Custom MIME type example not yet supported: application/problem+json";
+                  ApiUtil.setExampleResponse(request, "application/problem+json", exampleString);
+                  break;
                 }
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/problem+json"))) {
-                    String exampleString = "Custom MIME type example not yet supported: application/problem+json";
-                    ApiUtil.setExampleResponse(request, "application/problem+json", exampleString);
-                    break;
+                  String exampleString =
+                      "Custom MIME type example not yet supported: application/problem+json";
+                  ApiUtil.setExampleResponse(request, "application/problem+json", exampleString);
+                  break;
                 }
-            }
-        });
-        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
-
-    }
-
+              }
+            });
+    return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+  }
 }

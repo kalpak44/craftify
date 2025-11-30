@@ -3,48 +3,44 @@ package com.craftify.backend.model;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.annotation.Generated;
-
 import java.io.Serializable;
 
-/**
- * Gets or Sets Status
- */
-
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", comments = "Generator version: 7.15.0")
+/** Gets or Sets Status */
+@Generated(
+    value = "org.openapitools.codegen.languages.SpringCodegen",
+    comments = "Generator version: 7.15.0")
 public enum Status implements Serializable {
+  DRAFT("Draft"),
 
-    DRAFT("Draft"),
+  ACTIVE("Active"),
 
-    ACTIVE("Active"),
+  HOLD("Hold"),
 
-    HOLD("Hold"),
+  DISCONTINUED("Discontinued");
 
-    DISCONTINUED("Discontinued");
+  private final String value;
 
-    private final String value;
+  Status(String value) {
+    this.value = value;
+  }
 
-    Status(String value) {
-        this.value = value;
+  @JsonValue
+  public String getValue() {
+    return value;
+  }
+
+  @Override
+  public String toString() {
+    return String.valueOf(value);
+  }
+
+  @JsonCreator
+  public static Status fromValue(String value) {
+    for (Status b : Status.values()) {
+      if (b.value.equals(value)) {
+        return b;
+      }
     }
-
-    @JsonValue
-    public String getValue() {
-        return value;
-    }
-
-    @Override
-    public String toString() {
-        return String.valueOf(value);
-    }
-
-    @JsonCreator
-    public static Status fromValue(String value) {
-        for (Status b : Status.values()) {
-            if (b.value.equals(value)) {
-                return b;
-            }
-        }
-        throw new IllegalArgumentException("Unexpected value '" + value + "'");
-    }
+    throw new IllegalArgumentException("Unexpected value '" + value + "'");
+  }
 }
-

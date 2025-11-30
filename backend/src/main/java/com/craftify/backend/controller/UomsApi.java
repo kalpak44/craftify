@@ -13,6 +13,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,57 +23,53 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.context.request.NativeWebRequest;
 
-import java.util.List;
-import java.util.Optional;
-
 @Validated
 @Tag(name = "Lookups", description = "the Lookups API")
 public interface UomsApi {
 
-    default Optional<NativeWebRequest> getRequest() {
-        return Optional.empty();
-    }
+  default Optional<NativeWebRequest> getRequest() {
+    return Optional.empty();
+  }
 
-    public static final String PATH_UOMS_GET = "/uoms";
+  public static final String PATH_UOMS_GET = "/uoms";
 
-    /**
-     * GET /uoms : Common UoM codes (for autocomplete)
-     *
-     * @return OK (status code 200)
-     */
-    @Operation(
-            operationId = "uomsGet",
-            summary = "Common UoM codes (for autocomplete)",
-            tags = {"Lookups"},
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "OK", content = {
-                            @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = String.class)))
-                    })
-            },
-            security = {
-                    @SecurityRequirement(name = "bearerAuth")
-            }
-    )
-    @RequestMapping(
-            method = RequestMethod.GET,
-            value = UomsApi.PATH_UOMS_GET,
-            produces = {"application/json"}
-    )
+  /**
+   * GET /uoms : Common UoM codes (for autocomplete)
+   *
+   * @return OK (status code 200)
+   */
+  @Operation(
+      operationId = "uomsGet",
+      summary = "Common UoM codes (for autocomplete)",
+      tags = {"Lookups"},
+      responses = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "OK",
+            content = {
+              @Content(
+                  mediaType = "application/json",
+                  array = @ArraySchema(schema = @Schema(implementation = String.class)))
+            })
+      },
+      security = {@SecurityRequirement(name = "bearerAuth")})
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = UomsApi.PATH_UOMS_GET,
+      produces = {"application/json"})
+  default ResponseEntity<List<String>> uomsGet() {
 
-    default ResponseEntity<List<String>> uomsGet(
-
-    ) {
-        getRequest().ifPresent(request -> {
-            for (MediaType mediaType : MediaType.parseMediaTypes(request.getHeader("Accept"))) {
+    getRequest()
+        .ifPresent(
+            request -> {
+              for (MediaType mediaType : MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                    String exampleString = "[ \"pcs\", \"pcs\" ]";
-                    ApiUtil.setExampleResponse(request, "application/json", exampleString);
-                    break;
+                  String exampleString = "[ \"pcs\", \"pcs\" ]";
+                  ApiUtil.setExampleResponse(request, "application/json", exampleString);
+                  break;
                 }
-            }
-        });
-        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
-
-    }
-
+              }
+            });
+    return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+  }
 }
