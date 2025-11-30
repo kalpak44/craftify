@@ -1,4 +1,4 @@
-package com.craftify.backend.controller;
+package com.craftify.backend.utils;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;

@@ -10,6 +10,7 @@ import com.craftify.backend.model.CategoryPage;
 import com.craftify.backend.model.CreateCategoryRequest;
 import com.craftify.backend.model.ProblemDetail;
 import com.craftify.backend.model.RenameCategoryRequest;
+import com.craftify.backend.utils.ApiUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
