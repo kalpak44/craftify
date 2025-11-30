@@ -35,16 +35,16 @@ server:
   #      max-history: 10
 
   # Spring configuration
-  data:
-    mongodb:
-      # MongoDB URI with placeholders for environment variables
-      uri: ${MONGO_CONNECTION_STRING:}
-      auto-index-creation: true
-  jpa:
-    properties:
-      # Ensure the JDBC time zone is set to UTC
-      jdbc:
-        time_zone: UTC
+#  data:
+#    mongodb:
+#      # MongoDB URI with placeholders for environment variables
+#      uri: ${MONGO_CONNECTION_STRING:}
+#      auto-index-creation: true
+#  jpa:
+#    properties:
+#      # Ensure the JDBC time zone is set to UTC
+#      jdbc:
+#        time_zone: UTC
 
 # Springdoc configuration for OpenAPI and Swagger UI
 springdoc:
