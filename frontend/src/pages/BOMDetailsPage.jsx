@@ -481,8 +481,10 @@ export default function BOMDetailsPage() {
                                 <label className="block text-xs text-gray-400 mb-1">BOM ID</label>
                                 <input
                                     value={bomId}
-                                    onChange={(e) => setBomId(e.target.value)}
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    readOnly
+                                    aria-readonly="true"
+                                    placeholder={isEdit ? undefined : "Will be generated"}
+                                    className="w-full rounded-lg bg-gray-800/70 border border-white/10 px-3 py-2 text-sm cursor-not-allowed text-gray-300"
                                 />
                             </div>
 
