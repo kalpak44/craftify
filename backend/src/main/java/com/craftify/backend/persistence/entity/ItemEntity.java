@@ -174,6 +174,6 @@ public class ItemEntity {
   }
 
   public void setUoms(List<ItemUomEmbeddable> uoms) {
-    this.uoms = (uoms == null) ? new ArrayList<>() : uoms;
+    this.uoms = (uoms == null) ? new ArrayList<>() : new ArrayList<>(uoms);
   }
 }
