@@ -47,6 +47,34 @@ export async function listItems(authFetch, params = {}) {
 }
 
 /**
+ * List all items matching filters by traversing backend pages.
+ * @param {Function} authFetch
+ * @param {Object} params
+ *  - same filters/sort as listItems
+ *  - size (optional, defaults to 200 per page)
+ */
+export async function listAllItems(authFetch, params = {}) {
+  const pageSize = Number(params.size) > 0 ? Number(params.size) : 200;
+  const first = await listItems(authFetch, {...params, page: 0, size: pageSize});
+  const totalPages = Math.max(1, Number(first?.totalPages || 1));
+  const firstContent = Array.isArray(first?.content) ? first.content : [];
+
+  if (totalPages === 1) {
+    return firstContent;
+  }
+
+  const pageRequests = [];
+  for (let p = 1; p < totalPages; p += 1) {
+    pageRequests.push(listItems(authFetch, {...params, page: p, size: pageSize}));
+  }
+  const rest = await Promise.all(pageRequests);
+  return [
+    ...firstContent,
+    ...rest.flatMap((r) => (Array.isArray(r?.content) ? r.content : [])),
+  ];
+}
+
+/**
  * Get single item by id (code)
  * @param {Function} authFetch
  * @param {string} id

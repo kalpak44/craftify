@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {useAuthFetch} from "../hooks/useAuthFetch";
-import {listItems, getItem, deleteItem, exportItemsCsv, importItemsCsv} from "../api/items";
+import {listItems, listAllItems, getItem, deleteItem, exportItemsCsv, importItemsCsv} from "../api/items";
 import {listCategories} from "../api/categories";
 
 /**
@@ -38,7 +38,6 @@ export const ItemsPage = () => {
     const [pageSize, setPageSize] = useState(8);
 
     // Server paging
-    const [serverTotalPages, setServerTotalPages] = useState(1);
     const [serverTotalElements, setServerTotalElements] = useState(0);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -70,6 +69,7 @@ export const ItemsPage = () => {
 
     const navigate = useNavigate();
     const authFetch = useAuthFetch();
+    const itemCode = (item) => item?.code || item?.id;
 
     // Options (category uses categoryName, uom uses uomBase)
     const categories = categoryOptions;
@@ -100,7 +100,7 @@ export const ItemsPage = () => {
         };
     }, [authFetch, reloadTick]);
 
-    // Fetch from backend when filters/page/sort/query change (debounced)
+    // Fetch all filtered rows from backend when sort/query/filters change (debounced)
     useEffect(() => {
         let ignore = false;
         (async () => {
@@ -108,9 +108,7 @@ export const ItemsPage = () => {
                 setLoading(true);
                 setError("");
                 const serverSortKey = sort.key === "id" ? "code" : (sort.key === "name" ? "name" : "name");
-                const res = await listItems(authFetch, {
-                    page: Math.max(0, (page || 1) - 1),
-                    size: pageSize,
+                const allRows = await listAllItems(authFetch, {
                     sort: `${serverSortKey},${sort.dir}`,
                     q: queryDebounced || undefined,
                     status: status !== "all" ? status : undefined,
@@ -118,9 +116,8 @@ export const ItemsPage = () => {
                     uom: uom !== "all" ? uom : undefined,
                 });
                 if (ignore) return;
-                setRows(res.content || []);
-                setServerTotalPages(res.totalPages || 1);
-                setServerTotalElements(typeof res.totalElements === "number" ? res.totalElements : (res.content?.length || 0));
+                setRows(Array.isArray(allRows) ? allRows : []);
+                setServerTotalElements(Array.isArray(allRows) ? allRows.length : 0);
             } catch (e) {
                 if (!ignore) setError(e?.message || "Failed to load items");
             } finally {
@@ -130,7 +127,7 @@ export const ItemsPage = () => {
         return () => {
             ignore = true;
         };
-    }, [authFetch, page, pageSize, sort, queryDebounced, status, category, uom, reloadTick]);
+    }, [authFetch, sort, queryDebounced, status, category, uom, reloadTick]);
 
     useEffect(() => {
         let ignore = false;
@@ -212,28 +209,34 @@ export const ItemsPage = () => {
         return data;
     }, [rows, sort]);
 
-    // Paging (server-driven total pages; client shows current page slice which already reflects server page)
-    const totalPages = serverTotalPages;
-    const paged = filtered;
+    // Paging (client-side over all rows fetched from backend)
+    const totalPages = Math.max(1, Math.ceil(filtered.length / Math.max(1, pageSize)));
+    const paged = filtered.slice((page - 1) * pageSize, ((page - 1) * pageSize) + pageSize);
+
+    useEffect(() => {
+        if (page > totalPages) {
+            setPage(totalPages);
+        }
+    }, [page, totalPages]);
 
     // Selection
     const selectedIds = Object.keys(selected).filter((k) => selected[k]);
     const selectedCount = selectedIds.length;
 
-    const allOnPageSelected = paged.length > 0 && paged.every((r) => selected[r.id]);
+    const allOnPageSelected = paged.length > 0 && paged.every((r) => selected[itemCode(r)]);
     const toggleAll = () => {
         const next = {...selected};
         if (allOnPageSelected) {
-            paged.forEach((r) => delete next[r.id]);
+            paged.forEach((r) => delete next[itemCode(r)]);
         } else {
-            paged.forEach((r) => (next[r.id] = true));
+            paged.forEach((r) => (next[itemCode(r)] = true));
         }
         setSelected(next);
     };
     const toggleOne = (id) => setSelected((s) => ({...s, [id]: !s[id]}));
 
     // ---------- Export helpers ----------
-    const rowsForExport = () => (selectedCount ? filtered.filter((r) => selectedIds.includes(r.id)) : filtered);
+    const rowsForExport = () => (selectedCount ? filtered.filter((r) => selectedIds.includes(itemCode(r))) : filtered);
 
     const toCSV = (data) => {
         const headers = ["ID", "Product name", "Status", "Category", "UoM"];
@@ -244,7 +247,7 @@ export const ItemsPage = () => {
         };
         const lines = [headers.join(",")];
         data.forEach((r) => {
-            lines.push([escape(r.id), escape(r.name), escape(r.status), escape(r.categoryName || ""), escape(r.uomBase || "")].join(","));
+            lines.push([escape(itemCode(r)), escape(r.name), escape(r.status), escape(r.categoryName || ""), escape(r.uomBase || "")].join(","));
         });
         return lines.join("\n");
     };
@@ -335,7 +338,7 @@ export const ItemsPage = () => {
     ${data
             .map(
                 (r) => `<tr>
-          <td>${r.id}</td>
+          <td>${itemCode(r)}</td>
           <td>${r.name}</td>
           <td>${r.status}</td>
           <td>${r.categoryName ?? ""}</td>
@@ -666,30 +669,30 @@ export const ItemsPage = () => {
                     <div className="space-y-2">
                         {paged.map((item) => (
                             <div
-                                key={item.id}
+                                key={itemCode(item)}
                                 className="rounded-xl border border-white/10 bg-gray-900/60 p-3 active:bg-gray-800/40"
-                                onClick={() => goToEdit(item.id)}
+                                onClick={() => goToEdit(itemCode(item))}
                                 title="Open Edit"
                             >
                                 <div className="flex items-start gap-3">
                                     <input
                                         type="checkbox"
-                                        checked={!!selected[item.id]}
-                                        onChange={() => toggleOne(item.id)}
+                                        checked={!!selected[itemCode(item)]}
+                                        onChange={() => toggleOne(itemCode(item))}
                                         onClick={stopRowNav}
                                         className="mt-1"
                                     />
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-start justify-between gap-2">
                                             <div className="font-mono text-white text-sm">
-                                                <span className="underline decoration-dotted">{item.id}</span>
+                                                <span className="underline decoration-dotted">{itemCode(item)}</span>
                                             </div>
                                             {/* Mobile actions trigger */}
                                             <button
                                                 className="shrink-0 px-2 py-1 rounded-md hover:bg-gray-800/60 text-gray-300"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    setSheetId(item.id);
+                                                    setSheetId(itemCode(item));
                                                 }}
                                                 aria-label="Actions"
                                                 title="Actions"
@@ -740,16 +743,16 @@ export const ItemsPage = () => {
                         <tbody className="divide-y divide-gray-800">
                         {paged.map((item) => (
                             <tr
-                                key={item.id}
+                                key={itemCode(item)}
                                 className="hover:bg-gray-800/40 transition cursor-pointer"
-                                onClick={() => goToEdit(item.id)}
+                                onClick={() => goToEdit(itemCode(item))}
                                 title="Open Edit"
                             >
                                 <td className="px-4 py-3" onClick={stopRowNav}>
-                                    <input type="checkbox" checked={!!selected[item.id]} onChange={() => toggleOne(item.id)}/>
+                                    <input type="checkbox" checked={!!selected[itemCode(item)]} onChange={() => toggleOne(itemCode(item))}/>
                                 </td>
                                 <td className="px-4 py-3 font-mono text-white">
-                                    <span className="underline decoration-dotted">{item.id}</span>
+                                    <span className="underline decoration-dotted">{itemCode(item)}</span>
                                 </td>
                                 <td className="px-4 py-3 text-gray-200">{item.name}</td>
                                 <td className="px-4 py-3">
@@ -773,7 +776,7 @@ export const ItemsPage = () => {
                                         className="inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-800/60 text-gray-300"
                                         aria-label="Actions"
                                         title="Actions"
-                                        onClick={(e) => openDesktopMenu(e, item.id)}
+                                        onClick={(e) => openDesktopMenu(e, itemCode(item))}
                                     >
                                         …
                                     </button>

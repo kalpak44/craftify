@@ -72,7 +72,7 @@ export async function renameCategory(authFetch, id, name) {
  * @param {string} id
  * @param {boolean} force
  */
-export async function deleteCategory(authFetch, id, force = true) {
+export async function deleteCategory(authFetch, id, force = false) {
   const url = new URL(`${CATEGORIES_API_URL}/${encodeURIComponent(id)}`);
   if (force != null) url.searchParams.set("force", String(force));
   const res = await authFetch(url, { method: "DELETE" });

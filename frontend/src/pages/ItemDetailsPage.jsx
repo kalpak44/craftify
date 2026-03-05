@@ -550,21 +550,6 @@ function CategoryPickerModal({
 }
 
 // ---------- Item Details Page ----------
-const nextItemId = (() => {
-    let n = 11;
-    return () => `ITM-${String(n++).padStart(3, "0")}`;
-})();
-
-const DEFAULT_CATEGORIES = [
-    "Component",
-    "Fabrication",
-    "Hardware",
-    "Assembly",
-    "Finished Good",
-    "Consumable",
-    "Kit",
-];
-
 const STATUS = ["Draft", "Active", "Hold", "Discontinued"];
 
 const uid = () =>
@@ -592,8 +577,8 @@ export default function ItemDetailsPage() {
     const [baseUom, setBaseUom] = useState("");
     const [description, setDescription] = useState("");
 
-    const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
-    const [category, setCategory] = useState("Component");
+    const [categories, setCategories] = useState([]);
+    const [category, setCategory] = useState("");
 
     // Categories backend cache (objects)
     const [catObjs, setCatObjs] = useState([]);
@@ -608,24 +593,51 @@ export default function ItemDetailsPage() {
     const [error, setError] = useState("");
     const [version, setVersion] = useState(null);
 
+    const toComparableUomRows = (rows) =>
+        (rows || []).map((r) => ({
+            uom: (r?.uom || "").trim(),
+            coef: String(r?.coef ?? "").trim(),
+            notes: (r?.notes || "").trim(),
+        }));
+
+    const buildComparableSnapshot = () => ({
+        name: name.trim(),
+        status,
+        categoryName: category.trim(),
+        uomBase: baseUom.trim(),
+        description: (description || "").trim(),
+        uoms: toComparableUomRows(uomRows),
+    });
+
+    const initialSnapshotRef = useRef(buildComparableSnapshot());
+
     // Load categories from backend
     useEffect(() => {
         let ignore = false;
         (async () => {
             try {
-                const page = await listCategories(authFetch, { page: 0, size: 200, sort: "name,asc" });
+                const first = await listCategories(authFetch, { page: 0, size: 200, sort: "name,asc" });
                 if (ignore) return;
-                const objs = page?.content || [];
+                const totalPages = Math.max(1, Number(first?.totalPages || 1));
+                const rest = totalPages > 1
+                    ? await Promise.all(
+                        Array.from({length: totalPages - 1}, (_, i) =>
+                            listCategories(authFetch, {page: i + 1, size: 200, sort: "name,asc"})
+                        )
+                    )
+                    : [];
+                const objs = [
+                    ...(Array.isArray(first?.content) ? first.content : []),
+                    ...rest.flatMap((p) => (Array.isArray(p?.content) ? p.content : [])),
+                ];
                 setCatObjs(objs);
                 const names = objs.map(c => c.name).filter(Boolean).sort((a,b)=>a.localeCompare(b));
-                setCategories((prev) => {
-                    // merge with any defaults without duplicates
-                    const set = new Set([...(prev||[]), ...names]);
-                    return Array.from(set).sort((a,b)=>a.localeCompare(b));
-                });
-                // if current category not present, keep as is; otherwise nothing
+                setCategories(Array.from(new Set(names)));
             } catch (e) {
-                // silent; fallback to defaults
+                if (!ignore) {
+                    setCatObjs([]);
+                    setCategories([]);
+                }
             }
         })();
         return () => { ignore = true; };
@@ -645,13 +657,20 @@ export default function ItemDetailsPage() {
                 setStatus(it.status || "Active");
                 setBaseUom(it.uomBase || "");
                 setDescription(it.description || "");
-                const cat = it.categoryName || "Component";
+                const cat = it.categoryName || "";
                 setCategory(cat);
                 setCategories((prev) => (prev.includes(cat) ? prev : [...prev, cat].sort((a,b)=>a.localeCompare(b))));
                 const uoms = Array.isArray(it.uoms) ? it.uoms : [];
                 setUomRows(uoms.length ? uoms.map(u => ({ key: uid(), uom: u.uom || "", coef: String(u.coef ?? ""), notes: u.notes || "" })) : [emptyUomRow()]);
                 setVersion(typeof it.version === 'number' ? it.version : 0);
-                // just loaded -> not dirty
+                initialSnapshotRef.current = {
+                    name: (it.name || "").trim(),
+                    status: it.status || "Active",
+                    categoryName: (cat || "").trim(),
+                    uomBase: (it.uomBase || "").trim(),
+                    description: (it.description || "").trim(),
+                    uoms: toComparableUomRows(uoms),
+                };
                 setDirty(false);
             } catch (e) {
                 if (!ignore) setError(e?.message || "Failed to load item");
@@ -665,7 +684,8 @@ export default function ItemDetailsPage() {
     // ---------- Change tracking (dirty) ----------
     const [dirty, setDirty] = useState(false);
     useEffect(() => {
-        setDirty(true);
+        const current = buildComparableSnapshot();
+        setDirty(JSON.stringify(current) !== JSON.stringify(initialSnapshotRef.current));
     }, [name, category, status, baseUom, description, uomRows]);
 
     // beforeunload guard
@@ -785,6 +805,7 @@ export default function ItemDetailsPage() {
                     // no-op for now; we navigate away
                 }
             }
+            initialSnapshotRef.current = buildComparableSnapshot();
             setDirty(false);
             navigate("/items");
         } catch (e) {
@@ -815,8 +836,10 @@ export default function ItemDetailsPage() {
                 return next.sort((a, b) => a.localeCompare(b));
             });
             setCategory(created.name);
+            return true;
         } catch (e) {
             alert(e?.message || "Failed to create category");
+            return false;
         }
     };
 
@@ -1319,8 +1342,8 @@ export default function ItemDetailsPage() {
                     setOpenCategoryPicker(false);
                 }}
                 onCreate={async (val) => {
-                    await createCategory(val);
-                    setOpenCategoryPicker(false);
+                    const ok = await createCategory(val);
+                    if (ok) setOpenCategoryPicker(false);
                 }}
                 onRename={async (from, to) => {
                     try {
@@ -1329,11 +1352,11 @@ export default function ItemDetailsPage() {
                         const updated = await apiRenameCategory(authFetch, id, to.trim());
                         setCatObjs(prev => prev.map(c => c.id === id ? updated : c));
                         setCategories(prev => {
-                            const next = prev.map(n => n === from ? updated.name : n);
+                            const next = prev.map(n => n.toLowerCase() === from.toLowerCase() ? updated.name : n);
                             // ensure uniqueness and sort
                             return Array.from(new Set(next)).sort((a,b)=>a.localeCompare(b));
                         });
-                        setCategory(cur => (cur === from ? updated.name : cur));
+                        setCategory(cur => (cur.toLowerCase() === from.toLowerCase() ? updated.name : cur));
                     } catch (e) {
                         alert(e?.message || "Failed to rename category");
                     }
@@ -1342,10 +1365,10 @@ export default function ItemDetailsPage() {
                     try {
                         const id = nameToId[name] || (catObjs.find(c => c.name.toLowerCase() === name.toLowerCase())?.id);
                         if (!id) throw new Error("Category not found");
-                        await apiDeleteCategory(authFetch, id, true);
+                        await apiDeleteCategory(authFetch, id, false);
                         setCatObjs(prev => prev.filter(c => c.id !== id));
-                        setCategories(prev => prev.filter(n => n !== name));
-                        setCategory(cur => (cur === name ? "" : cur));
+                        setCategories(prev => prev.filter(n => n.toLowerCase() !== name.toLowerCase()));
+                        setCategory(cur => (cur.toLowerCase() === name.toLowerCase() ? "" : cur));
                     } catch (e) {
                         alert(e?.message || "Failed to delete category");
                     }
