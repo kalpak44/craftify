@@ -1,69 +1,54 @@
 package com.craftify.backend.config;
 
-import java.util.List;
+import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtDecoders;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.jwt.JwtValidators;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.util.Assert;
 
-/**
- * Configures security for the application using Spring Security and OAuth2 JWT. Applies global CORS
- * policies from unified origin config.
- */
 @Configuration
 public class SecurityConfig {
 
-    private final CrossOriginConfig crossOriginConfig;
-    private final String issuer;
+  @Bean
+  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http.csrf(csrf -> csrf.disable())
+        .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
+        .authorizeHttpRequests(
+            auth ->
+                auth.requestMatchers(
+                        "/swagger-ui", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs", "/v3/api-docs/**")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.OPTIONS, "/**")
+                    .permitAll()
+                    .anyRequest()
+                    .authenticated())
+        .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}));
 
-    public SecurityConfig(
-            CrossOriginConfig crossOriginConfig, @Value("${okta.oauth2.issuer}") String issuer) {
-        this.crossOriginConfig = crossOriginConfig;
-        this.issuer = issuer;
-    }
+    return http.build();
+  }
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests(
-                        auth ->
-                                auth.requestMatchers(
-                                                "/swagger-ui/**",
-                                                "/v3/api-docs/**",
-                                                "/swagger-ui.html")
-                                        .permitAll()
-                                        .anyRequest()
-                                        .authenticated())
-                .oauth2ResourceServer(
-                        oauth2 ->
-                                oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(new JwtAuthenticationConverter())))
-                .cors(Customizer.withDefaults());
+  @Bean
+  public JwtDecoder jwtDecoder(
+      @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}") String issuerUri,
+      @Value("${auth0.audience}") String audience) {
+    Assert.hasText(issuerUri, "spring.security.oauth2.resourceserver.jwt.issuer-uri must be set");
+    Assert.hasText(audience, "auth0.audience must be set");
 
-        return http.build();
-    }
+    NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withIssuerLocation(issuerUri).build();
+    OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuerUri);
+    OAuth2TokenValidator<Jwt> withAudience = new AudienceValidator(audience);
+    jwtDecoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(withIssuer, withAudience));
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        var config = new CorsConfiguration();
-        config.setAllowedOrigins(crossOriginConfig.getAllowedOrigins());
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true);
-
-        var source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
-
-    @Bean
-    public JwtDecoder jwtDecoder() {
-        return JwtDecoders.fromIssuerLocation(issuer);
-    }
+    return jwtDecoder;
+  }
 }

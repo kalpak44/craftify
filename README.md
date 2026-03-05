@@ -39,12 +39,60 @@ Notes:
 - These variables are used by the Vite dev server (`npm run dev`) and should match your local services and Auth0 application allowed callback URLs.
 - For production (GitHub Pages), variables live in `frontend/.env.production`. The redirect URL there is set to `https://my-domain.com/callback` and must also be allowed in your Auth0 app settings.
 
+## Backend PostgreSQL configuration
+
+The backend reads PostgreSQL connection settings from system environment variables:
+
+- `DB_CONNECTION_STRING` (JDBC URL, for example `jdbc:postgresql://localhost:5432/craftify`)
+- `DB_USERNAME`
+- `DB_PASSWORD`
+
+Example:
+
+```bash
+export DB_CONNECTION_STRING=jdbc:postgresql://localhost:5432/craftify
+export DB_USERNAME=craftify
+export DB_PASSWORD=craftify
+```
+
+Then run the backend:
+
+```bash
+cd backend
+mvn spring-boot:run
+```
+
+## Backend dependency updates (Mojo Versions Plugin)
+
+The backend `pom.xml` is configured with `org.codehaus.mojo:versions-maven-plugin` and uses `dependencyManagement` with `spring-boot-dependencies` BOM (`spring-boot.version` property).
+
+Check available updates:
+
+```bash
+cd backend
+mvn versions:display-property-updates versions:display-dependency-updates versions:display-plugin-updates
+```
+
+Apply updates for properties:
+
+```bash
+cd backend
+mvn versions:update-properties
+```
+
+Then verify build:
+
+```bash
+cd backend
+mvn -DskipTests compile
+```
+
 ## CI/CD (GitHub Pages)
 
 This repository deploys the frontend to GitHub Pages.
 
 - Workflow: `.github/workflows/deploy-pages.yml`
-- Trigger: push to `main` or `master`, or manual dispatch
+- Trigger: push to `main` (frontend path changes), or manual dispatch
 - Build directory: `frontend/`
 - Output: `frontend/dist` uploaded to Pages
 - GitHub Pages: `frontend/dist` and `public/404.html` uploaded to Pages

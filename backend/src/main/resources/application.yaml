@@ -3,72 +3,48 @@ spring:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:}
+  datasource:
+    url: ${DB_CONNECTION_STRING:jdbc:postgresql://localhost:5432/craftify}
+    username: ${DB_USERNAME:craftify}
+    password: ${DB_PASSWORD:craftify}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
 
-# Server configuration
 server:
-  # Maximum size of HTTP request headers
   max-http-request-header-size: 100MB
-  # Enable graceful shutdown
   shutdown: graceful
-  # Server port
   port: 8080
-  # HTTP response compression settings
   compression:
     enabled: true
-    # MIME types to be compressed
     mime-types: text/xml,text/plain,application/json
-    # Minimum response size to trigger compression
     min-response-size: 1024
 
-  #logging:
-  #  level:
-  #    org.springframework: INFO
-  #    com.craftify: INFO
-  #  pattern:
-  #    console: "%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"
-  #    file: "%d %p %c{1.} [%t] %m%n"
-  #  file:
-  #    name: "logger.log"
-  #  logback:
-  #    rollingpolicy:
-  #      max-file-size: 100MB
-  #      max-history: 10
-
-  # Spring configuration
-  data:
-    mongodb:
-      # MongoDB URI with placeholders for environment variables
-      uri: ${MONGO_CONNECTION_STRING:}
-      auto-index-creation: true
-  jpa:
-    properties:
-      # Ensure the JDBC time zone is set to UTC
-      jdbc:
-        time_zone: UTC
-
-# Springdoc configuration for OpenAPI and Swagger UI
 springdoc:
   api-docs:
-    # Path for API documentation
-    path: '/v3/api-docs'
+    path: /v3/api-docs
   swagger-ui:
-    # Path for Swagger UI
-    path: '/swagger-ui'
-    # Sort operations alphabetically
+    path: /swagger-ui
     operationsSorter: alpha
-    # Sort tags alphabetically
     tagsSorter: alpha
 
-app:
-  cors:
-    allowed-origins:
-      - http://localhost:5173
-      - https://kalpak44.github.io/craftify
+logging:
+  level:
+    root: INFO
+    org.springframework: INFO
+    com.fasterxml.jackson.databind: INFO
 
-# Auth0 configuration
-okta:
-  oauth2:
-    # Replace with the domain of your Auth0 tenant.
-    issuer: ${AUTH0_ISSUER}
-    # Replace with the API Identifier for your Auth0 API.
-    audience: ${AUTH0_AUDIENCE}
+auth0:
+  audience: ${AUTH0_AUDIENCE:}
