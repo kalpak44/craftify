@@ -3,6 +3,7 @@ import {useEffect, useRef, useState} from "react";
 import {useAuth0} from "@auth0/auth0-react";
 import {NavLink} from "react-router-dom";
 import {Loader as Spinner} from "../common/Loader";
+import {useTheme} from "../../hooks/useTheme";
 
 /**
  * Layout with full width, navbar, and profile dropdown.
@@ -16,6 +17,7 @@ import {Loader as Spinner} from "../common/Loader";
  */
 export const FullWidthLayout = ({children}) => {
     const {isAuthenticated, user, logout, loginWithRedirect, isLoading} = useAuth0();
+    const {isDark, toggleTheme} = useTheme();
     const path = import.meta.env.VITE_APP_ROOT_PATH;
     const [showProfile, setShowProfile] = useState(false);
     const profileMenuRef = useRef(null);
@@ -78,12 +80,14 @@ export const FullWidthLayout = ({children}) => {
 
     // Desktop: keep original visual design
     const navLinkClassDesktop = ({isActive}) =>
-        `whitespace-nowrap ${isActive ? "text-white" : "text-gray-400 hover:text-white"}`;
+        `whitespace-nowrap ${isActive ? (isDark ? "text-white" : "text-gray-900") : (isDark ? "text-gray-400 hover:text-white" : "text-gray-600 hover:text-gray-900")}`;
 
     // Mobile: larger tap targets + focus styles
     const navLinkClassMobile = ({isActive}) =>
         `block px-3 py-2 rounded-md text-sm font-medium focus:outline-none focus-visible:ring focus-visible:ring-blue-500/50 whitespace-nowrap ${
-            isActive ? "bg-white/10 text-white" : "text-gray-300 hover:text-white hover:bg-white/5"
+            isActive
+                ? (isDark ? "bg-white/10 text-white" : "bg-gray-200 text-gray-900")
+                : (isDark ? "text-gray-300 hover:text-white hover:bg-white/5" : "text-gray-700 hover:text-gray-900 hover:bg-gray-100")
         }`;
 
     const AUTH_ITEMS = [
@@ -105,13 +109,17 @@ export const FullWidthLayout = ({children}) => {
     const ITEMS = isAuthenticated ? AUTH_ITEMS : PUBLIC_ITEMS;
 
     return (
-        <div className="flex flex-col h-screen w-full overflow-hidden bg-gray-900 text-white">
+        <div
+            className={`flex flex-col h-screen w-full overflow-hidden ${isDark ? "bg-gray-900 text-white" : "bg-white text-gray-900"}`}>
             {/* Top nav (desktop styles preserved) */}
-            <nav className="flex items-center justify-between px-6 py-4 bg-gray-950 border-b border-gray-800">
+            <nav
+                className={`flex items-center justify-between px-6 py-4 border-b ${isDark ? "bg-gray-950 border-gray-800" : "bg-white border-gray-200"}`}>
                 {/* Left: brand */}
                 <div className="flex items-center gap-3">
                     <div className="h-9 w-9 rounded-2xl bg-blue-600 flex items-center justify-center font-bold">C</div>
-                    <div className="text-white text-lg font-semibold">Craftify Platform</div>
+                    <div className={`text-lg font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>Craftify
+                        Platform
+                    </div>
                 </div>
 
                 {/* Links + auth container */}
@@ -124,6 +132,20 @@ export const FullWidthLayout = ({children}) => {
                             </NavLink>
                         ))}
                     </div>
+
+                    <button
+                        type="button"
+                        onClick={toggleTheme}
+                        className={`hidden md:inline-flex items-center justify-center h-8 w-8 shrink-0 overflow-visible rounded-full transition ${
+                            isDark ? "text-amber-300 hover:text-amber-200" : "text-slate-600 hover:text-slate-900"
+                        }`}
+                        aria-label={`Switch to ${isDark ? "light" : "dark"} theme`}
+                        title={`Switch to ${isDark ? "light" : "dark"} theme`}
+                    >
+                        <span className="text-lg leading-none select-none" aria-hidden="true">
+                            {isDark ? "☀" : "☾"}
+                        </span>
+                    </button>
 
                     {/* Auth controls (desktop) */}
                     {isAuthenticated ? (
@@ -154,7 +176,7 @@ export const FullWidthLayout = ({children}) => {
                                 </button>
                                 {showProfile && (
                                     <div
-                                        className="absolute right-0 mt-2 w-64 bg-gray-800 rounded-lg shadow-lg border border-gray-700 z-50 p-4"
+                                        className={`absolute right-0 mt-2 w-64 rounded-lg shadow-lg z-50 p-4 ${isDark ? "bg-gray-800 border border-gray-700" : "bg-white border border-gray-200"}`}
                                         role="menu"
                                     >
                                         <div className="flex items-center space-x-3 mb-3">
@@ -170,8 +192,8 @@ export const FullWidthLayout = ({children}) => {
                                                 )}
                                             </div>
                                             <div>
-                                                <p className="text-sm font-medium text-white">{user?.name}</p>
-                                                <p className="text-xs text-gray-400">{user?.email}</p>
+                                                <p className={`text-sm font-medium ${isDark ? "text-white" : "text-gray-900"}`}>{user?.name}</p>
+                                                <p className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>{user?.email}</p>
                                             </div>
                                         </div>
 
@@ -257,7 +279,7 @@ export const FullWidthLayout = ({children}) => {
                     {/* Hamburger (mobile) */}
                     <button
                         type="button"
-                        className="md:hidden inline-flex items-center justify-center p-2 rounded-md border border-gray-700 focus:outline-none focus-visible:ring focus-visible:ring-blue-500/50"
+                        className={`md:hidden inline-flex items-center justify-center p-2 rounded-md border focus:outline-none focus-visible:ring focus-visible:ring-blue-500/50 ${isDark ? "border-gray-700" : "border-gray-300"}`}
                         aria-controls="mobile-menu"
                         aria-expanded={mobileOpen}
                         aria-label="Toggle menu"
@@ -296,7 +318,7 @@ export const FullWidthLayout = ({children}) => {
                     {/* Drawer */}
                     <div
                         id="mobile-menu"
-                        className="absolute left-0 top-0 h-full w-11/12 max-w-sm bg-gray-900 border-right border-gray-800 shadow-2xl p-4 flex flex-col overflow-y-auto animate-in slide-in-from-left duration-200"
+                        className={`absolute left-0 top-0 h-full w-11/12 max-w-sm shadow-2xl p-4 flex flex-col overflow-y-auto animate-in slide-in-from-left duration-200 ${isDark ? "bg-gray-900 border-r border-gray-800" : "bg-white border-r border-gray-200"}`}
                     >
                         {/* Header inside drawer */}
                         <div className="flex items-center justify-between mb-2">
@@ -304,10 +326,10 @@ export const FullWidthLayout = ({children}) => {
                                 <div
                                     className="h-8 w-8 rounded-2xl bg-blue-600 flex items-center justify-center font-bold">C
                                 </div>
-                                <div className="text-white text-base font-semibold">Craftify</div>
+                                <div className={`text-base font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>Craftify</div>
                             </div>
                             <button
-                                className="p-2 rounded-md border border-gray-700 focus:outline-none focus-visible:ring focus-visible:ring-blue-500/50"
+                                className={`p-2 rounded-md border focus:outline-none focus-visible:ring focus-visible:ring-blue-500/50 ${isDark ? "border-gray-700" : "border-gray-300"}`}
                                 onClick={() => setMobileOpen(false)}
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
@@ -338,7 +360,19 @@ export const FullWidthLayout = ({children}) => {
                         </nav>
 
                         {/* Divider */}
-                        <div className="my-4 h-px bg-white/10"/>
+                        <div className={`my-4 h-px ${isDark ? "bg-white/10" : "bg-gray-200"}`}/>
+
+                        <button
+                            type="button"
+                            onClick={toggleTheme}
+                            className={`mb-3 inline-flex items-center justify-center h-8 w-8 shrink-0 overflow-visible rounded-full ${isDark ? "text-amber-300 hover:text-amber-200" : "text-slate-600 hover:text-slate-900"}`}
+                            title={`Switch to ${isDark ? "light" : "dark"} theme`}
+                            aria-label={`Switch to ${isDark ? "light" : "dark"} theme`}
+                        >
+                            <span className="text-lg leading-none select-none" aria-hidden="true">
+                                {isDark ? "☀" : "☾"}
+                            </span>
+                        </button>
 
                         {/* Auth controls (mobile) */}
                         <div className="mt-1">
@@ -361,7 +395,7 @@ export const FullWidthLayout = ({children}) => {
                                         </div>
                                         <div className="min-w-0">
                                             <p className="text-sm font-medium truncate">{user?.name}</p>
-                                            <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                                            <p className={`text-xs truncate ${isDark ? "text-gray-400" : "text-gray-500"}`}>{user?.email}</p>
                                         </div>
                                     </div>
 
@@ -443,18 +477,18 @@ export const FullWidthLayout = ({children}) => {
             )}
 
             {/* Page content */}
-            <main className="flex flex-col flex-1 overflow-auto">{children}</main>
+            <main className="flex flex-col flex-1 overflow-auto bg-slate-50 dark:bg-gray-950">{children}</main>
 
             {/* Footer */}
-            <footer className="border-t border-white/5">
+            <footer className={`border-t ${isDark ? "border-white/5" : "border-gray-200"}`}>
                 <div
-                    className="mx-auto max-w-6xl px-4 py-8 text-sm text-gray-500 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    className={`mx-auto max-w-6xl px-4 py-8 text-sm flex flex-col sm:flex-row items-center justify-between gap-3 ${isDark ? "text-gray-500" : "text-gray-600"}`}>
                     <p>© {new Date().getFullYear()} Craftify. All rights reserved.</p>
                     <div className="flex items-center gap-4">
-                        <NavLink to="/terms" className="hover:text-gray-300">
+                        <NavLink to="/terms" className={isDark ? "hover:text-gray-300" : "hover:text-gray-900"}>
                             Terms
                         </NavLink>
-                        <NavLink to="/privacy" className="hover:text-gray-300">
+                        <NavLink to="/privacy" className={isDark ? "hover:text-gray-300" : "hover:text-gray-900"}>
                             Privacy
                         </NavLink>
                     </div>

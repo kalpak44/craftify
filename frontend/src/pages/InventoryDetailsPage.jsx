@@ -35,15 +35,15 @@ function Modal({open, onClose, title, children, footer}) {
             <div className="absolute inset-0 bg-black/60" onClick={onClose}/>
             <div className="absolute inset-0 flex items-center justify-center p-0 md:p-4">
                 <div
-                    className="w-full h-full md:h-auto md:max-h-[85vh] md:max-w-4xl overflow-hidden rounded-none md:rounded-2xl border border-white/10 bg-gray-900 text-gray-200 shadow-2xl">
-                    <div className="px-4 md:px-5 py-4 border-b border-white/10 flex items-center justify-between">
+                    className="w-full h-full md:h-auto md:max-h-[85vh] md:max-w-4xl overflow-hidden rounded-none md:rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 text-slate-900 dark:text-gray-200 shadow-2xl">
+                    <div className="px-4 md:px-5 py-4 border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
                         <h3 className="text-base md:text-lg font-semibold">{title}</h3>
                         <button onClick={onClose}
-                                className="text-gray-400 hover:text-gray-200 text-xl leading-none">&times;</button>
+                                className="text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-gray-200 text-xl leading-none">&times;</button>
                     </div>
                     <div className="p-4 md:p-5 h-[calc(100%-112px)] md:h-auto overflow-y-auto">{children}</div>
                     <div
-                        className="px-4 md:px-5 py-4 border-t border-white/10 bg-gray-900/60 flex items-center justify-end gap-2">
+                        className="px-4 md:px-5 py-4 border-t border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 flex items-center justify-end gap-2">
                         {footer}
                     </div>
                 </div>
@@ -164,26 +164,26 @@ function CategoryPickerModal({
             title="Pick or Create Category"
             footer={
                 <div className="w-full flex items-center justify-between gap-2">
-                    <div className="hidden sm:flex items-center gap-3 text-xs text-gray-400">
+                    <div className="hidden sm:flex items-center gap-3 text-xs text-slate-500 dark:text-gray-400">
                         {mode === "search" ? (
                             <>
-                                <span><span className="text-gray-300">Enter</span> pick first</span>
+                                <span><span className="text-slate-700 dark:text-gray-300">Enter</span> pick first</span>
                                 <span>•</span>
-                                <span><span className="text-gray-300">Ctrl/⌘+Enter</span> create</span>
+                                <span><span className="text-slate-700 dark:text-gray-300">Ctrl/⌘+Enter</span> create</span>
                                 <span>•</span>
-                                <span><span className="text-gray-300">Esc</span> close</span>
+                                <span><span className="text-slate-700 dark:text-gray-300">Esc</span> close</span>
                             </>
                         ) : mode === "manage" ? (
                             <>
                                 <span>Rename or delete categories below.</span>
                                 <span>•</span>
-                                <span><span className="text-gray-300">Esc</span> close</span>
+                                <span><span className="text-slate-700 dark:text-gray-300">Esc</span> close</span>
                             </>
                         ) : (
                             <>
-                                <span><span className="text-gray-300">Enter</span> add</span>
+                                <span><span className="text-slate-700 dark:text-gray-300">Enter</span> add</span>
                                 <span>•</span>
-                                <span><span className="text-gray-300">Esc</span> close</span>
+                                <span><span className="text-slate-700 dark:text-gray-300">Esc</span> close</span>
                             </>
                         )}
                     </div>
@@ -199,7 +199,7 @@ function CategoryPickerModal({
                         )}
                         <button
                             onClick={onClose}
-                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm w-full md:w-auto"
+                            className="px-4 py-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm w-full md:w-auto"
                         >
                             Close
                         </button>
@@ -208,7 +208,7 @@ function CategoryPickerModal({
             }
         >
             <div className="mb-4 space-y-3">
-                <div className="inline-flex rounded-xl border border-white/10 bg-gray-900/60 p-1">
+                <div className="inline-flex rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-1">
                     {[
                         {key: "search", label: "Search & Browse"},
                         {key: "create", label: "Create New"},
@@ -219,7 +219,7 @@ function CategoryPickerModal({
                             onClick={() => setMode(t.key)}
                             className={classNames(
                                 "px-3 py-1.5 text-xs rounded-lg transition",
-                                mode === t.key ? "bg-gray-800 text-white" : "text-gray-400 hover:text-gray-200"
+                                mode === t.key ? "bg-slate-100 dark:bg-gray-800 text-slate-900 dark:text-white" : "text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-gray-200"
                             )}
                         >
                             {t.label}
@@ -228,7 +228,7 @@ function CategoryPickerModal({
                 </div>
 
                 {mode === "search" && (
-                    <div className="rounded-xl border border-white/10 bg-gray-900/60 p-3">
+                    <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-3">
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                             <div className="relative flex-1">
                                 <input
@@ -236,13 +236,13 @@ function CategoryPickerModal({
                                     onChange={(e) => setQ(e.target.value)}
                                     onKeyDown={handleSearchKeyDown}
                                     placeholder="Search categories (type to filter)"
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 pl-9 pr-8 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 pl-9 pr-8 py-2 text-sm"
                                 />
-                                <span className="absolute left-3 top-2.5 text-gray-500">🔎</span>
+                                <span className="absolute left-3 top-2.5 text-slate-600 dark:text-gray-500">🔎</span>
                                 {q && (
                                     <button
                                         onClick={() => setQ("")}
-                                        className="absolute right-2 top-2 text-gray-400 hover:text-gray-200"
+                                        className="absolute right-2 top-2 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-gray-200"
                                         title="Clear"
                                     >
                                         ×
@@ -255,8 +255,8 @@ function CategoryPickerModal({
                             <div
                                 className="mt-2 flex items-center justify-between gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2">
                                 <div className="text-xs">
-                                    <span className="text-gray-300">No exact match.</span>{" "}
-                                    <span className="text-gray-400">You can create</span>{" "}
+                                    <span className="text-slate-700 dark:text-gray-300">No exact match.</span>{" "}
+                                    <span className="text-slate-500 dark:text-gray-400">You can create</span>{" "}
                                     <span className="font-medium text-emerald-300">“{qDebounced}”</span>.
                                 </div>
                                 <button
@@ -271,8 +271,8 @@ function CategoryPickerModal({
                 )}
 
                 {mode === "create" && (
-                    <div className="rounded-xl border border-white/10 bg-gray-900/60 p-3">
-                        <div className="text-xs text-gray-400 mb-1">Create new</div>
+                    <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-3">
+                        <div className="text-xs text-slate-500 dark:text-gray-400 mb-1">Create new</div>
                         <div className="flex gap-2">
                             <input
                                 value={newCat}
@@ -282,8 +282,8 @@ function CategoryPickerModal({
                                 }}
                                 placeholder="e.g. Spare Part"
                                 className={classNames(
-                                    "w-full rounded-lg bg-gray-800 border px-3 py-2 text-sm",
-                                    createError ? "border-red-500/60" : "border-white/10"
+                                    "w-full rounded-lg bg-slate-100 dark:bg-gray-800 border px-3 py-2 text-sm",
+                                    createError ? "border-red-500/60" : "border-slate-200 dark:border-white/10"
                                 )}
                                 onKeyDown={(e) => {
                                     if (e.key === "Enter") handleCreate();
@@ -300,15 +300,15 @@ function CategoryPickerModal({
                 )}
 
                 {mode === "manage" && (
-                    <div className="rounded-xl border border-white/10 bg-gray-900/60 p-3">
+                    <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-3">
                         <div className="relative">
                             <input
                                 value={q}
                                 onChange={(e) => setQ(e.target.value)}
                                 placeholder="Find category to manage (rename / delete)"
-                                className="w-full rounded-lg bg-gray-800 border border-white/10 pl-9 pr-3 py-2 text-sm"
+                                className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 pl-9 pr-3 py-2 text-sm"
                             />
-                            <span className="absolute left-3 top-2.5 text-gray-500">🔎</span>
+                            <span className="absolute left-3 top-2.5 text-slate-600 dark:text-gray-500">🔎</span>
                         </div>
                         {renameError && <div className="mt-2 text-xs text-red-400">{renameError}</div>}
                     </div>
@@ -322,7 +322,7 @@ function CategoryPickerModal({
                         {pageRows.map((cat) => {
                             const isEditing = mode === "manage" && editingKey === cat;
                             return (
-                                <div key={cat} className="rounded-xl border border-white/10 bg-gray-900/60 p-3">
+                                <div key={cat} className="rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-3">
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="flex-1">
                                             {isEditing ? (
@@ -330,8 +330,8 @@ function CategoryPickerModal({
                                                     value={editValue}
                                                     onChange={(e) => setEditValue(e.target.value)}
                                                     className={classNames(
-                                                        "w-full rounded-lg bg-gray-800 border px-3 py-2 text-sm",
-                                                        renameError ? "border-red-500/60" : "border-white/10"
+                                                        "w-full rounded-lg bg-slate-100 dark:bg-gray-800 border px-3 py-2 text-sm",
+                                                        renameError ? "border-red-500/60" : "border-slate-200 dark:border-white/10"
                                                     )}
                                                     autoFocus
                                                     onKeyDown={(e) => {
@@ -340,7 +340,7 @@ function CategoryPickerModal({
                                                     }}
                                                 />
                                             ) : (
-                                                <div className="text-sm text-gray-200">{cat}</div>
+                                                <div className="text-sm text-slate-900 dark:text-gray-200">{cat}</div>
                                             )}
                                         </div>
                                         <div className="shrink-0 flex gap-2">
@@ -351,25 +351,25 @@ function CategoryPickerModal({
                                                                 className="px-2.5 py-1.5 rounded-md border text-xs bg-emerald-600/80 text-white border-emerald-400/30 hover:bg-emerald-600">Save
                                                         </button>
                                                         <button onClick={cancelRename}
-                                                                className="px-2.5 py-1.5 rounded-md border text-xs bg-gray-700/80 text-white border-white/10 hover:bg-gray-700">Cancel
+                                                                className="px-2.5 py-1.5 rounded-md border text-xs bg-gray-700/80 text-white border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700">Cancel
                                                         </button>
                                                     </>
                                                 ) : (
                                                     <>
                                                         <button onClick={() => beginRename(cat)}
-                                                                className="px-2.5 py-1.5 rounded-md border text-xs bg-gray-700/80 text-white border-white/10 hover:bg-gray-700">Rename
+                                                                className="px-2.5 py-1.5 rounded-md border text-xs bg-gray-700/80 text-white border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700">Rename
                                                         </button>
                                                         <button onClick={() => handleDelete(cat)}
                                                                 className="px-2.5 py-1.5 rounded-md border text-xs bg-red-600/10 border-red-500/30 text-red-300 hover:bg-red-600/20">Delete
                                                         </button>
                                                         <button onClick={() => onPick(cat)}
-                                                                className="px-2.5 py-1.5 rounded-md border text-xs bg-gray-700/80 text-white border-white/10 hover:bg-gray-700">Use
+                                                                className="px-2.5 py-1.5 rounded-md border text-xs bg-gray-700/80 text-white border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700">Use
                                                         </button>
                                                     </>
                                                 )
                                             ) : (
                                                 <button onClick={() => onPick(cat)}
-                                                        className="px-2.5 py-1.5 rounded-md border text-xs bg-gray-700/80 text-white border-white/10 hover:bg-gray-700">Use</button>
+                                                        className="px-2.5 py-1.5 rounded-md border text-xs bg-gray-700/80 text-white border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700">Use</button>
                                             )}
                                         </div>
                                     </div>
@@ -378,14 +378,14 @@ function CategoryPickerModal({
                         })}
                         {pageRows.length === 0 && (
                             <div
-                                className="text-center text-gray-400 py-6 text-sm">{mode === "create" ? "Enter a name to add" : "No matches"}</div>
+                                className="text-center text-slate-500 dark:text-gray-400 py-6 text-sm">{mode === "create" ? "Enter a name to add" : "No matches"}</div>
                         )}
                     </div>
 
                     {/* Desktop table */}
-                    <div className="hidden md:block overflow-x-auto border border-white/10 rounded-xl bg-gray-900/40">
+                    <div className="hidden md:block overflow-x-auto border border-slate-200 dark:border-white/10 rounded-xl bg-slate-100/70 dark:bg-gray-900/40">
                         <table className="min-w-full divide-y divide-gray-800 text-sm">
-                            <thead className="bg-gray-900/80">
+                            <thead className="bg-slate-100/80 dark:bg-gray-900/80">
                             <tr>
                                 <th className="px-4 py-3 text-left">Category</th>
                                 <th className="px-4 py-3 text-right">{mode === "manage" ? "Manage" : "Action"}</th>
@@ -395,15 +395,15 @@ function CategoryPickerModal({
                             {pageRows.map((cat) => {
                                 const isEditing = mode === "manage" && editingKey === cat;
                                 return (
-                                    <tr key={cat} className="hover:bg-gray-800/40">
+                                    <tr key={cat} className="hover:bg-slate-100/60 dark:hover:bg-gray-800/40">
                                         <td className="px-4 py-3">
                                             {isEditing ? (
                                                 <input
                                                     value={editValue}
                                                     onChange={(e) => setEditValue(e.target.value)}
                                                     className={classNames(
-                                                        "w-full rounded-lg bg-gray-800 border px-3 py-2 text-sm",
-                                                        renameError ? "border-red-500/60" : "border-white/10"
+                                                        "w-full rounded-lg bg-slate-100 dark:bg-gray-800 border px-3 py-2 text-sm",
+                                                        renameError ? "border-red-500/60" : "border-slate-200 dark:border-white/10"
                                                     )}
                                                     autoFocus
                                                     onKeyDown={(e) => {
@@ -423,25 +423,25 @@ function CategoryPickerModal({
                                                                 className="px-2.5 py-1.5 rounded-md border text-xs bg-emerald-600/80 text-white border-emerald-400/30 hover:bg-emerald-600">Save
                                                         </button>
                                                         <button onClick={cancelRename}
-                                                                className="px-2.5 py-1.5 rounded-md border text-xs bg-gray-700/80 text-white border-white/10 hover:bg-gray-700">Cancel
+                                                                className="px-2.5 py-1.5 rounded-md border text-xs bg-gray-700/80 text-white border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700">Cancel
                                                         </button>
                                                     </div>
                                                 ) : (
                                                     <div className="inline-flex items-center gap-2">
                                                         <button onClick={() => beginRename(cat)}
-                                                                className="px-2.5 py-1.5 rounded-md border text-xs bg-gray-700/80 text-white border-white/10 hover:bg-gray-700">Rename
+                                                                className="px-2.5 py-1.5 rounded-md border text-xs bg-gray-700/80 text-white border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700">Rename
                                                         </button>
                                                         <button onClick={() => handleDelete(cat)}
                                                                 className="px-2.5 py-1.5 rounded-md border text-xs bg-red-600/10 border-red-500/30 text-red-300 hover:bg-red-600/20">Delete
                                                         </button>
                                                         <button onClick={() => onPick(cat)}
-                                                                className="px-2.5 py-1.5 rounded-md border text-xs bg-gray-700/80 text-white border-white/10 hover:bg-gray-700">Use
+                                                                className="px-2.5 py-1.5 rounded-md border text-xs bg-gray-700/80 text-white border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700">Use
                                                         </button>
                                                     </div>
                                                 )
                                             ) : (
                                                 <button onClick={() => onPick(cat)}
-                                                        className="px-2.5 py-1.5 rounded-md border text-xs bg-gray-700/80 text-white border-white/10 hover:bg-gray-700">Use
+                                                        className="px-2.5 py-1.5 rounded-md border text-xs bg-gray-700/80 text-white border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700">Use
                                                     Category</button>
                                             )}
                                         </td>
@@ -450,7 +450,7 @@ function CategoryPickerModal({
                             })}
                             {pageRows.length === 0 && (
                                 <tr>
-                                    <td colSpan={2} className="px-4 py-6 text-center text-gray-400">
+                                    <td colSpan={2} className="px-4 py-6 text-center text-slate-500 dark:text-gray-400">
                                         {mode === "create" ? "Enter a name to add" : "No matches"}
                                     </td>
                                 </tr>
@@ -460,31 +460,31 @@ function CategoryPickerModal({
                     </div>
 
                     {/* Bottom pager */}
-                    <div className="flex items-center justify-between mt-3 text-xs text-gray-300">
+                    <div className="flex items-center justify-between mt-3 text-xs text-slate-700 dark:text-gray-300">
                         <div className="flex items-center gap-2">
                             <span>Rows per page</span>
                             <select
                                 value={pageSize}
                                 onChange={(e) => setPageSize(Number(e.target.value))}
-                                className="bg-gray-800 border border-white/10 rounded px-2 py-1"
+                                className="bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 rounded px-2 py-1"
                             >
                                 {[8, 16, 24].map((n) => <option key={n} value={n}>{n}</option>)}
                             </select>
                         </div>
                         <div className="flex items-center gap-2">
                             <button disabled={page <= 1} onClick={() => setPage(1)}
-                                    className="px-2 py-1 rounded bg-gray-800 border border-white/10 disabled:opacity-50">⏮
+                                    className="px-2 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 disabled:opacity-50">⏮
                             </button>
                             <button disabled={page <= 1} onClick={() => setPage(page - 1)}
-                                    className="px-2 py-1 rounded bg-gray-800 border border-white/10 disabled:opacity-50">‹
+                                    className="px-2 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 disabled:opacity-50">‹
                             </button>
                             <span>Page {page} / {Math.max(1, Math.ceil(filtered.length / pageSize))}</span>
                             <button disabled={start + pageSize >= filtered.length} onClick={() => setPage(page + 1)}
-                                    className="px-2 py-1 rounded bg-gray-800 border border-white/10 disabled:opacity-50">›
+                                    className="px-2 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 disabled:opacity-50">›
                             </button>
                             <button disabled={start + pageSize >= filtered.length}
                                     onClick={() => setPage(Math.max(1, Math.ceil(filtered.length / pageSize)))}
-                                    className="px-2 py-1 rounded bg-gray-800 border border-white/10 disabled:opacity-50">⏭
+                                    className="px-2 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 disabled:opacity-50">⏭
                             </button>
                         </div>
                     </div>
@@ -545,7 +545,7 @@ function ItemPickerModal({open, onClose, items, onPick}) {
             title="Pick Item"
             footer={
                 <button onClick={onClose}
-                        className="px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm">
+                        className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm">
                     Close
                 </button>
             }
@@ -559,9 +559,9 @@ function ItemPickerModal({open, onClose, items, onPick}) {
                             setPage(1);
                         }}
                         placeholder="Search Item ID, name, category, UoM…"
-                        className="w-full rounded-lg bg-gray-800 border border-white/10 pl-9 pr-3 py-2 text-sm"
+                        className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 pl-9 pr-3 py-2 text-sm"
                     />
-                    <span className="absolute left-3 top-2.5 text-gray-500">🔎</span>
+                    <span className="absolute left-3 top-2.5 text-slate-600 dark:text-gray-500">🔎</span>
                 </div>
 
                 {/* Mobile list */}
@@ -569,31 +569,31 @@ function ItemPickerModal({open, onClose, items, onPick}) {
                     {paged.map((it) => (
                         <div
                             key={it.itemId}
-                            className="rounded-xl border border-white/10 bg-gray-900/60 p-3 active:bg-gray-800/40"
+                            className="rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-3 active:bg-slate-100/60 dark:active:bg-gray-800/40"
                             onClick={() => onPick(it)}
                         >
                             <div className="flex items-start justify-between gap-3">
                                 <div>
-                                    <div className="font-mono text-white text-sm"><span
+                                    <div className="font-mono text-slate-900 dark:text-white text-sm"><span
                                         className="underline decoration-dotted">{it.itemId}</span></div>
-                                    <div className="text-sm text-gray-200 mt-0.5">{it.name}</div>
-                                    <div className="text-xs text-gray-400 mt-1 flex items-center gap-2">
+                                    <div className="text-sm text-slate-900 dark:text-gray-200 mt-0.5">{it.name}</div>
+                                    <div className="text-xs text-slate-500 dark:text-gray-400 mt-1 flex items-center gap-2">
                                         <span>{it.category}</span><span>•</span><span>{it.uom}</span>
                                     </div>
                                 </div>
                                 <button
-                                    className="px-3 py-1.5 rounded-md bg-gray-800 border border-white/10 text-xs">Use
+                                    className="px-3 py-1.5 rounded-md bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-xs">Use
                                 </button>
                             </div>
                         </div>
                     ))}
-                    {paged.length === 0 && <div className="text-center text-gray-400 py-6 text-sm">No matches</div>}
+                    {paged.length === 0 && <div className="text-center text-slate-500 dark:text-gray-400 py-6 text-sm">No matches</div>}
                 </div>
 
                 {/* Desktop table */}
-                <div className="hidden md:block overflow-x-auto border border-white/10 rounded-xl bg-gray-900/40">
+                <div className="hidden md:block overflow-x-auto border border-slate-200 dark:border-white/10 rounded-xl bg-slate-100/70 dark:bg-gray-900/40">
                     <table className="min-w-full divide-y divide-gray-800 text-sm">
-                        <thead className="bg-gray-900/80">
+                        <thead className="bg-slate-100/80 dark:bg-gray-900/80">
                         <tr>
                             <th className="px-4 py-3 text-left">Item ID</th>
                             <th className="px-4 py-3 text-left">Name</th>
@@ -604,15 +604,15 @@ function ItemPickerModal({open, onClose, items, onPick}) {
                         </thead>
                         <tbody className="divide-y divide-gray-800">
                         {paged.map((it) => (
-                            <tr key={it.itemId} className="hover:bg-gray-800/40">
-                                <td className="px-4 py-3 font-mono text-white"><span
+                            <tr key={it.itemId} className="hover:bg-slate-100/60 dark:hover:bg-gray-800/40">
+                                <td className="px-4 py-3 font-mono text-slate-900 dark:text-white"><span
                                     className="underline decoration-dotted">{it.itemId}</span></td>
-                                <td className="px-4 py-3 text-gray-200">{it.name}</td>
-                                <td className="px-4 py-3 text-gray-400">{it.category}</td>
-                                <td className="px-4 py-3 text-gray-400">{it.uom}</td>
+                                <td className="px-4 py-3 text-slate-900 dark:text-gray-200">{it.name}</td>
+                                <td className="px-4 py-3 text-slate-500 dark:text-gray-400">{it.category}</td>
+                                <td className="px-4 py-3 text-slate-500 dark:text-gray-400">{it.uom}</td>
                                 <td className="px-4 py-3 text-right">
                                     <button onClick={() => onPick(it)}
-                                            className="px-3 py-1.5 rounded-md bg-gray-800 border border-white/10 hover:bg-gray-700 text-xs">
+                                            className="px-3 py-1.5 rounded-md bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-xs">
                                         Use Item
                                     </button>
                                 </td>
@@ -620,7 +620,7 @@ function ItemPickerModal({open, onClose, items, onPick}) {
                         ))}
                         {paged.length === 0 && (
                             <tr>
-                                <td colSpan={5} className="px-4 py-6 text-center text-gray-400">No matches</td>
+                                <td colSpan={5} className="px-4 py-6 text-center text-slate-500 dark:text-gray-400">No matches</td>
                             </tr>
                         )}
                         </tbody>
@@ -628,7 +628,7 @@ function ItemPickerModal({open, onClose, items, onPick}) {
                 </div>
 
                 {/* Pager */}
-                <div className="flex items-center justify-between mt-3 text-xs text-gray-300">
+                <div className="flex items-center justify-between mt-3 text-xs text-slate-700 dark:text-gray-300">
                     <div className="flex items-center gap-2">
                         <span>Rows per page</span>
                         <select
@@ -637,24 +637,24 @@ function ItemPickerModal({open, onClose, items, onPick}) {
                                 setPageSize(Number(e.target.value));
                                 setPage(1);
                             }}
-                            className="bg-gray-800 border border-white/10 rounded px-2 py-1"
+                            className="bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 rounded px-2 py-1"
                         >
                             {[8, 16, 24].map((n) => <option key={n} value={n}>{n}</option>)}
                         </select>
                     </div>
                     <div className="flex items-center gap-2">
                         <button disabled={page <= 1} onClick={() => setPage(1)}
-                                className="px-2 py-1 rounded bg-gray-800 border border-white/10 disabled:opacity-50">⏮
+                                className="px-2 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 disabled:opacity-50">⏮
                         </button>
                         <button disabled={page <= 1} onClick={() => setPage(page - 1)}
-                                className="px-2 py-1 rounded bg-gray-800 border border-white/10 disabled:opacity-50">‹
+                                className="px-2 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 disabled:opacity-50">‹
                         </button>
                         <span>Page {page} / {totalPages}</span>
                         <button disabled={page >= totalPages} onClick={() => setPage(page + 1)}
-                                className="px-2 py-1 rounded bg-gray-800 border border-white/10 disabled:opacity-50">›
+                                className="px-2 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 disabled:opacity-50">›
                         </button>
                         <button disabled={page >= totalPages} onClick={() => setPage(totalPages)}
-                                className="px-2 py-1 rounded bg-gray-800 border border-white/10 disabled:opacity-50">⏭
+                                className="px-2 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 disabled:opacity-50">⏭
                         </button>
                     </div>
                 </div>
@@ -761,7 +761,7 @@ function LotCustomModal({open, onClose, lotLabel, initialRows, onSave}) {
                         }}
                         className={classNames(
                             "w-full md:w-28 px-4 py-2 rounded-lg text-sm",
-                            dirty ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "bg-gray-700 text-gray-300"
+                            dirty ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "bg-slate-100 dark:bg-gray-700 text-slate-700 dark:text-gray-300 border border-slate-200 dark:border-white/10"
                         )}
                         title="Save custom details"
                     >
@@ -769,7 +769,7 @@ function LotCustomModal({open, onClose, lotLabel, initialRows, onSave}) {
                     </button>
                     <button
                         onClick={onClose}
-                        className="w-full md:w-28 px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                        className="w-full md:w-28 px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                     >
                         Close
                     </button>
@@ -777,17 +777,17 @@ function LotCustomModal({open, onClose, lotLabel, initialRows, onSave}) {
             }
         >
             {/* Toolbar */}
-            <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-3 md:p-4 mb-3">
+            <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-3 md:p-4 mb-3">
                 <div className="flex items-center gap-3">
                     <div className="relative flex-1">
                         <input
                             placeholder="Search Name or Note…"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            className="w-full rounded-lg bg-gray-800 border border-white/10 pl-3 pr-10 py-2.5 text-sm md:text-base"
+                            className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 pl-3 pr-10 py-2.5 text-sm md:text-base"
                             inputMode="text"
                         />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">⌕</span>
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 dark:text-gray-500">⌕</span>
                     </div>
                 </div>
             </div>
@@ -801,12 +801,12 @@ function LotCustomModal({open, onClose, lotLabel, initialRows, onSave}) {
                     const ensureRange = (val) => (typeof val === "object" && val ? val : {from: "", to: ""});
                     const val = isDateRange ? ensureRange(r.value) : r.value ?? "";
                     return (
-                        <div key={r.id} className="rounded-xl border border-white/10 bg-gray-900/70 p-3">
+                        <div key={r.id} className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100/70 dark:bg-gray-900/70 p-3">
                             <div className="flex items-center justify-between gap-2">
                                 <input
                                     value={r.name}
                                     onChange={(e) => setField(r.id, {name: e.target.value})}
-                                    className="flex-1 rounded-lg bg-gray-800 border border-white/10 px-3 py-2.5 text-base"
+                                    className="flex-1 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2.5 text-base"
                                     placeholder="Field name (e.g., Certificate No.)"
                                 />
                                 <button onClick={() => deleteRow(r.id)}
@@ -823,7 +823,7 @@ function LotCustomModal({open, onClose, lotLabel, initialRows, onSave}) {
                                         const nextValue = nextType === "date-range" ? {from: "", to: ""} : "";
                                         setField(r.id, {type: nextType, value: nextValue});
                                     }}
-                                    className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2.5 text-base col-span-2"
+                                    className="rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2.5 text-base col-span-2"
                                 >
                                     <option value="text">Text</option>
                                     <option value="date">Date</option>
@@ -834,7 +834,7 @@ function LotCustomModal({open, onClose, lotLabel, initialRows, onSave}) {
                                     <input
                                         value={val}
                                         onChange={(e) => setField(r.id, {value: e.target.value})}
-                                        className="col-span-2 rounded-lg bg-gray-800 border border-white/10 px-3 py-2.5 text-base"
+                                        className="col-span-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2.5 text-base"
                                         placeholder="Enter value…"
                                     />
                                 )}
@@ -843,7 +843,7 @@ function LotCustomModal({open, onClose, lotLabel, initialRows, onSave}) {
                                         type="date"
                                         value={val || ""}
                                         onChange={(e) => setField(r.id, {value: e.target.value})}
-                                        className="col-span-2 rounded-lg bg-gray-800 border border-white/10 px-3 py-2.5 text-base"
+                                        className="col-span-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2.5 text-base"
                                     />
                                 )}
                                 {isDateRange && (
@@ -852,13 +852,13 @@ function LotCustomModal({open, onClose, lotLabel, initialRows, onSave}) {
                                             type="date"
                                             value={val.from || ""}
                                             onChange={(e) => setField(r.id, {value: {...val, from: e.target.value}})}
-                                            className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2.5 text-base"
+                                            className="rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2.5 text-base"
                                         />
                                         <input
                                             type="date"
                                             value={val.to || ""}
                                             onChange={(e) => setField(r.id, {value: {...val, to: e.target.value}})}
-                                            className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2.5 text-base"
+                                            className="rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2.5 text-base"
                                         />
                                     </>
                                 )}
@@ -866,25 +866,25 @@ function LotCustomModal({open, onClose, lotLabel, initialRows, onSave}) {
                                 <input
                                     value={r.note}
                                     onChange={(e) => setField(r.id, {note: e.target.value})}
-                                    className="col-span-2 rounded-lg bg-gray-800 border border-white/10 px-3 py-2.5 text-base"
+                                    className="col-span-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2.5 text-base"
                                     placeholder="Optional note…"
                                 />
                             </div>
 
                             <div className="mt-3 flex items-center justify-between gap-2">
-                                <div className="text-xs text-gray-400">Position: {idx + 1}</div>
+                                <div className="text-xs text-slate-500 dark:text-gray-400">Position: {idx + 1}</div>
                                 <div className="flex gap-2">
                                     <button onClick={() => moveUp(r.id)}
-                                            className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm">↑
+                                            className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm">↑
                                     </button>
                                     <button onClick={() => moveDown(r.id)}
-                                            className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm">↓
+                                            className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm">↓
                                     </button>
                                     <button onClick={() => moveTop(r.id)}
-                                            className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm">Top
+                                            className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm">Top
                                     </button>
                                     <button onClick={() => moveBottom(r.id)}
-                                            className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm">Bottom
+                                            className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm">Bottom
                                     </button>
                                 </div>
                             </div>
@@ -892,16 +892,16 @@ function LotCustomModal({open, onClose, lotLabel, initialRows, onSave}) {
                     );
                 })}
                 {filtered.length === 0 && (
-                    <div className="rounded-xl border border-white/10 bg-gray-900/60 p-6 text-center text-gray-400">
-                        No custom fields yet. Use <span className="text-gray-200">+ Add field</span>.
+                    <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-6 text-center text-slate-500 dark:text-gray-400">
+                        No custom fields yet. Use <span className="text-slate-900 dark:text-gray-200">+ Add field</span>.
                     </div>
                 )}
             </div>
 
             {/* Desktop table */}
-            <div className="hidden md:block overflow-x-auto border border-white/10 rounded-xl bg-gray-900/60">
+            <div className="hidden md:block overflow-x-auto border border-slate-200 dark:border-white/10 rounded-xl bg-white/80 dark:bg-gray-900/60">
                 <table className="min-w-full divide-y divide-gray-800 text-sm">
-                    <thead className="bg-gray-900/80">
+                    <thead className="bg-slate-100/80 dark:bg-gray-900/80">
                     <tr>
                         <th className="px-4 py-3 text-left">Name</th>
                         <th className="px-4 py-3 text-left">Type</th>
@@ -919,12 +919,12 @@ function LotCustomModal({open, onClose, lotLabel, initialRows, onSave}) {
                         const ensureRange = (val) => (typeof val === "object" && val ? val : {from: "", to: ""});
                         const val = isDateRange ? ensureRange(r.value) : r.value ?? "";
                         return (
-                            <tr key={r.id} className="hover:bg-gray-800/40 transition">
+                            <tr key={r.id} className="hover:bg-slate-100/60 dark:hover:bg-gray-800/40 transition">
                                 <td className="px-4 py-3">
                                     <input
                                         value={r.name}
                                         onChange={(e) => setField(r.id, {name: e.target.value})}
-                                        className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                        className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                         placeholder="e.g. Certificate No."
                                     />
                                 </td>
@@ -936,7 +936,7 @@ function LotCustomModal({open, onClose, lotLabel, initialRows, onSave}) {
                                             const nextValue = nextType === "date-range" ? {from: "", to: ""} : "";
                                             setField(r.id, {type: nextType, value: nextValue});
                                         }}
-                                        className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                        className="rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                     >
                                         <option value="text">Text</option>
                                         <option value="date">Date</option>
@@ -948,7 +948,7 @@ function LotCustomModal({open, onClose, lotLabel, initialRows, onSave}) {
                                         <input
                                             value={val}
                                             onChange={(e) => setField(r.id, {value: e.target.value})}
-                                            className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                            className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                             placeholder="Enter value…"
                                         />
                                     )}
@@ -957,7 +957,7 @@ function LotCustomModal({open, onClose, lotLabel, initialRows, onSave}) {
                                             type="date"
                                             value={val || ""}
                                             onChange={(e) => setField(r.id, {value: e.target.value})}
-                                            className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                            className="rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                         />
                                     )}
                                     {isDateRange && (
@@ -971,14 +971,14 @@ function LotCustomModal({open, onClose, lotLabel, initialRows, onSave}) {
                                                         from: e.target.value
                                                     }
                                                 })}
-                                                className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                                className="rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                             />
-                                            <span className="text-gray-500">→</span>
+                                            <span className="text-slate-600 dark:text-gray-500">→</span>
                                             <input
                                                 type="date"
                                                 value={val.to || ""}
                                                 onChange={(e) => setField(r.id, {value: {...val, to: e.target.value}})}
-                                                className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                                className="rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                             />
                                         </div>
                                     )}
@@ -987,23 +987,23 @@ function LotCustomModal({open, onClose, lotLabel, initialRows, onSave}) {
                                     <input
                                         value={r.note}
                                         onChange={(e) => setField(r.id, {note: e.target.value})}
-                                        className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                        className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                         placeholder="Optional note…"
                                     />
                                 </td>
                                 <td className="px-4 py-3 text-right">
                                     <div className="inline-flex gap-2">
                                         <button onClick={() => moveTop(r.id)}
-                                                className="px-2 py-1 rounded bg-gray-800 border border-white/10 hover:bg-gray-700 text-xs">Top
+                                                className="px-2 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-xs">Top
                                         </button>
                                         <button onClick={() => moveUp(r.id)}
-                                                className="px-2 py-1 rounded bg-gray-800 border border-white/10 hover:bg-gray-700 text-xs">↑
+                                                className="px-2 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-xs">↑
                                         </button>
                                         <button onClick={() => moveDown(r.id)}
-                                                className="px-2 py-1 rounded bg-gray-800 border border-white/10 hover:bg-gray-700 text-xs">↓
+                                                className="px-2 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-xs">↓
                                         </button>
                                         <button onClick={() => moveBottom(r.id)}
-                                                className="px-2 py-1 rounded bg-gray-800 border border-white/10 hover:bg-gray-700 text-xs">Bottom
+                                                className="px-2 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-xs">Bottom
                                         </button>
                                     </div>
                                 </td>
@@ -1018,7 +1018,7 @@ function LotCustomModal({open, onClose, lotLabel, initialRows, onSave}) {
                     })}
                     {filtered.length === 0 && (
                         <tr>
-                            <td className="px-4 py-6 text-center text-gray-400" colSpan={6}>No custom fields. Use “+ Add
+                            <td className="px-4 py-6 text-center text-slate-500 dark:text-gray-400" colSpan={6}>No custom fields. Use “+ Add
                                 field”.
                             </td>
                         </tr>
@@ -1221,17 +1221,17 @@ export default function InventoryDetailsPage() {
     const activeLotLabel = activeLot ? (activeLot.lotCode ? `Lot ${activeLot.lotCode}` : `Lot (${activeLotKey.slice(0, 6)})`) : "";
 
     return (
-        <div className="relative text-gray-200 min-h-screen">
+        <div className="relative text-slate-900 dark:text-gray-200 min-h-screen">
             {/* Background */}
             <div
-                className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 sm:bg-gradient-to-br md:bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] md:from-gray-950 md:via-gray-900 md:to-gray-950 lg:bg-gradient-to-tr"/>
+                className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-slate-50 via-white to-slate-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 sm:bg-gradient-to-br dark:md:bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] dark:md:from-gray-950 dark:md:via-gray-900 dark:md:to-gray-950 lg:bg-gradient-to-tr"/>
 
             {/* Header */}
             <header className="mx-auto px-4 pt-8 md:pt-10 pb-4 md:pb-6">
                 <div className="flex items-end justify-between gap-3 flex-wrap">
                     <div className="min-w-0">
-                        <h1 className="text-2xl md:text-3xl font-bold text-white">{isEdit ? "Edit Inventory" : "New Inventory"}</h1>
-                        <p className="mt-1 md:mt-2 text-gray-400 text-sm md:text-base">Select Item (required), set base
+                        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">{isEdit ? "Edit Inventory" : "New Inventory"}</h1>
+                        <p className="mt-1 md:mt-2 text-slate-500 dark:text-gray-400 text-sm md:text-base">Select Item (required), set base
                             data, and manage lots with expiration tracking.</p>
                     </div>
                     <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
@@ -1244,7 +1244,7 @@ export default function InventoryDetailsPage() {
                         </button>
                         <button
                             onClick={handleCancel}
-                            className="w-28 px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm flex-1 sm:flex-none"
+                            className="w-28 px-4 py-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm flex-1 sm:flex-none"
                         >
                             Cancel
                         </button>
@@ -1253,12 +1253,12 @@ export default function InventoryDetailsPage() {
 
                 {/* Unsaved banner */}
                 <div
-                    className="mt-3 md:mt-4 rounded-xl border border-white/10 bg-gray-900/60 px-3 md:px-4 py-3 text-sm flex items-center gap-3">
+                    className="mt-3 md:mt-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 px-3 md:px-4 py-3 text-sm flex items-center gap-3">
                     <span className={`inline-flex h-2 w-2 rounded-full ${dirty ? "bg-yellow-400" : "bg-green-400"}`}/>
                     <span
-                        className="text-gray-300 truncate">{dirty ? "You have unsaved changes" : "No changes since open"}</span>
-                    <span className="ml-auto text-xs text-gray-500">Inventory ID: <span
-                        className="font-mono text-gray-300">{inventoryId}</span></span>
+                        className="text-slate-700 dark:text-gray-300 truncate">{dirty ? "You have unsaved changes" : "No changes since open"}</span>
+                    <span className="ml-auto text-xs text-slate-600 dark:text-gray-500">Inventory ID: <span
+                        className="font-mono text-slate-700 dark:text-gray-300">{inventoryId}</span></span>
                 </div>
             </header>
 
@@ -1267,24 +1267,24 @@ export default function InventoryDetailsPage() {
                 {/* Left column */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* General */}
-                    <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
-                        <h2 className="text-lg font-semibold text-white mb-3">General</h2>
+                    <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-4">
+                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">General</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="sm:col-span-2">
-                                <label className="block text-xs text-gray-400 mb-1">Item (required)</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Item (required)</label>
                                 <div className="flex items-center gap-2">
                                     <input
                                         value={selectedItem ? `${selectedItem.id} — ${selectedItem.name}` : ""}
                                         readOnly
                                         placeholder="Pick an Item"
                                         className={classNames(
-                                            "w-full rounded-lg bg-gray-800 border px-3 py-2 text-sm",
-                                            selectedItem ? "border-white/10" : "border-red-500/50"
+                                            "w-full rounded-lg bg-slate-100 dark:bg-gray-800 border px-3 py-2 text-sm",
+                                            selectedItem ? "border-slate-200 dark:border-white/10" : "border-red-500/50"
                                         )}
                                     />
                                     <button
                                         onClick={() => setOpenItemPicker(true)}
-                                        className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm whitespace-nowrap"
+                                        className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm whitespace-nowrap"
                                     >
                                         {selectedItem ? "Change" : "Pick Item"}
                                     </button>
@@ -1294,42 +1294,42 @@ export default function InventoryDetailsPage() {
                             </div>
 
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">Inventory ID</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Inventory ID</label>
                                 <input value={inventoryId} readOnly
-                                       className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm opacity-80 cursor-not-allowed"/>
+                                       className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm opacity-80 cursor-not-allowed"/>
                             </div>
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">Base UoM</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Base UoM</label>
                                 <input
                                     value={baseUom}
                                     onChange={(e) => setBaseUom(e.target.value)}
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                     placeholder="e.g. pcs / L / ea"
                                 />
                             </div>
 
                             <div className="sm:col-span-2">
-                                <label className="block text-xs text-gray-400 mb-1">Name</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Name</label>
                                 <input
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                     placeholder="e.g. Chain Bracket"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">Category</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Category</label>
                                 <div className="flex gap-2">
                                     <input
                                         value={category}
                                         onChange={(e) => setCategory(e.target.value)}
                                         placeholder="Choose or type"
-                                        className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                        className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                     />
                                     <button
                                         onClick={() => setOpenCategoryPicker(true)}
-                                        className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm whitespace-nowrap"
+                                        className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm whitespace-nowrap"
                                         title="Pick / Create Category"
                                     >
                                         Pick / Manage
@@ -1338,23 +1338,23 @@ export default function InventoryDetailsPage() {
                             </div>
 
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">Reorder Pt</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Reorder Pt</label>
                                 <input
                                     inputMode="numeric"
                                     value={reorderPt}
                                     onChange={(e) => setReorderPt(e.target.value)}
                                     placeholder="e.g. 100"
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm text-right font-mono tabular-nums"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm text-right font-mono tabular-nums"
                                 />
                             </div>
 
                             <div className="sm:col-span-2">
-                                <label className="block text-xs text-gray-400 mb-1">Description</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Description</label>
                                 <textarea
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
                                     rows={3}
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                     placeholder="Optional description / notes."
                                 />
                             </div>
@@ -1362,17 +1362,17 @@ export default function InventoryDetailsPage() {
                     </div>
 
                     {/* Lots */}
-                    <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
+                    <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-4">
                         <div className="flex items-center justify-between mb-3">
-                            <h2 className="text-lg font-semibold text-white">Lots</h2>
+                            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Lots</h2>
                             <button onClick={addLot}
-                                    className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm">+
+                                    className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm">+
                                 Add Lot
                             </button>
                         </div>
 
-                        <p className="text-xs text-gray-400 mb-2">
-                            Track per-lot quantities and expiration. <span className="text-gray-300">Available = Size − Allocated</span>.
+                        <p className="text-xs text-slate-500 dark:text-gray-400 mb-2">
+                            Track per-lot quantities and expiration. <span className="text-slate-700 dark:text-gray-300">Available = Size − Allocated</span>.
                             Expiration is required for each filled lot.
                         </p>
 
@@ -1389,29 +1389,29 @@ export default function InventoryDetailsPage() {
                                 };
                                 const cfCount = (lotCustom[r.key] || []).length;
                                 return (
-                                    <div key={r.key} className="rounded-xl border border-white/10 bg-gray-900/40 p-3">
+                                    <div key={r.key} className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100/70 dark:bg-gray-900/40 p-3">
                                         <div className="grid grid-cols-1 gap-2">
                                             <div className="grid grid-cols-2 gap-2">
                                                 <div>
-                                                    <label className="block text-[11px] text-gray-400 mb-1">Lot
+                                                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1">Lot
                                                         Code</label>
                                                     <input
                                                         data-rowkey={r.key}
                                                         value={r.lotCode}
                                                         onChange={(e) => updateLot(r.key, {lotCode: e.target.value})}
                                                         placeholder="optional"
-                                                        className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                                        className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-[11px] text-gray-400 mb-1">Expiration
+                                                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1">Expiration
                                                         *</label>
                                                     <input
                                                         data-rowkey={r.key}
                                                         type="date"
                                                         value={r.expiration}
                                                         onChange={(e) => updateLot(r.key, {expiration: e.target.value})}
-                                                        className={classNames("w-full rounded-lg bg-gray-800 border px-3 py-2 text-sm", errs.exp ? "border-red-500/60" : "border-white/10")}
+                                                        className={classNames("w-full rounded-lg bg-slate-100 dark:bg-gray-800 border px-3 py-2 text-sm", errs.exp ? "border-red-500/60" : "border-slate-200 dark:border-white/10")}
                                                     />
                                                     {errs.exp &&
                                                         <div className="text-xs text-red-400 mt-1">Required</div>}
@@ -1420,46 +1420,46 @@ export default function InventoryDetailsPage() {
 
                                             <div className="grid grid-cols-3 gap-2">
                                                 <div>
-                                                    <label className="block text-[11px] text-gray-400 mb-1">Size</label>
+                                                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1">Size</label>
                                                     <input
                                                         data-rowkey={r.key}
                                                         inputMode="numeric"
                                                         value={r.size}
                                                         onChange={(e) => updateLot(r.key, {size: e.target.value})}
                                                         placeholder="0"
-                                                        className={classNames("w-full rounded-lg bg-gray-800 border px-3 py-2 text-sm text-right font-mono tabular-nums", errs.size ? "border-red-500/60" : "border-white/10")}
+                                                        className={classNames("w-full rounded-lg bg-slate-100 dark:bg-gray-800 border px-3 py-2 text-sm text-right font-mono tabular-nums", errs.size ? "border-red-500/60" : "border-slate-200 dark:border-white/10")}
                                                     />
                                                 </div>
                                                 <div>
                                                     <label
-                                                        className="block text-[11px] text-gray-400 mb-1">Allocated</label>
+                                                        className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1">Allocated</label>
                                                     <input
                                                         data-rowkey={r.key}
                                                         inputMode="numeric"
                                                         value={r.allocated}
                                                         onChange={(e) => updateLot(r.key, {allocated: e.target.value})}
                                                         placeholder="0"
-                                                        className={classNames("w-full rounded-lg bg-gray-800 border px-3 py-2 text-sm text-right font-mono tabular-nums", errs.allocated ? "border-red-500/60" : "border-white/10")}
+                                                        className={classNames("w-full rounded-lg bg-slate-100 dark:bg-gray-800 border px-3 py-2 text-sm text-right font-mono tabular-nums", errs.allocated ? "border-red-500/60" : "border-slate-200 dark:border-white/10")}
                                                     />
                                                 </div>
                                                 <div>
                                                     <label
-                                                        className="block text-[11px] text-gray-400 mb-1">Available</label>
+                                                        className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1">Available</label>
                                                     <div
-                                                        className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-xs text-gray-200 font-mono tabular-nums text-right">
+                                                        className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-gray-200 font-mono tabular-nums text-right">
                                                         {Number.isFinite(available) ? available : "—"}
                                                     </div>
                                                 </div>
                                             </div>
 
                                             <div>
-                                                <label className="block text-[11px] text-gray-400 mb-1">Notes</label>
+                                                <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1">Notes</label>
                                                 <input
                                                     data-rowkey={r.key}
                                                     value={r.notes}
                                                     onChange={(e) => updateLot(r.key, {notes: e.target.value})}
                                                     placeholder="Optional"
-                                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                                 />
                                             </div>
 
@@ -1474,7 +1474,7 @@ export default function InventoryDetailsPage() {
                                                 </button>
                                                 <button
                                                     onClick={() => cloneLot(r.key)}
-                                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md border text-xs font-medium bg-gray-800/60 border-white/10 text-gray-200 hover:bg-gray-700/60"
+                                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md border text-xs font-medium bg-slate-100/70 dark:bg-gray-800/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-gray-200 hover:bg-slate-200 dark:hover:bg-gray-700/60"
                                                 >
                                                     Clone
                                                 </button>
@@ -1493,7 +1493,7 @@ export default function InventoryDetailsPage() {
 
                         {/* Desktop: Table */}
                         <div
-                            className="hidden md:block overflow-x-auto border border-white/10 rounded-xl bg-gray-900/40 mt-3">
+                            className="hidden md:block overflow-x-auto border border-slate-200 dark:border-white/10 rounded-xl bg-slate-100/70 dark:bg-gray-900/40 mt-3">
                             <table ref={tableRef} className="min-w-full divide-y divide-gray-800 text-sm table-fixed">
                                 <colgroup>
                                     <col style={{width: 160}}/>
@@ -1504,7 +1504,7 @@ export default function InventoryDetailsPage() {
                                     <col/>
                                     <col style={{width: 260}}/>
                                 </colgroup>
-                                <thead className="bg-gray-900/80">
+                                <thead className="bg-slate-100/80 dark:bg-gray-900/80">
                                 <tr>
                                     <th className="px-4 py-3 text-left">Lot Code</th>
                                     <th className="px-4 py-3 text-left">Expiration *</th>
@@ -1526,14 +1526,14 @@ export default function InventoryDetailsPage() {
                                     const errAlloc = r.allocated !== "" && (!(allocated >= 0) || allocated > (Number.isFinite(size) ? size : Infinity));
                                     const cfCount = (lotCustom[r.key] || []).length;
                                     return (
-                                        <tr key={r.key} className="hover:bg-gray-800/40 transition">
+                                        <tr key={r.key} className="hover:bg-slate-100/60 dark:hover:bg-gray-800/40 transition">
                                             <td className="px-4 py-3 align-top">
                                                 <input
                                                     data-rowkey={r.key}
                                                     value={r.lotCode}
                                                     onChange={(e) => updateLot(r.key, {lotCode: e.target.value})}
                                                     placeholder="optional"
-                                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                                 />
                                             </td>
                                             <td className="px-4 py-3 align-top">
@@ -1542,7 +1542,7 @@ export default function InventoryDetailsPage() {
                                                     type="date"
                                                     value={r.expiration}
                                                     onChange={(e) => updateLot(r.key, {expiration: e.target.value})}
-                                                    className={classNames("w-full rounded-lg bg-gray-800 border px-3 py-2 text-sm", errExp ? "border-red-500/60" : "border-white/10")}
+                                                    className={classNames("w-full rounded-lg bg-slate-100 dark:bg-gray-800 border px-3 py-2 text-sm", errExp ? "border-red-500/60" : "border-slate-200 dark:border-white/10")}
                                                 />
                                                 {errExp && <div className="text-xs text-red-400 mt-1">Required</div>}
                                             </td>
@@ -1553,7 +1553,7 @@ export default function InventoryDetailsPage() {
                                                     value={r.size}
                                                     onChange={(e) => updateLot(r.key, {size: e.target.value})}
                                                     placeholder="0"
-                                                    className={classNames("w-full rounded-lg bg-gray-800 border px-3 py-2 text-sm text-right font-mono tabular-nums", errSize ? "border-red-500/60" : "border-white/10")}
+                                                    className={classNames("w-full rounded-lg bg-slate-100 dark:bg-gray-800 border px-3 py-2 text-sm text-right font-mono tabular-nums", errSize ? "border-red-500/60" : "border-slate-200 dark:border-white/10")}
                                                 />
                                             </td>
                                             <td className="px-4 py-3 align-top text-right">
@@ -1563,12 +1563,12 @@ export default function InventoryDetailsPage() {
                                                     value={r.allocated}
                                                     onChange={(e) => updateLot(r.key, {allocated: e.target.value})}
                                                     placeholder="0"
-                                                    className={classNames("w-full rounded-lg bg-gray-800 border px-3 py-2 text-sm text-right font-mono tabular-nums", errAlloc ? "border-red-500/60" : "border-white/10")}
+                                                    className={classNames("w-full rounded-lg bg-slate-100 dark:bg-gray-800 border px-3 py-2 text-sm text-right font-mono tabular-nums", errAlloc ? "border-red-500/60" : "border-slate-200 dark:border-white/10")}
                                                 />
                                                 {errAlloc && <div className="text-xs text-red-400 mt-1">0 ≤ Allocated ≤
                                                     Size</div>}
                                             </td>
-                                            <td className="px-4 py-3 align-top text-right text-gray-200 font-mono tabular-nums">
+                                            <td className="px-4 py-3 align-top text-right text-slate-900 dark:text-gray-200 font-mono tabular-nums">
                                                 {Number.isFinite(available) ? available : "—"}
                                             </td>
                                             <td className="px-4 py-3 align-top">
@@ -1577,7 +1577,7 @@ export default function InventoryDetailsPage() {
                                                     value={r.notes}
                                                     onChange={(e) => updateLot(r.key, {notes: e.target.value})}
                                                     placeholder="Optional"
-                                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                                 />
                                             </td>
                                             <td className="px-4 py-3 align-top text-right">
@@ -1592,7 +1592,7 @@ export default function InventoryDetailsPage() {
                                                     </button>
                                                     <button
                                                         onClick={() => cloneLot(r.key)}
-                                                        className="px-2.5 py-1.5 rounded-md border text-xs font-medium bg-gray-800/60 border-white/10 text-gray-200 hover:bg-gray-700/60"
+                                                        className="px-2.5 py-1.5 rounded-md border text-xs font-medium bg-slate-100/70 dark:bg-gray-800/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-gray-200 hover:bg-slate-200 dark:hover:bg-gray-700/60"
                                                     >
                                                         Clone
                                                     </button>
@@ -1611,25 +1611,25 @@ export default function InventoryDetailsPage() {
                             </table>
                         </div>
 
-                        <div className="mt-3 text-xs text-gray-500 flex items-center justify-between flex-wrap gap-3">
+                        <div className="mt-3 text-xs text-slate-600 dark:text-gray-500 flex items-center justify-between flex-wrap gap-3">
                             <div className="hidden md:block">
-                                Shortcuts: <span className="text-gray-300">Enter</span> add •{" "}
-                                <span className="text-gray-300">Ctrl/⌘+Enter</span> clone •{" "}
-                                <span className="text-gray-300">Delete</span> remove
+                                Shortcuts: <span className="text-slate-700 dark:text-gray-300">Enter</span> add •{" "}
+                                <span className="text-slate-700 dark:text-gray-300">Ctrl/⌘+Enter</span> clone •{" "}
+                                <span className="text-slate-700 dark:text-gray-300">Delete</span> remove
                             </div>
                             <div>
-                                Totals — On hand: <span className="text-gray-300">{totals.onHand}</span> •
+                                Totals — On hand: <span className="text-slate-700 dark:text-gray-300">{totals.onHand}</span> •
                                 Allocated:{" "}
-                                <span className="text-gray-300">{totals.allocated}</span> • Available:{" "}
-                                <span className="text-gray-300">{totals.available}</span>
+                                <span className="text-slate-700 dark:text-gray-300">{totals.allocated}</span> • Available:{" "}
+                                <span className="text-slate-700 dark:text-gray-300">{totals.available}</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Attachments placeholder */}
-                    <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
-                        <h2 className="text-lg font-semibold text-white mb-1">Attachments</h2>
-                        <div className="text-sm text-gray-400">Upload drawings/specs later. (Placeholder)</div>
+                    <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-4">
+                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">Attachments</h2>
+                        <div className="text-sm text-slate-500 dark:text-gray-400">Upload drawings/specs later. (Placeholder)</div>
                     </div>
 
                     {/* Error summary */}
@@ -1645,58 +1645,58 @@ export default function InventoryDetailsPage() {
 
                 {/* Right summary */}
                 <aside className="lg:sticky lg:top-6 space-y-4">
-                    <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
-                        <h3 className="text-base font-semibold text-white">Summary</h3>
+                    <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-4">
+                        <h3 className="text-base font-semibold text-slate-900 dark:text-white">Summary</h3>
                         <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-                            <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
-                                <div className="text-xs text-gray-400">Inventory</div>
-                                <div className="text-sm text-gray-200">{inventoryId}</div>
+                            <div className="rounded-xl bg-slate-100/70 dark:bg-gray-800/60 p-3 border border-slate-200 dark:border-white/10">
+                                <div className="text-xs text-slate-500 dark:text-gray-400">Inventory</div>
+                                <div className="text-sm text-slate-900 dark:text-gray-200">{inventoryId}</div>
                             </div>
-                            <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
-                                <div className="text-xs text-gray-400">Item</div>
-                                <div className="text-sm text-gray-200 min-h-[20px]">
+                            <div className="rounded-xl bg-slate-100/70 dark:bg-gray-800/60 p-3 border border-slate-200 dark:border-white/10">
+                                <div className="text-xs text-slate-500 dark:text-gray-400">Item</div>
+                                <div className="text-sm text-slate-900 dark:text-gray-200 min-h-[20px]">
                                     {selectedItem ? <span className="font-mono">{selectedItem.id}</span> :
-                                        <span className="text-gray-500">(not set)</span>}
+                                        <span className="text-slate-600 dark:text-gray-500">(not set)</span>}
                                 </div>
                             </div>
-                            <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10 col-span-2">
-                                <div className="text-xs text-gray-400">Name</div>
-                                <div className="text-sm text-gray-200 min-h-[20px]">{name ||
-                                    <span className="text-gray-500">(not set)</span>}</div>
+                            <div className="rounded-xl bg-slate-100/70 dark:bg-gray-800/60 p-3 border border-slate-200 dark:border-white/10 col-span-2">
+                                <div className="text-xs text-slate-500 dark:text-gray-400">Name</div>
+                                <div className="text-sm text-slate-900 dark:text-gray-200 min-h-[20px]">{name ||
+                                    <span className="text-slate-600 dark:text-gray-500">(not set)</span>}</div>
                             </div>
-                            <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
-                                <div className="text-xs text-gray-400">Category</div>
-                                <div className="text-sm text-gray-200 min-h-[20px]">{category ||
-                                    <span className="text-gray-500">(not set)</span>}</div>
+                            <div className="rounded-xl bg-slate-100/70 dark:bg-gray-800/60 p-3 border border-slate-200 dark:border-white/10">
+                                <div className="text-xs text-slate-500 dark:text-gray-400">Category</div>
+                                <div className="text-sm text-slate-900 dark:text-gray-200 min-h-[20px]">{category ||
+                                    <span className="text-slate-600 dark:text-gray-500">(not set)</span>}</div>
                             </div>
-                            <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
-                                <div className="text-xs text-gray-400">Base UoM</div>
-                                <div className="text-sm text-gray-200 min-h-[20px]">{baseUom ||
-                                    <span className="text-gray-500">(not set)</span>}</div>
+                            <div className="rounded-xl bg-slate-100/70 dark:bg-gray-800/60 p-3 border border-slate-200 dark:border-white/10">
+                                <div className="text-xs text-slate-500 dark:text-gray-400">Base UoM</div>
+                                <div className="text-sm text-slate-900 dark:text-gray-200 min-h-[20px]">{baseUom ||
+                                    <span className="text-slate-600 dark:text-gray-500">(not set)</span>}</div>
                             </div>
-                            <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
-                                <div className="text-xs text-gray-400">Reorder Pt</div>
-                                <div className="text-sm text-gray-200 min-h-[20px]">{reorderPt !== "" ? reorderPt :
-                                    <span className="text-gray-500">(not set)</span>}</div>
+                            <div className="rounded-xl bg-slate-100/70 dark:bg-gray-800/60 p-3 border border-slate-200 dark:border-white/10">
+                                <div className="text-xs text-slate-500 dark:text-gray-400">Reorder Pt</div>
+                                <div className="text-sm text-slate-900 dark:text-gray-200 min-h-[20px]">{reorderPt !== "" ? reorderPt :
+                                    <span className="text-slate-600 dark:text-gray-500">(not set)</span>}</div>
                             </div>
 
                             <div
-                                className="rounded-2xl bg-gray-900/60 p-4 text-xs text-gray-400 border border-white/10 col-span-2">
-                                <div className="font-semibold text-gray-300 mb-2">Lot Totals</div>
+                                className="rounded-2xl bg-white/80 dark:bg-gray-900/60 p-4 text-xs text-slate-500 dark:text-gray-400 border border-slate-200 dark:border-white/10 col-span-2">
+                                <div className="font-semibold text-slate-700 dark:text-gray-300 mb-2">Lot Totals</div>
                                 <div className="grid grid-cols-3 gap-3">
-                                    <div className="rounded-lg bg-gray-800/60 p-3 border border-white/10">
-                                        <div className="text-[11px] text-gray-400">On hand</div>
-                                        <div className="mt-1 text-gray-200 font-mono tabular-nums">{totals.onHand}</div>
+                                    <div className="rounded-lg bg-slate-100/70 dark:bg-gray-800/60 p-3 border border-slate-200 dark:border-white/10">
+                                        <div className="text-[11px] text-slate-500 dark:text-gray-400">On hand</div>
+                                        <div className="mt-1 text-slate-900 dark:text-gray-200 font-mono tabular-nums">{totals.onHand}</div>
                                     </div>
-                                    <div className="rounded-lg bg-gray-800/60 p-3 border border-white/10">
-                                        <div className="text-[11px] text-gray-400">Allocated</div>
+                                    <div className="rounded-lg bg-slate-100/70 dark:bg-gray-800/60 p-3 border border-slate-200 dark:border-white/10">
+                                        <div className="text-[11px] text-slate-500 dark:text-gray-400">Allocated</div>
                                         <div
-                                            className="mt-1 text-gray-200 font-mono tabular-nums">{totals.allocated}</div>
+                                            className="mt-1 text-slate-900 dark:text-gray-200 font-mono tabular-nums">{totals.allocated}</div>
                                     </div>
-                                    <div className="rounded-lg bg-gray-800/60 p-3 border border-white/10">
-                                        <div className="text-[11px] text-gray-400">Available</div>
+                                    <div className="rounded-lg bg-slate-100/70 dark:bg-gray-800/60 p-3 border border-slate-200 dark:border-white/10">
+                                        <div className="text-[11px] text-slate-500 dark:text-gray-400">Available</div>
                                         <div
-                                            className="mt-1 text-gray-200 font-mono tabular-nums">{totals.available}</div>
+                                            className="mt-1 text-slate-900 dark:text-gray-200 font-mono tabular-nums">{totals.available}</div>
                                     </div>
                                 </div>
                             </div>
@@ -1707,11 +1707,11 @@ export default function InventoryDetailsPage() {
 
             {/* Sticky bottom action bar (mobile) */}
             <div
-                className="fixed md:hidden bottom-0 inset-x-0 z-30 border-t border-white/10 bg-gray-900/80 backdrop-blur supports-[backdrop-filter]:bg-gray-900/60"
+                className="fixed md:hidden bottom-0 inset-x-0 z-30 border-t border-slate-200 dark:border-white/10 bg-slate-100/80 dark:bg-gray-900/80 backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:bg-gray-900/60"
                 style={{paddingBottom: "env(safe-area-inset-bottom)"}}>
                 <div className="px-4 py-3 flex items-center gap-2">
                     <button onClick={handleCancel}
-                            className="flex-1 px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm">Cancel
+                            className="flex-1 px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm">Cancel
                     </button>
                     <button onClick={handleSave} disabled={!canSave}
                             className="flex-1 px-4 py-2 rounded-lg bg-blue-600 enabled:hover:bg-blue-700 text-white text-sm disabled:opacity-50">Save
@@ -1727,7 +1727,7 @@ export default function InventoryDetailsPage() {
                 footer={
                     <>
                         <button onClick={() => setOpenConfirmLeave(false)}
-                                className="w-full md:w-28 px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm">Stay
+                                className="w-full md:w-28 px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm">Stay
                         </button>
                         <button onClick={() => navigate("/inventory")}
                                 className="w-full md:w-28 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm">Discard
@@ -1735,7 +1735,7 @@ export default function InventoryDetailsPage() {
                     </>
                 }
             >
-                <div className="text-gray-300">If you leave, your latest unsaved edits will be lost.</div>
+                <div className="text-slate-700 dark:text-gray-300">If you leave, your latest unsaved edits will be lost.</div>
             </Modal>
 
             {/* Category Picker Modal */}
@@ -1784,7 +1784,7 @@ export default function InventoryDetailsPage() {
                             setOpenConfirmOverwrite(false);
                             setPendingItem(null);
                         }}
-                                className="px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm">Cancel
+                                className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm">Cancel
                         </button>
                         <button onClick={applyItem}
                                 className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm">Overwrite
@@ -1795,27 +1795,27 @@ export default function InventoryDetailsPage() {
             >
                 {pendingItem ? (
                     <div className="space-y-3 text-sm">
-                        <div className="rounded-lg border border-white/10 bg-gray-900/60 p-3">
-                            <div className="text-xs text-gray-400">Selected Item</div>
+                        <div className="rounded-lg border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-3">
+                            <div className="text-xs text-slate-500 dark:text-gray-400">Selected Item</div>
                             <div className="mt-1 grid grid-cols-2 gap-3">
-                                <div className="font-mono text-gray-300">{pendingItem.itemId}</div>
-                                <div className="text-gray-300">{pendingItem.name}</div>
-                                <div className="text-xs text-gray-400">Category: <span
-                                    className="text-gray-300">{pendingItem.category}</span></div>
-                                <div className="text-xs text-gray-400">Base UoM: <span
-                                    className="text-gray-300">{pendingItem.uom}</span></div>
+                                <div className="font-mono text-slate-700 dark:text-gray-300">{pendingItem.itemId}</div>
+                                <div className="text-slate-700 dark:text-gray-300">{pendingItem.name}</div>
+                                <div className="text-xs text-slate-500 dark:text-gray-400">Category: <span
+                                    className="text-slate-700 dark:text-gray-300">{pendingItem.category}</span></div>
+                                <div className="text-xs text-slate-500 dark:text-gray-400">Base UoM: <span
+                                    className="text-slate-700 dark:text-gray-300">{pendingItem.uom}</span></div>
                             </div>
                         </div>
-                        <div className="text-gray-300">This will overwrite the following fields:</div>
-                        <ul className="list-disc pl-5 text-gray-200">
+                        <div className="text-slate-700 dark:text-gray-300">This will overwrite the following fields:</div>
+                        <ul className="list-disc pl-5 text-slate-900 dark:text-gray-200">
                             <li>Name → {pendingItem.name}</li>
                             <li>Category → {pendingItem.category}</li>
                             <li>Base UoM → {pendingItem.uom}</li>
                         </ul>
-                        <div className="text-xs text-gray-500">Inventory ID will not change.</div>
+                        <div className="text-xs text-slate-600 dark:text-gray-500">Inventory ID will not change.</div>
                     </div>
                 ) : (
-                    <div className="text-gray-400 text-sm">No item selected.</div>
+                    <div className="text-slate-500 dark:text-gray-400 text-sm">No item selected.</div>
                 )}
             </Modal>
 

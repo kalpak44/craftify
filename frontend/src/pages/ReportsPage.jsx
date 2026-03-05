@@ -77,13 +77,14 @@ export default function DashboardPage() {
     }, [rows.length]);
 
     return (
-        <div className="bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-200 min-h-screen">
+        <div
+            className="bg-gradient-to-b from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-slate-200 min-h-screen">
             {/* Header */}
             <header className="mx-auto max-w-6xl px-4 pt-10 pb-6">
                 <div className="flex items-center gap-3">
                     <div>
-                        <h1 className="text-3xl font-bold text-white tracking-tight">Dashboard</h1>
-                        <p className="mt-1 text-slate-400">Live KPIs and insights for operations & inventory.</p>
+                        <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Dashboard</h1>
+                        <p className="mt-1 text-slate-500 dark:text-slate-400">Live KPIs and insights for operations & inventory.</p>
                     </div>
                 </div>
             </header>
@@ -98,25 +99,25 @@ export default function DashboardPage() {
             {/* Controls */}
             <div className="mx-auto max-w-6xl px-4 pt-6">
                 <div
-                    className="rounded-2xl border border-white/10 bg-slate-900/60 p-3 flex flex-wrap items-center gap-2 shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_8px_30px_rgba(0,0,0,0.25)]">
+                    className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-slate-900/60 p-3 flex flex-wrap items-center gap-2 shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_8px_30px_rgba(0,0,0,0.25)]">
                     <div className="flex flex-wrap gap-2">
                         {METRICS.map(m => (
                             <button key={m.key} onClick={() => setMetric(m.key)}
                                     className={`px-3 py-1.5 rounded-lg text-sm border transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 ${
                                         metric === m.key
                                             ? "bg-blue-600 text-white border-blue-500 shadow hover:bg-blue-500"
-                                            : "bg-slate-800/70 text-slate-300 border-white/10 hover:bg-slate-700"
+                                            : "bg-slate-100 dark:bg-slate-800/70 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-slate-700"
                                     }`}>
                                 {m.label}
                             </button>
                         ))}
                     </div>
                     <div className="ml-auto flex items-center gap-2">
-                        <span className="text-xs text-slate-400">Window</span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">Window</span>
                         <select
                             value={windowSize}
                             onChange={(e) => setWindowSize(Number(e.target.value))}
-                            className="rounded-lg bg-slate-800 border border-white/10 px-2 py-1 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                            className="rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 px-2 py-1 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
                         >
                             {[6, 9, 12].map(n => <option key={n} value={n}>{n} months</option>)}
                         </select>
@@ -128,7 +129,7 @@ export default function DashboardPage() {
             <section className="mx-auto max-w-6xl px-4 py-6 grid grid-cols-1 xl:grid-cols-3 gap-6">
                 {/* Chart */}
                 <div
-                    className="xl:col-span-2 rounded-2xl border border-white/10 bg-slate-900/60 p-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_20px_50px_rgba(0,0,0,0.3)]">
+                    className="xl:col-span-2 rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-slate-900/60 p-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_20px_50px_rgba(0,0,0,0.3)]">
                     <MetricChart
                         rows={rows}
                         metric={metric}
@@ -140,7 +141,7 @@ export default function DashboardPage() {
                     {typeof TARGETS[metric] !== "undefined" && (
                         <div className="text-xs text-slate-500 mt-2">
                             Target: <span
-                            className="text-slate-300">{TARGETS[metric]}{(METRICS.find(m => m.key === metric) || {}).unit || ""}</span>
+                            className="text-slate-700 dark:text-slate-300">{TARGETS[metric]}{(METRICS.find(m => m.key === metric) || {}).unit || ""}</span>
                         </div>
                     )}
                 </div>
@@ -149,9 +150,9 @@ export default function DashboardPage() {
                 <div className="flex flex-col gap-6">
 
                     {/* Table (Ticker) */}
-                    <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-4 overflow-hidden">
+                    <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-slate-900/60 p-4 overflow-hidden">
                         <div className="flex items-center justify-between mb-2">
-                            <h3 className="text-white font-semibold text-base">Monthly Breakdown</h3>
+                            <h3 className="text-slate-900 dark:text-white font-semibold text-base">Monthly Breakdown</h3>
                             <TickerControls/>
                         </div>
                         <BreakdownTicker
@@ -174,15 +175,15 @@ export default function DashboardPage() {
 function KpiTile({label, value, delta, invert, spark}) {
     const good = invert ? delta < 0 : delta > 0;
     const bad = invert ? delta > 0 : delta < 0;
-    const cls = good ? "text-emerald-400" : bad ? "text-red-400" : "text-slate-400";
+    const cls = good ? "text-emerald-400" : bad ? "text-red-400" : "text-slate-500 dark:text-slate-400";
     return (
-        <div className="rounded-xl bg-slate-900/60 border border-white/10 p-4 relative overflow-hidden group">
+        <div className="rounded-xl bg-white/80 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 p-4 relative overflow-hidden group">
             {/* soft glow */}
             <div
                 className="pointer-events-none absolute -inset-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                 style={{background: "radial-gradient(600px circle at var(--x,50%) var(--y,50%), rgba(59,130,246,0.08), transparent 40%)"}}/>
-            <div className="text-xs text-slate-400">{label}</div>
-            <div className="mt-1 text-2xl font-semibold text-slate-100">{value}</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">{label}</div>
+            <div className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{value}</div>
             <div className={`mt-1 text-xs ${cls}`}>{delta > 0 ? "+" : ""}{round1(delta)}% vs prev mo</div>
             {spark && <Sparkline values={spark}/>}
         </div>
@@ -338,7 +339,7 @@ function MetricChart({rows, metric, config, target, hoverIndex, setHoverIndex}) 
             {/* Tooltip */}
             {rows[hi] && (
                 <div
-                    className="absolute -translate-x-1/2 bg-slate-900/95 border border-white/10 rounded px-2 py-1 text-xs shadow-lg"
+                    className="absolute -translate-x-1/2 bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-white/10 rounded px-2 py-1 text-xs shadow-lg"
                     style={{left: hvX, top: hvY - 30}}>
                     <div className="font-semibold">{fmtMonth(rows[hi].m)}</div>
                     <div>{fmtNum(vals[hi])}{config.unit || ""}</div>
@@ -351,9 +352,9 @@ function MetricChart({rows, metric, config, target, hoverIndex, setHoverIndex}) 
 /** Ticker controls visual only (dummy btns for now, place for future hooks) **/
 function TickerControls() {
     return (
-        <div className="flex items-center gap-1 text-slate-400 text-xs">
-            <span className="px-2 py-0.5 rounded bg-slate-800 border border-white/10">Auto</span>
-            <span className="px-2 py-0.5 rounded bg-slate-800 border border-white/10">Hover to pause</span>
+        <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs">
+            <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10">Auto</span>
+            <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10">Hover to pause</span>
         </div>
     );
 }
@@ -378,7 +379,7 @@ function BreakdownTicker({rows, metric, hoverIndex, setHoverIndex, visibleCount 
     return (
         <div className="relative" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
             <table className="min-w-full text-sm">
-                <thead className="bg-slate-800/60 text-slate-400 sticky top-0 z-10">
+                <thead className="bg-slate-100/80 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 sticky top-0 z-10">
                 <tr>
                     <th className="px-3 py-2 text-left">Month</th>
                     <th className="px-3 py-2 text-right">Throughput</th>
@@ -395,7 +396,7 @@ function BreakdownTicker({rows, metric, hoverIndex, setHoverIndex, visibleCount 
             <div className="overflow-hidden" style={{height: `${visibleCount * 44}px`}}>
                 <table className="min-w-full text-sm">
                     <tbody
-                        className="divide-y divide-slate-800 transition-transform duration-500"
+                        className="divide-y divide-slate-200 dark:divide-slate-800 transition-transform duration-500"
                         style={{transform: `translateY(0)`}}
                     >
                     {slice.map((r, idx) => {
@@ -408,7 +409,7 @@ function BreakdownTicker({rows, metric, hoverIndex, setHoverIndex, visibleCount 
                         const bad = (cfg.lowerIsBetter ? d > 0 : d < 0);
                         return (
                             <tr key={`${r.m}-${idx}`}
-                                className={`hover:bg-slate-800/40 ${hoverIndex === i ? "bg-slate-800/60" : ""}`}
+                                className={`hover:bg-slate-100/70 dark:hover:bg-slate-800/40 ${hoverIndex === i ? "bg-slate-100/80 dark:bg-slate-800/60" : ""}`}
                                 onMouseEnter={() => setHoverIndex(i)} onMouseLeave={() => setHoverIndex(null)}>
                                 <td className="px-3 py-2">{fmtMonth(r.m)}</td>
                                 <td className="px-3 py-2 text-right">{fmtNum(r.throughput)}</td>
@@ -416,7 +417,7 @@ function BreakdownTicker({rows, metric, hoverIndex, setHoverIndex, visibleCount 
                                 <td className="px-3 py-2 text-right">{r.turns}</td>
                                 <td className="px-3 py-2 text-right">{r.woAgingDays}</td>
                                 <td className="px-3 py-2 text-right">€{fmtNum(r.scrapCost)}</td>
-                                <td className={`px-3 py-2 text-right ${good ? "text-emerald-400" : bad ? "text-red-400" : "text-slate-400"}`}>
+                                <td className={`px-3 py-2 text-right ${good ? "text-emerald-400" : bad ? "text-red-400" : "text-slate-500 dark:text-slate-400"}`}>
                                     {i === 0 ? "—" : (d > 0 ? "+" : "") + round1(d) + (cfg.unit || "")}
                                 </td>
                             </tr>

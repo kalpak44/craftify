@@ -198,18 +198,18 @@ export const WorkOrdersPage = () => {
                     dir: s.key === key && s.dir === "asc" ? "desc" : "asc"
                 }))
             }
-            className={`px-4 py-3 font-semibold text-gray-300 select-none cursor-pointer ${right ? "text-right" : "text-left"}`}
+            className={`px-4 py-3 font-semibold text-slate-700 dark:text-gray-300 select-none cursor-pointer ${right ? "text-right" : "text-left"}`}
         >
       <span className="inline-flex items-center gap-1">
         {label}
-          {sort.key === key && <span className="text-gray-500">{sort.dir === "asc" ? "▲" : "▼"}</span>}
+          {sort.key === key && <span className="text-slate-600 dark:text-gray-500">{sort.dir === "asc" ? "▲" : "▼"}</span>}
       </span>
         </th>
     );
 
     const pill = (value, map) => (
         <span
-            className={`px-2 py-1 text-xs rounded-full ${map[value] || "bg-gray-600/30 text-gray-300"}`}>{value}</span>
+            className={`px-2 py-1 text-xs rounded-full ${map[value] || "bg-gray-600/30 text-slate-700 dark:text-gray-300"}`}>{value}</span>
     );
 
     const STATUS_CLS = {
@@ -217,10 +217,10 @@ export const WorkOrdersPage = () => {
         "In Progress": "bg-indigo-600/30 text-indigo-300",
         Completed: "bg-green-600/30 text-green-400",
         Hold: "bg-yellow-600/30 text-yellow-400",
-        Cancelled: "bg-gray-600/30 text-gray-400"
+        Cancelled: "bg-gray-600/30 text-slate-500 dark:text-gray-400"
     };
     const PRIORITY_CLS = {
-        Low: "bg-gray-600/30 text-gray-300",
+        Low: "bg-gray-600/30 text-slate-700 dark:text-gray-300",
         Medium: "bg-sky-600/30 text-sky-300",
         High: "bg-orange-600/30 text-orange-300",
         Rush: "bg-red-600/30 text-red-300"
@@ -301,7 +301,7 @@ export const WorkOrdersPage = () => {
     const MenuItems = ({id, onDone}) => (
         <div className="py-1">
             <button
-                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-800"
+                className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-gray-800"
                 onClick={(e) => {
                     e.stopPropagation();
                     navigate(`/work-orders/${id}/edit`);
@@ -311,7 +311,7 @@ export const WorkOrdersPage = () => {
                 Open details
             </button>
             <button
-                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-800"
+                className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-gray-800"
                 onClick={(e) => {
                     e.stopPropagation();
                     navigate(`/work-orders/${id}/operations`);
@@ -320,7 +320,7 @@ export const WorkOrdersPage = () => {
             >
                 Operations
             </button>
-            <div className="my-1 border-t border-white/10"/>
+            <div className="my-1 border-t border-slate-200 dark:border-white/10"/>
             <button
                 className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-950/40 hover:text-red-300"
                 onClick={(e) => {
@@ -335,13 +335,13 @@ export const WorkOrdersPage = () => {
     );
 
     return (
-        <div className="min-h-[calc(100vh-140px)] bg-gray-950 text-gray-200">
+        <div className="min-h-full text-slate-900 dark:text-gray-200">
             {/* Header */}
             <header className="mx-auto px-4 pt-8 pb-5">
                 <div className="flex items-start md:items-end justify-between gap-4 flex-wrap">
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-bold text-white">Work Orders</h1>
-                        <p className="mt-1 md:mt-2 text-gray-400 text-sm md:text-base">Issue, track, and complete work
+                        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Work Orders</h1>
+                        <p className="mt-1 md:mt-2 text-slate-500 dark:text-gray-400 text-sm md:text-base">Issue, track, and complete work
                             orders.</p>
                     </div>
                     <div className="flex gap-2 md:gap-3 items-center w-full sm:w-auto">
@@ -352,7 +352,7 @@ export const WorkOrdersPage = () => {
                             + New Work Order
                         </button>
                         <button
-                            className="flex-1 sm:flex-none px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">
+                            className="flex-1 sm:flex-none px-4 py-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm">
                             Import CSV
                         </button>
                     </div>
@@ -361,7 +361,7 @@ export const WorkOrdersPage = () => {
 
             {/* Toolbar with filters */}
             <div className="mx-auto px-4 pb-4">
-                <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-3 md:p-4">
+                <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-3 md:p-4">
                     <div className="flex flex-col md:flex-row md:items-center gap-3">
                         <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-3">
                             <select
@@ -370,7 +370,7 @@ export const WorkOrdersPage = () => {
                                     setStatus(e.target.value);
                                     setPage(1);
                                 }}
-                                className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                className="rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                             >
                                 <option value="all">All Statuses</option>
                                 {STATUSES.map((s) => (
@@ -384,7 +384,7 @@ export const WorkOrdersPage = () => {
                                     setAssignee(e.target.value);
                                     setPage(1);
                                 }}
-                                className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                className="rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                             >
                                 <option value="all">All Assignees</option>
                                 {assignees.map((a) => (
@@ -398,7 +398,7 @@ export const WorkOrdersPage = () => {
                                     setPriority(e.target.value);
                                     setPage(1);
                                 }}
-                                className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm col-span-2 sm:col-span-1"
+                                className="rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm col-span-2 sm:col-span-1"
                             >
                                 <option value="all">All Priorities</option>
                                 {PRIORITIES.map((p) => (
@@ -415,18 +415,18 @@ export const WorkOrdersPage = () => {
                                     setQuery(e.target.value);
                                     setPage(1);
                                 }}
-                                className="w-full rounded-lg bg-gray-800 border border-white/10 pl-3 pr-10 py-2 text-sm"
+                                className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 pl-3 pr-10 py-2 text-sm"
                             />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">⌕</span>
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 dark:text-gray-500">⌕</span>
                         </div>
 
                         <div className="flex items-center gap-2 md:ml-auto">
                             <button
-                                className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm hover:bg-gray-700">
+                                className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm hover:bg-slate-200 dark:hover:bg-gray-700">
                                 Export CSV
                             </button>
                             <button
-                                className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm hover:bg-gray-700">
+                                className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm hover:bg-slate-200 dark:hover:bg-gray-700">
                                 Print / PDF
                             </button>
                             <button
@@ -448,11 +448,11 @@ export const WorkOrdersPage = () => {
                 <div className="md:hidden">
                     {/* Select-all toolbar for mobile */}
                     <div className="mb-2 flex items-center justify-between">
-                        <label className="inline-flex items-center gap-2 text-sm text-gray-300">
+                        <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-gray-300">
                             <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll} onClick={stop}/>
                             <span>Select all on page</span>
                         </label>
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-slate-500 dark:text-gray-400">
               {filtered.length === 0 ? 0 : pageStart + 1}–{Math.min(filtered.length, pageStart + pageSize)} of {filtered.length}
             </span>
                     </div>
@@ -461,7 +461,7 @@ export const WorkOrdersPage = () => {
                         {paged.map((wo) => (
                             <div
                                 key={wo.id}
-                                className="rounded-xl border border-white/10 bg-gray-900/60 p-3 active:bg-gray-800/40"
+                                className="rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-3 active:bg-slate-100/60 dark:active:bg-gray-800/40"
                                 onClick={() => handleRowClick(wo.id)}
                                 title="Open Edit"
                             >
@@ -477,10 +477,10 @@ export const WorkOrdersPage = () => {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-start justify-between gap-2">
                                             <div
-                                                className="font-mono text-white text-sm underline decoration-dotted">{wo.id}</div>
+                                                className="font-mono text-slate-900 dark:text-white text-sm underline decoration-dotted">{wo.id}</div>
                                             {/* Mobile actions trigger */}
                                             <button
-                                                className="shrink-0 px-2 py-1 rounded-md hover:bg-gray-800/60 text-gray-300"
+                                                className="shrink-0 px-2 py-1 rounded-md hover:bg-slate-100/70 dark:hover:bg-gray-800/60 text-slate-700 dark:text-gray-300"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     setSheetId(wo.id);
@@ -491,8 +491,8 @@ export const WorkOrdersPage = () => {
                                                 …
                                             </button>
                                         </div>
-                                        <div className="mt-1 text-gray-200 text-sm line-clamp-2">{wo.product}</div>
-                                        <div className="mt-1 text-xs text-gray-400 flex items-center gap-2 flex-wrap">
+                                        <div className="mt-1 text-slate-900 dark:text-gray-200 text-sm line-clamp-2">{wo.product}</div>
+                                        <div className="mt-1 text-xs text-slate-500 dark:text-gray-400 flex items-center gap-2 flex-wrap">
                                             <span className="truncate">{wo.itemId}</span>
                                             <span>•</span>
                                             <span className="truncate">{wo.assignee}</span>
@@ -511,7 +511,7 @@ export const WorkOrdersPage = () => {
                         ))}
                         {paged.length === 0 && (
                             <div
-                                className="rounded-xl border border-white/10 bg-gray-900/60 p-6 text-center text-gray-500">
+                                className="rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-6 text-center text-slate-600 dark:text-gray-500">
                                 No work orders found.
                             </div>
                         )}
@@ -519,9 +519,9 @@ export const WorkOrdersPage = () => {
                 </div>
 
                 {/* Desktop table */}
-                <div className="hidden md:block overflow-x-auto border border-white/10 rounded-xl bg-gray-900/60">
+                <div className="hidden md:block overflow-x-auto border border-slate-200 dark:border-white/10 rounded-xl bg-white/80 dark:bg-gray-900/60">
                     <table className="min-w-full divide-y divide-gray-800 text-sm">
-                        <thead className="bg-gray-900/80">
+                        <thead className="bg-slate-100/80 dark:bg-gray-900/80">
                         <tr>
                             <th className="px-4 py-3">
                                 <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll} onClick={stop}/>
@@ -534,14 +534,14 @@ export const WorkOrdersPage = () => {
                             {th("Priority", "priority")}
                             {th("Due Date", "due")}
                             {th("Last Updated", "updated")}
-                            <th className="px-4 py-3 text-right font-semibold text-gray-300">Actions</th>
+                            <th className="px-4 py-3 text-right font-semibold text-slate-700 dark:text-gray-300">Actions</th>
                         </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-800">
                         {paged.map((wo) => (
                             <tr
                                 key={wo.id}
-                                className="hover:bg-gray-800/40 transition cursor-pointer"
+                                className="hover:bg-slate-100/60 dark:hover:bg-gray-800/40 transition cursor-pointer"
                                 onClick={() => handleRowClick(wo.id)}
                                 role="button"
                                 tabIndex={0}
@@ -558,20 +558,20 @@ export const WorkOrdersPage = () => {
                                         aria-label={`Select ${wo.id}`}
                                     />
                                 </td>
-                                <td className="px-4 py-3 font-mono text-white">
+                                <td className="px-4 py-3 font-mono text-slate-900 dark:text-white">
                                     <span className="underline decoration-dotted">{wo.id}</span>
                                 </td>
-                                <td className="px-4 py-3 text-gray-200">{wo.product}</td>
-                                <td className="px-4 py-3 text-gray-400">{wo.itemId}</td>
-                                <td className="px-4 py-3 text-gray-200">{wo.assignee}</td>
+                                <td className="px-4 py-3 text-slate-900 dark:text-gray-200">{wo.product}</td>
+                                <td className="px-4 py-3 text-slate-500 dark:text-gray-400">{wo.itemId}</td>
+                                <td className="px-4 py-3 text-slate-900 dark:text-gray-200">{wo.assignee}</td>
                                 <td className="px-4 py-3">{pill(wo.status, STATUS_CLS)}</td>
                                 <td className="px-4 py-3">{pill(wo.priority, PRIORITY_CLS)}</td>
-                                <td className="px-4 py-3 text-gray-400">{wo.due}</td>
-                                <td className="px-4 py-3 text-gray-400">{wo.updated}</td>
+                                <td className="px-4 py-3 text-slate-500 dark:text-gray-400">{wo.due}</td>
+                                <td className="px-4 py-3 text-slate-500 dark:text-gray-400">{wo.updated}</td>
                                 <td className="px-4 py-3 text-right" onClick={stop}>
                                     {/* Desktop actions trigger */}
                                     <button
-                                        className="inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-800/60 text-gray-300"
+                                        className="inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-slate-100/70 dark:hover:bg-gray-800/60 text-slate-700 dark:text-gray-300"
                                         aria-label="Actions"
                                         title="Actions"
                                         onClick={(e) => openDesktopMenu(e, wo.id)}
@@ -583,7 +583,7 @@ export const WorkOrdersPage = () => {
                         ))}
                         {paged.length === 0 && (
                             <tr>
-                                <td className="px-4 py-6 text-center text-gray-500" colSpan={10}>
+                                <td className="px-4 py-6 text-center text-slate-600 dark:text-gray-500" colSpan={10}>
                                     No work orders found.
                                 </td>
                             </tr>
@@ -594,7 +594,7 @@ export const WorkOrdersPage = () => {
 
                 {/* Pagination */}
                 <div
-                    className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-gray-400">
+                    className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-slate-500 dark:text-gray-400">
                     <div className="flex items-center gap-2">
                         <span>Rows per page</span>
                         <select
@@ -603,7 +603,7 @@ export const WorkOrdersPage = () => {
                                 setPageSize(Number(e.target.value));
                                 setPage(1);
                             }}
-                            className="rounded bg-gray-800 border border-white/10 px-2 py-1"
+                            className="rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-2 py-1"
                         >
                             {[8, 16, 24].map((n) => (
                                 <option key={n} value={n}>{n}</option>
@@ -611,16 +611,16 @@ export const WorkOrdersPage = () => {
                         </select>
                         <span className="hidden sm:inline">•</span>
                         <span>
-              Showing <span className="text-gray-300">{filtered.length === 0 ? 0 : pageStart + 1}</span>–
-              <span className="text-gray-300">{Math.min(filtered.length, pageStart + pageSize)}</span> of
-              <span className="text-gray-300"> {filtered.length}</span>
+              Showing <span className="text-slate-700 dark:text-gray-300">{filtered.length === 0 ? 0 : pageStart + 1}</span>–
+              <span className="text-slate-700 dark:text-gray-300">{Math.min(filtered.length, pageStart + pageSize)}</span> of
+              <span className="text-slate-700 dark:text-gray-300"> {filtered.length}</span>
             </span>
                     </div>
                     <div className="flex items-center gap-2">
                         <button
                             disabled={page === 1}
                             onClick={() => setPage((p) => Math.max(1, p - 1))}
-                            className="px-3 py-1 rounded bg-gray-800 border border-white/10 disabled:opacity-40"
+                            className="px-3 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 disabled:opacity-40"
                         >
                             Prev
                         </button>
@@ -628,7 +628,7 @@ export const WorkOrdersPage = () => {
                         <button
                             disabled={page === totalPages}
                             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                            className="px-3 py-1 rounded bg-gray-800 border border-white/10 disabled:opacity-40"
+                            className="px-3 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 disabled:opacity-40"
                         >
                             Next
                         </button>
@@ -640,7 +640,7 @@ export const WorkOrdersPage = () => {
             {menu && (
                 <div
                     ref={menuRef}
-                    className="fixed z-50 min-w-[200px] rounded-xl border border-white/10 bg-gray-900 shadow-2xl"
+                    className="fixed z-50 min-w-[200px] rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 shadow-2xl"
                     style={{left: `${menu.x}px`, top: `${menu.y}px`}}
                     onClick={(e) => e.stopPropagation()}
                 >
@@ -653,16 +653,16 @@ export const WorkOrdersPage = () => {
                 <div className="fixed inset-0 z-50">
                     <div className="absolute inset-0 bg-black/60" onClick={() => setSheetId(null)}/>
                     <div
-                        className="absolute inset-x-0 bottom-0 rounded-t-2xl border border-white/10 bg-gray-900 p-2 pt-3 shadow-2xl">
+                        className="absolute inset-x-0 bottom-0 rounded-t-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 p-2 pt-3 shadow-2xl">
                         <div className="mx-auto h-1 w-10 rounded-full bg-white/20 mb-1.5"/>
                         <div className="px-2 pb-2">
-                            <div className="text-xs text-gray-400 mb-2 px-1">Actions for <span
-                                className="font-mono text-gray-300">{sheetId}</span></div>
-                            <div className="rounded-xl overflow-hidden border border-white/10 divide-y divide-white/10">
+                            <div className="text-xs text-slate-500 dark:text-gray-400 mb-2 px-1">Actions for <span
+                                className="font-mono text-slate-700 dark:text-gray-300">{sheetId}</span></div>
+                            <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 divide-y divide-white/10">
                                 <MenuItems id={sheetId} onDone={() => setSheetId(null)}/>
                             </div>
                             <button
-                                className="mt-2 w-full px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                                className="mt-2 w-full px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                                 onClick={() => setSheetId(null)}
                             >
                                 Close
@@ -677,16 +677,16 @@ export const WorkOrdersPage = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/60" onClick={() => setShowDeleteModal(false)}/>
                     <div
-                        className="relative z-10 w-[92%] sm:w-[80%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
-                        <h2 className="text-lg font-semibold text-white">Confirm deletion</h2>
-                        <p className="mt-2 text-sm text-gray-300">
-                            You are about to delete <span className="font-medium text-white">{selectedCount}</span>{" "}
+                        className="relative z-10 w-[92%] sm:w-[80%] max-w-md rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 p-5 shadow-xl">
+                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Confirm deletion</h2>
+                        <p className="mt-2 text-sm text-slate-700 dark:text-gray-300">
+                            You are about to delete <span className="font-medium text-slate-900 dark:text-white">{selectedCount}</span>{" "}
                             {selectedCount === 1 ? "work order" : "work orders"}. This action cannot be undone.
                         </p>
                         <div className="mt-4 flex flex-col sm:flex-row justify-end gap-2">
                             <button
                                 onClick={() => setShowDeleteModal(false)}
-                                className="px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                                className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                             >
                                 Cancel
                             </button>
@@ -706,16 +706,16 @@ export const WorkOrdersPage = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/60" onClick={() => setDeleteOneId(null)}/>
                     <div
-                        className="relative z-10 w-[92%] sm:w-[80%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
-                        <h2 className="text-lg font-semibold text-white">Delete Work Order</h2>
-                        <p className="mt-2 text-sm text-gray-300">
-                            You are about to delete <span className="font-mono text-white">{deleteOneId}</span>. This
+                        className="relative z-10 w-[92%] sm:w-[80%] max-w-md rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 p-5 shadow-xl">
+                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Delete Work Order</h2>
+                        <p className="mt-2 text-sm text-slate-700 dark:text-gray-300">
+                            You are about to delete <span className="font-mono text-slate-900 dark:text-white">{deleteOneId}</span>. This
                             action cannot be undone.
                         </p>
                         <div className="mt-4 flex flex-col sm:flex-row justify-end gap-2">
                             <button
                                 onClick={() => setDeleteOneId(null)}
-                                className="px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                                className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                             >
                                 Cancel
                             </button>

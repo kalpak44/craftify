@@ -76,16 +76,16 @@ function Modal({open, onClose, title, children, footer}) {
             <div className="absolute inset-0 flex items-center justify-center p-0 md:p-4">
                 <div
                     className="w-full h-full md:h-auto md:max-h-[85vh] md:max-w-3xl overflow-hidden
-                     rounded-none md:rounded-2xl border border-white/10 md:bg-gray-900 bg-gray-900 text-gray-200 shadow-2xl"
+                     rounded-none md:rounded-2xl border border-slate-200 dark:border-white/10 md:bg-white dark:bg-gray-900 bg-white dark:bg-gray-900 text-slate-900 dark:text-gray-200 shadow-2xl"
                 >
-                    <div className="px-4 md:px-5 py-4 border-b border-white/10 flex items-center justify-between">
+                    <div className="px-4 md:px-5 py-4 border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
                         <h3 className="text-base md:text-lg font-semibold">{title}</h3>
                         <button onClick={onClose}
-                                className="text-gray-400 hover:text-gray-200 text-xl leading-none">&times;</button>
+                                className="text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-gray-200 text-xl leading-none">&times;</button>
                     </div>
                     <div className="p-4 md:p-5 h-[calc(100%-112px)] md:h-auto overflow-y-auto">{children}</div>
                     <div
-                        className="px-4 md:px-5 py-4 border-t border-white/10 bg-gray-900/60 flex items-center justify-end gap-2">
+                        className="px-4 md:px-5 py-4 border-t border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 flex items-center justify-end gap-2">
                         {footer}
                     </div>
                 </div>
@@ -98,30 +98,30 @@ function Modal({open, onClose, title, children, footer}) {
 function Pager({page, pageSize, total, onPage, onPageSize}) {
     const pages = Math.max(1, Math.ceil(total / pageSize));
     return (
-        <div className="flex items-center justify-between mt-3 text-xs text-gray-300">
+        <div className="flex items-center justify-between mt-3 text-xs text-slate-700 dark:text-gray-300">
             <div className="flex items-center gap-2">
                 <span>Rows per page</span>
                 <select
                     value={pageSize}
                     onChange={e => onPageSize(Number(e.target.value))}
-                    className="bg-gray-800 border border-white/10 rounded px-2 py-1"
+                    className="bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 rounded px-2 py-1"
                 >
                     {[5, 10, 20, 50].map(n => <option key={n} value={n}>{n}</option>)}
                 </select>
             </div>
             <div className="flex items-center gap-2">
                 <button disabled={page <= 1} onClick={() => onPage(1)}
-                        className="px-2 py-1 rounded bg-gray-800 border border-white/10 disabled:opacity-50">⏮
+                        className="px-2 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 disabled:opacity-50">⏮
                 </button>
                 <button disabled={page <= 1} onClick={() => onPage(page - 1)}
-                        className="px-2 py-1 rounded bg-gray-800 border border-white/10 disabled:opacity-50">‹
+                        className="px-2 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 disabled:opacity-50">‹
                 </button>
                 <span>Page {page} / {pages}</span>
                 <button disabled={page >= pages} onClick={() => onPage(page + 1)}
-                        className="px-2 py-1 rounded bg-gray-800 border border-white/10 disabled:opacity-50">›
+                        className="px-2 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 disabled:opacity-50">›
                 </button>
                 <button disabled={page >= pages} onClick={() => onPage(pages)}
-                        className="px-2 py-1 rounded bg-gray-800 border border-white/10 disabled:opacity-50">⏭
+                        className="px-2 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 disabled:opacity-50">⏭
                 </button>
             </div>
         </div>
@@ -167,7 +167,7 @@ function BomPickerModal({open, onClose, onPick, items, boms}) {
             footer={
                 <button
                     onClick={onClose}
-                    className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm w-full md:w-auto"
+                    className="px-4 py-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm w-full md:w-auto"
                 >
                     Close
                 </button>
@@ -178,19 +178,19 @@ function BomPickerModal({open, onClose, onPick, items, boms}) {
                     value={q}
                     onChange={e => setQ(e.target.value)}
                     placeholder="Search by FG ID, name, or component"
-                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                 />
             </div>
 
             {/* Mobile: cards */}
             <div className="space-y-2 md:hidden">
                 {pageRows.map(r => (
-                    <div key={r.id} className="rounded-xl border border-white/10 bg-gray-900/60 p-3">
+                    <div key={r.id} className="rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-3">
                         <div className="flex items-start justify-between gap-3">
                             <div>
                                 <div className="font-mono text-sm text-gray-100">{r.id}</div>
-                                <div className="text-sm text-gray-300">{r.name}</div>
-                                <div className="text-xs text-gray-500 mt-1">Components: {r.comps || "—"}</div>
+                                <div className="text-sm text-slate-700 dark:text-gray-300">{r.name}</div>
+                                <div className="text-xs text-slate-600 dark:text-gray-500 mt-1">Components: {r.comps || "—"}</div>
                             </div>
                             <button
                                 onClick={() => onPick(r.id)}
@@ -201,13 +201,13 @@ function BomPickerModal({open, onClose, onPick, items, boms}) {
                         </div>
                     </div>
                 ))}
-                {pageRows.length === 0 && <div className="text-center text-gray-400 py-6 text-sm">No matches</div>}
+                {pageRows.length === 0 && <div className="text-center text-slate-500 dark:text-gray-400 py-6 text-sm">No matches</div>}
             </div>
 
             {/* Desktop: table */}
-            <div className="hidden md:block overflow-x-auto border border-white/10 rounded-xl bg-gray-900/40">
+            <div className="hidden md:block overflow-x-auto border border-slate-200 dark:border-white/10 rounded-xl bg-slate-100/70 dark:bg-gray-900/40">
                 <table className="min-w-full divide-y divide-gray-800 text-sm">
-                    <thead className="bg-gray-900/80">
+                    <thead className="bg-slate-100/80 dark:bg-gray-900/80">
                     <tr>
                         <th className="px-4 py-3 text-left">FG</th>
                         <th className="px-4 py-3 text-left">Name</th>
@@ -217,10 +217,10 @@ function BomPickerModal({open, onClose, onPick, items, boms}) {
                     </thead>
                     <tbody className="divide-y divide-gray-800">
                     {pageRows.map(r => (
-                        <tr key={r.id} className="hover:bg-gray-800/40">
+                        <tr key={r.id} className="hover:bg-slate-100/60 dark:hover:bg-gray-800/40">
                             <td className="px-4 py-3 font-mono">{r.id}</td>
                             <td className="px-4 py-3">{r.name}</td>
-                            <td className="px-4 py-3 text-xs text-gray-400">{r.comps}</td>
+                            <td className="px-4 py-3 text-xs text-slate-500 dark:text-gray-400">{r.comps}</td>
                             <td className="px-4 py-3 text-right">
                                 <button
                                     onClick={() => onPick(r.id)}
@@ -233,7 +233,7 @@ function BomPickerModal({open, onClose, onPick, items, boms}) {
                     ))}
                     {pageRows.length === 0 && (
                         <tr>
-                            <td colSpan={4} className="px-4 py-6 text-center text-gray-400">No matches</td>
+                            <td colSpan={4} className="px-4 py-6 text-center text-slate-500 dark:text-gray-400">No matches</td>
                         </tr>
                     )}
                     </tbody>
@@ -241,7 +241,7 @@ function BomPickerModal({open, onClose, onPick, items, boms}) {
             </div>
 
             <Pager page={page} pageSize={pageSize} total={filtered.length} onPage={setPage} onPageSize={setPageSize}/>
-            <div className="mt-2 text-xs text-gray-400">Tip: type components (e.g. “ITM-009”) to find BOMs using them.
+            <div className="mt-2 text-xs text-slate-500 dark:text-gray-400">Tip: type components (e.g. “ITM-009”) to find BOMs using them.
             </div>
         </Modal>
     );
@@ -294,16 +294,16 @@ function AvailabilityModal({open, onClose, requirements, lots, onReserve, onGoPu
                     </button>
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm w-full md:w-auto"
+                        className="px-4 py-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm w-full md:w-auto"
                     >
                         Close
                     </button>
                 </>
             }
         >
-            <div className="overflow-x-auto border border-white/10 rounded-xl bg-gray-900/40">
+            <div className="overflow-x-auto border border-slate-200 dark:border-white/10 rounded-xl bg-slate-100/70 dark:bg-gray-900/40">
                 <table className="min-w-full divide-y divide-gray-800 text-sm">
-                    <thead className="bg-gray-900/80">
+                    <thead className="bg-slate-100/80 dark:bg-gray-900/80">
                     <tr>
                         <th className="px-4 py-3 text-left">Item</th>
                         <th className="px-4 py-3 text-left">Required</th>
@@ -318,20 +318,20 @@ function AvailabilityModal({open, onClose, requirements, lots, onReserve, onGoPu
                             <tr key={r.itemId} className="align-top">
                                 <td className="px-4 py-3">
                                     <div className="font-mono">{r.itemId}</div>
-                                    <div className="text-xs text-gray-400">{it?.name}</div>
+                                    <div className="text-xs text-slate-500 dark:text-gray-400">{it?.name}</div>
                                 </td>
                                 <td className="px-4 py-3">
-                                    {r.required} <span className="text-xs text-gray-400">{it?.uom}</span>
+                                    {r.required} <span className="text-xs text-slate-500 dark:text-gray-400">{it?.uom}</span>
                                 </td>
                                 <td className="px-4 py-3">
                                     {r.allocations.length === 0 ? (
-                                        <span className="text-gray-500">—</span>
+                                        <span className="text-slate-600 dark:text-gray-500">—</span>
                                     ) : (
                                         <div className="space-y-1">
                                             {r.allocations.map(a => (
                                                 <div key={a.lotId} className="text-xs">
                                                     <span
-                                                        className="font-mono text-gray-200">{a.lotId}</span> • {a.alloc} (exp {a.expiry})
+                                                        className="font-mono text-slate-900 dark:text-gray-200">{a.lotId}</span> • {a.alloc} (exp {a.expiry})
                                                 </div>
                                             ))}
                                         </div>
@@ -352,7 +352,7 @@ function AvailabilityModal({open, onClose, requirements, lots, onReserve, onGoPu
                     </tbody>
                 </table>
             </div>
-            <div className="mt-3 text-xs text-gray-400">FEFO = First-Expired-First-Out. The earliest expiry lots are
+            <div className="mt-3 text-xs text-slate-500 dark:text-gray-400">FEFO = First-Expired-First-Out. The earliest expiry lots are
                 allocated first for each component.
             </div>
         </Modal>
@@ -375,7 +375,7 @@ function NoticeModal({open, onClose, title = "Heads up", message, actionLabel = 
                 </button>
             }
         >
-            <div className="text-sm text-gray-300">{message}</div>
+            <div className="text-sm text-slate-700 dark:text-gray-300">{message}</div>
         </Modal>
     );
 }
@@ -513,15 +513,15 @@ export default function WorkOrderDetailsPage() {
     }, [bomFgId, qty]);
 
     return (
-        <div className="relative text-gray-200 min-h-screen">
+        <div className="relative text-slate-900 dark:text-gray-200 min-h-screen">
             {/* Fixed, full-viewport responsive gradient layer */}
             <div
                 className={classNames(
                     "pointer-events-none fixed inset-0 -z-10",
-                    "bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950",
-                    "sm:bg-gradient-to-br sm:from-gray-950 sm:via-gray-900 sm:to-gray-950",
-                    "md:bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] md:from-gray-950 md:via-gray-900 md:to-gray-950",
-                    "lg:bg-gradient-to-tr lg:from-gray-950 lg:via-gray-900 lg:to-gray-950"
+                    "bg-gradient-to-b from-slate-50 via-white to-slate-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950",
+                    "dark:sm:bg-gradient-to-br dark:sm:from-gray-950 dark:sm:via-gray-900 dark:sm:to-gray-950",
+                    "dark:md:bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] dark:md:from-gray-950 dark:md:via-gray-900 dark:md:to-gray-950",
+                    "dark:lg:bg-gradient-to-tr dark:lg:from-gray-950 dark:lg:via-gray-900 dark:lg:to-gray-950"
                 )}
             />
 
@@ -529,8 +529,8 @@ export default function WorkOrderDetailsPage() {
             <header className="mx-auto px-4 pt-8 md:pt-10 pb-4 md:pb-6">
                 <div className="flex items-end justify-between gap-3 flex-wrap">
                     <div className="min-w-0">
-                        <h1 className="text-2xl md:text-3xl font-bold text-white">New Work Order</h1>
-                        <p className="mt-1 md:mt-2 text-gray-400 text-sm md:text-base">Create a production order. Adjust
+                        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">New Work Order</h1>
+                        <p className="mt-1 md:mt-2 text-slate-500 dark:text-gray-400 text-sm md:text-base">Create a production order. Adjust
                             details as needed.</p>
                     </div>
                     <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
@@ -542,13 +542,13 @@ export default function WorkOrderDetailsPage() {
                         </button>
                         <button
                             onClick={handleSave}
-                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm flex-1 sm:flex-none"
+                            className="px-4 py-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm flex-1 sm:flex-none"
                         >
                             Save
                         </button>
                         <button
                             onClick={handleCancel}
-                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm flex-1 sm:flex-none"
+                            className="px-4 py-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm flex-1 sm:flex-none"
                         >
                             Cancel
                         </button>
@@ -557,14 +557,14 @@ export default function WorkOrderDetailsPage() {
 
                 {/* Unsaved banner (like BOM) */}
                 <div
-                    className="mt-3 md:mt-4 rounded-xl border border-white/10 bg-gray-900/60 px-3 md:px-4 py-3 text-sm flex items-center gap-3">
+                    className="mt-3 md:mt-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 px-3 md:px-4 py-3 text-sm flex items-center gap-3">
                     <span
                         className={`inline-flex h-2 w-2 rounded-full ${hasChanges ? "bg-yellow-400" : "bg-green-400"}`}/>
-                    <span className="text-gray-300 truncate">
+                    <span className="text-slate-700 dark:text-gray-300 truncate">
             {hasChanges ? "You have unsaved changes" : "No changes since open"}
           </span>
-                    <span className="ml-auto text-xs text-gray-500">
-            WO ID: <span className="font-mono text-gray-300">{woId}</span>
+                    <span className="ml-auto text-xs text-slate-600 dark:text-gray-500">
+            WO ID: <span className="font-mono text-slate-700 dark:text-gray-300">{woId}</span>
           </span>
                 </div>
             </header>
@@ -574,37 +574,37 @@ export default function WorkOrderDetailsPage() {
                 {/* Left column */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* General */}
-                    <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
-                        <h2 className="text-lg font-semibold text-white mb-3">General</h2>
+                    <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-4">
+                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">General</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">WO ID</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">WO ID</label>
                                 <input
                                     value={woId}
                                     onChange={(e) => setWoId(e.target.value)}
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                 />
                             </div>
 
                             {/* BOM */}
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">BOM (Finished Good)</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">BOM (Finished Good)</label>
                                 <div className="flex gap-2">
                                     <input
                                         value={bomFgId}
                                         onChange={(e) => setBomFgId(e.target.value)}
                                         placeholder="e.g. ITM-006"
-                                        className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                        className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                     />
                                     <button
                                         onClick={() => setShowBomPicker(true)}
-                                        className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm whitespace-nowrap"
+                                        className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm whitespace-nowrap"
                                     >
                                         Pick
                                     </button>
                                 </div>
                                 {bomFgId && (
-                                    <div className="mt-1 text-xs text-gray-500 flex items-center gap-3">
+                                    <div className="mt-1 text-xs text-slate-600 dark:text-gray-500 flex items-center gap-3">
                                         <a
                                             href={`/boms/${bomFgId}`}
                                             className="text-sky-300 hover:text-sky-200 underline offset-2"
@@ -617,21 +617,21 @@ export default function WorkOrderDetailsPage() {
                             </div>
 
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">Quantity</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Quantity</label>
                                 <input
                                     inputMode="decimal"
                                     value={qty}
                                     onChange={(e) => setQty(e.target.value)}
                                     placeholder="0"
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">Priority</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Priority</label>
                                 <select
                                     value={priority}
                                     onChange={(e) => setPriority(e.target.value)}
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                 >
                                     <option>Low</option>
                                     <option>Medium</option>
@@ -641,51 +641,51 @@ export default function WorkOrderDetailsPage() {
                             </div>
 
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">Assignee</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Assignee</label>
                                 <input
                                     value={assignee}
                                     onChange={(e) => setAssignee(e.target.value)}
                                     placeholder="e.g. K. Adams"
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">Due Date</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Due Date</label>
                                 <input
                                     type="date"
                                     value={dueDate}
                                     onChange={(e) => setDueDate(e.target.value)}
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                 />
                             </div>
 
                             <div className="sm:col-span-2">
-                                <label className="block text-xs text-gray-400 mb-1">Notes</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Notes</label>
                                 <textarea
                                     rows={3}
                                     value={notes}
                                     onChange={(e) => setNotes(e.target.value)}
                                     placeholder="Optional shop traveler notes."
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                 />
                             </div>
                         </div>
                     </div>
 
                     {/* BOM Components & Availability */}
-                    <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
+                    <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-4">
                         <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-3">
-                                <h2 className="text-lg font-semibold text-white">Bill of Materials</h2>
+                                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Bill of Materials</h2>
                                 {bomFgId && (
                                     <div className="flex items-center gap-2 text-xs">
-                    <span className="px-2 py-1 rounded-full bg-gray-800 border border-white/10">
-                      Buildable now: <span className="text-gray-200 font-semibold">{buildableInfo.max}</span>
+                    <span className="px-2 py-1 rounded-full bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10">
+                      Buildable now: <span className="text-slate-900 dark:text-gray-200 font-semibold">{buildableInfo.max}</span>
                     </span>
                                         {buildableInfo.limiting.length > 0 && (
                                             <span
-                                                className="text-gray-400">limit: {buildableInfo.limiting.join(", ")}</span>
+                                                className="text-slate-500 dark:text-gray-400">limit: {buildableInfo.limiting.join(", ")}</span>
                                         )}
                                     </div>
                                 )}
@@ -693,7 +693,7 @@ export default function WorkOrderDetailsPage() {
                             <div className="flex items-center gap-2 text-sm">
                                 <button
                                     onClick={() => setShowBomPicker(true)}
-                                    className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700"
+                                    className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700"
                                 >
                                     Select / Search BOM
                                 </button>
@@ -708,8 +708,8 @@ export default function WorkOrderDetailsPage() {
 
                         {/* Buildable details */}
                         {bomFgId && (
-                            <div className="mb-3 rounded-xl bg-gray-900/50 border border-white/10 p-3">
-                                <div className="text-sm text-gray-300">
+                            <div className="mb-3 rounded-xl bg-white dark:bg-gray-900/50 border border-slate-200 dark:border-white/10 p-3">
+                                <div className="text-sm text-slate-700 dark:text-gray-300">
                                     You can make <span
                                     className="font-semibold text-gray-100">{buildableInfo.max}</span> unit(s) now with
                                     current lots.
@@ -717,7 +717,7 @@ export default function WorkOrderDetailsPage() {
                                 {buildableInfo.details.length > 0 && (
                                     <div className="mt-2 overflow-x-auto">
                                         <table className="min-w-full divide-y divide-gray-800 text-xs">
-                                            <thead className="bg-gray-900/60">
+                                            <thead className="bg-white/80 dark:bg-gray-900/60">
                                             <tr>
                                                 <th className="px-3 py-2 text-left">Component</th>
                                                 <th className="px-3 py-2 text-left">Avail</th>
@@ -733,16 +733,16 @@ export default function WorkOrderDetailsPage() {
                                                     <tr key={d.itemId} className={isLimit ? "bg-red-500/5" : ""}>
                                                         <td className="px-3 py-2">
                                                             <div className="font-mono">{d.itemId}</div>
-                                                            <div className="text-[11px] text-gray-400">{it?.name}</div>
+                                                            <div className="text-[11px] text-slate-500 dark:text-gray-400">{it?.name}</div>
                                                         </td>
                                                         <td className="px-3 py-2">
                                                             {d.available} <span
-                                                            className="text-[11px] text-gray-400">{it?.uom}</span>
+                                                            className="text-[11px] text-slate-500 dark:text-gray-400">{it?.uom}</span>
                                                         </td>
                                                         <td className="px-3 py-2">{d.per}</td>
                                                         <td className="px-3 py-2">
                               <span
-                                  className={classNames("px-2 py-0.5 rounded-full", isLimit ? "bg-red-600/30 text-red-200" : "bg-gray-700/40 text-gray-200")}>
+                                  className={classNames("px-2 py-0.5 rounded-full", isLimit ? "bg-red-600/30 text-red-200" : "bg-gray-700/40 text-slate-900 dark:text-gray-200")}>
                                 {d.maxFromThis}
                               </span>
                                                         </td>
@@ -756,9 +756,9 @@ export default function WorkOrderDetailsPage() {
                             </div>
                         )}
 
-                        <div className="overflow-x-auto border border-white/10 rounded-xl bg-gray-900/40">
+                        <div className="overflow-x-auto border border-slate-200 dark:border-white/10 rounded-xl bg-slate-100/70 dark:bg-gray-900/40">
                             <table className="min-w-full divide-y divide-gray-800 text-sm">
-                                <thead className="bg-gray-900/80">
+                                <thead className="bg-slate-100/80 dark:bg-gray-900/80">
                                 <tr>
                                     <th className="px-4 py-3 text-left">Component Item</th>
                                     <th className="px-4 py-3 text-left">Qty per</th>
@@ -771,10 +771,10 @@ export default function WorkOrderDetailsPage() {
                                     const it = MOCK_ITEMS.find(i => i.id === b.itemId);
                                     const required = (Number(b.qty) || 0) * (qtyNum || 0);
                                     return (
-                                        <tr key={b.itemId} className="hover:bg-gray-800/40 transition">
+                                        <tr key={b.itemId} className="hover:bg-slate-100/60 dark:hover:bg-gray-800/40 transition">
                                             <td className="px-4 py-3">
                                                 <div className="font-mono">{b.itemId}</div>
-                                                <div className="text-xs text-gray-500">{it?.name}</div>
+                                                <div className="text-xs text-slate-600 dark:text-gray-500">{it?.name}</div>
                                             </td>
                                             <td className="px-4 py-3">{b.qty}</td>
                                             <td className="px-4 py-3">{required}</td>
@@ -784,7 +784,7 @@ export default function WorkOrderDetailsPage() {
                                 })}
                                 {(!bomFgId || (bomForParent || []).length === 0) && (
                                     <tr>
-                                        <td colSpan={4} className="px-4 py-6 text-center text-gray-400">Pick a BOM to
+                                        <td colSpan={4} className="px-4 py-6 text-center text-slate-500 dark:text-gray-400">Pick a BOM to
                                             see components.
                                         </td>
                                     </tr>
@@ -795,15 +795,15 @@ export default function WorkOrderDetailsPage() {
 
                         {/* Reserved lots summary */}
                         <div className="mt-4">
-                            <h3 className="text-sm font-semibold text-gray-200 mb-2">Reserved Lots (Traceability)</h3>
+                            <h3 className="text-sm font-semibold text-slate-900 dark:text-gray-200 mb-2">Reserved Lots (Traceability)</h3>
                             {reservedLots.length === 0 ? (
-                                <div className="text-xs text-gray-500">
-                                    No lots reserved yet. Run <span className="text-gray-300">Check &amp; Reserve</span>.
+                                <div className="text-xs text-slate-600 dark:text-gray-500">
+                                    No lots reserved yet. Run <span className="text-slate-700 dark:text-gray-300">Check &amp; Reserve</span>.
                                 </div>
                             ) : (
-                                <div className="overflow-x-auto border border-white/10 rounded-xl bg-gray-900/40">
+                                <div className="overflow-x-auto border border-slate-200 dark:border-white/10 rounded-xl bg-slate-100/70 dark:bg-gray-900/40">
                                     <table className="min-w-full divide-y divide-gray-800 text-sm">
-                                        <thead className="bg-gray-900/80">
+                                        <thead className="bg-slate-100/80 dark:bg-gray-900/80">
                                         <tr>
                                             <th className="px-4 py-3 text-left">Item</th>
                                             <th className="px-4 py-3 text-left">Lot</th>
@@ -828,9 +828,9 @@ export default function WorkOrderDetailsPage() {
                     </div>
 
                     {/* Attachments (placeholder) */}
-                    <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
-                        <h2 className="text-lg font-semibold text-white mb-3">Attachments</h2>
-                        <div className="text-sm text-gray-400">Upload drawings/specs here in the future. (Placeholder)
+                    <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-4">
+                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">Attachments</h2>
+                        <div className="text-sm text-slate-500 dark:text-gray-400">Upload drawings/specs here in the future. (Placeholder)
                         </div>
                     </div>
 
@@ -847,61 +847,61 @@ export default function WorkOrderDetailsPage() {
 
                 {/* Right column: sticky summary */}
                 <aside className="lg:sticky lg:top-6 space-y-4">
-                    <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
-                        <h3 className="text-base font-semibold text-white">Summary</h3>
+                    <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-4">
+                        <h3 className="text-base font-semibold text-slate-900 dark:text-white">Summary</h3>
                         <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-                            <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
-                                <div className="text-xs text-gray-400">BOM</div>
-                                <div className="text-sm text-gray-200 min-h-[20px]">
+                            <div className="rounded-xl bg-slate-100/70 dark:bg-gray-800/60 p-3 border border-slate-200 dark:border-white/10">
+                                <div className="text-xs text-slate-500 dark:text-gray-400">BOM</div>
+                                <div className="text-sm text-slate-900 dark:text-gray-200 min-h-[20px]">
                                     {bomFgId ? (
                                         <a href={`/boms/${bomFgId}`} onClick={(e) => e.preventDefault()}
                                            className="text-sky-300 hover:text-sky-200 underline">
                                             {bomFgId}
                                         </a>
-                                    ) : <span className="text-gray-500">(not set)</span>}
+                                    ) : <span className="text-slate-600 dark:text-gray-500">(not set)</span>}
                                 </div>
                             </div>
-                            <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
-                                <div className="text-xs text-gray-400">Finished Good</div>
-                                <div className="text-sm text-gray-200 min-h-[20px]">
+                            <div className="rounded-xl bg-slate-100/70 dark:bg-gray-800/60 p-3 border border-slate-200 dark:border-white/10">
+                                <div className="text-xs text-slate-500 dark:text-gray-400">Finished Good</div>
+                                <div className="text-sm text-slate-900 dark:text-gray-200 min-h-[20px]">
                                     {parentItem ? `${parentItem.id} — ${parentItem.name}` :
-                                        <span className="text-gray-500">(not set)</span>}
+                                        <span className="text-slate-600 dark:text-gray-500">(not set)</span>}
                                 </div>
                             </div>
-                            <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
-                                <div className="text-xs text-gray-400">Quantity</div>
+                            <div className="rounded-xl bg-slate-100/70 dark:bg-gray-800/60 p-3 border border-slate-200 dark:border-white/10">
+                                <div className="text-xs text-slate-500 dark:text-gray-400">Quantity</div>
                                 <div className="text-lg font-semibold text-gray-100">{qty || 0}</div>
                             </div>
-                            <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
-                                <div className="text-xs text-gray-400">Buildable Now</div>
+                            <div className="rounded-xl bg-slate-100/70 dark:bg-gray-800/60 p-3 border border-slate-200 dark:border-white/10">
+                                <div className="text-xs text-slate-500 dark:text-gray-400">Buildable Now</div>
                                 <div
                                     className="text-lg font-semibold text-gray-100">{bomFgId ? buildableInfo.max : "-"}</div>
                                 {buildableInfo.limiting.length > 0 && (
                                     <div
-                                        className="text-[11px] text-gray-400 mt-1">Limit: {buildableInfo.limiting.join(", ")}</div>
+                                        className="text-[11px] text-slate-500 dark:text-gray-400 mt-1">Limit: {buildableInfo.limiting.join(", ")}</div>
                                 )}
                             </div>
                             <div
-                                className="rounded-2xl bg-gray-800/60 p-3 border border-white/10 col-span-2 flex items-center justify-between text-sm">
+                                className="rounded-2xl bg-slate-100/70 dark:bg-gray-800/60 p-3 border border-slate-200 dark:border-white/10 col-span-2 flex items-center justify-between text-sm">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xs text-gray-400">Priority</span>
+                                    <span className="text-xs text-slate-500 dark:text-gray-400">Priority</span>
                                     {(() => {
                                         const v = priority;
                                         const cls =
                                             v === "Rush" ? "bg-red-600/30 text-red-300" :
                                                 v === "High" ? "bg-orange-600/30 text-orange-300" :
                                                     v === "Medium" ? "bg-sky-600/30 text-sky-300" :
-                                                        "bg-gray-600/30 text-gray-300";
+                                                        "bg-gray-600/30 text-slate-700 dark:text-gray-300";
                                         return <span className={`px-2 py-1 text-xs rounded-full ${cls}`}>{v}</span>;
                                     })()}
                                 </div>
-                                <div className="text-xs text-gray-400">Due <span
-                                    className="text-gray-200">{dueDate || "-"}</span></div>
+                                <div className="text-xs text-slate-500 dark:text-gray-400">Due <span
+                                    className="text-slate-900 dark:text-gray-200">{dueDate || "-"}</span></div>
                             </div>
 
                             {/* Availability / Reservation status */}
-                            <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10 col-span-2">
-                                <div className="text-xs text-gray-400 mb-1">Availability</div>
+                            <div className="rounded-xl bg-slate-100/70 dark:bg-gray-800/60 p-3 border border-slate-200 dark:border-white/10 col-span-2">
+                                <div className="text-xs text-slate-500 dark:text-gray-400 mb-1">Availability</div>
                                 {availabilityChecked ? (
                                     <div className="flex items-center gap-2">
                                         {hasShortage
@@ -910,18 +910,18 @@ export default function WorkOrderDetailsPage() {
                                             : <span
                                                 className="px-2 py-1 text-xs rounded-full bg-emerald-600/30 text-emerald-200">All reserved</span>}
                                         <span
-                                            className="text-xs text-gray-400">{reservedLots.length} lot(s) reserved</span>
+                                            className="text-xs text-slate-500 dark:text-gray-400">{reservedLots.length} lot(s) reserved</span>
                                     </div>
-                                ) : <span className="text-xs text-gray-500">Not checked</span>}
+                                ) : <span className="text-xs text-slate-600 dark:text-gray-500">Not checked</span>}
                             </div>
                         </div>
                     </div>
 
-                    <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4 text-xs text-gray-400">
-                        <div className="font-semibold text-gray-300 mb-2">Tips</div>
+                    <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-4 text-xs text-slate-500 dark:text-gray-400">
+                        <div className="font-semibold text-slate-700 dark:text-gray-300 mb-2">Tips</div>
                         <ul className="list-disc pl-5 space-y-1">
                             <li>Select a BOM; components appear from its structure (mock).</li>
-                            <li>Use <span className="text-gray-300">Check &amp; Reserve</span> to allocate FEFO lots and
+                            <li>Use <span className="text-slate-700 dark:text-gray-300">Check &amp; Reserve</span> to allocate FEFO lots and
                                 see shortages.
                             </li>
                             <li>If there’s a shortage, navigate to Purchasing to cover it.</li>
@@ -932,7 +932,7 @@ export default function WorkOrderDetailsPage() {
 
             {/* Sticky bottom action bar (mobile) — order: Operations, Save, Cancel */}
             <div
-                className="fixed md:hidden bottom-0 inset-x-0 z-30 border-t border-white/10 bg-gray-900/80 backdrop-blur supports-[backdrop-filter]:bg-gray-900/60"
+                className="fixed md:hidden bottom-0 inset-x-0 z-30 border-t border-slate-200 dark:border-white/10 bg-slate-100/80 dark:bg-gray-900/80 backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:bg-gray-900/60"
                 style={{paddingBottom: "env(safe-area-inset-bottom)"}}
             >
                 <div className="px-4 py-3 flex items-center gap-2">
@@ -944,13 +944,13 @@ export default function WorkOrderDetailsPage() {
                     </button>
                     <button
                         onClick={handleSave}
-                        className="flex-1 px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                        className="flex-1 px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                     >
                         Save
                     </button>
                     <button
                         onClick={handleCancel}
-                        className="flex-1 px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                        className="flex-1 px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                     >
                         Cancel
                     </button>
@@ -966,7 +966,7 @@ export default function WorkOrderDetailsPage() {
                     <>
                         <button
                             onClick={() => setOpenConfirmLeave(false)}
-                            className="w-full md:w-28 px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                            className="w-full md:w-28 px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                         >
                             Stay
                         </button>
@@ -979,7 +979,7 @@ export default function WorkOrderDetailsPage() {
                     </>
                 }
             >
-                <div className="text-gray-300">If you leave, your latest unsaved edits will be lost.</div>
+                <div className="text-slate-700 dark:text-gray-300">If you leave, your latest unsaved edits will be lost.</div>
             </Modal>
 
             {/* Pickers, Availability & Notices */}

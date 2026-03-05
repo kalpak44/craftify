@@ -57,16 +57,16 @@ function Modal({open, onClose, title, children, footer}) {
             <div className="absolute inset-0 flex items-center justify-center p-0 md:p-4">
                 <div
                     className="w-full h-full md:h-auto md:max-h-[85vh] md:max-w-3xl overflow-hidden
-                     rounded-none md:rounded-2xl border border-white/10 md:bg-gray-900 bg-gray-900 text-gray-200 shadow-2xl"
+                     rounded-none md:rounded-2xl border border-slate-200 dark:border-white/10 md:bg-white dark:bg-gray-900 bg-white dark:bg-gray-900 text-slate-900 dark:text-gray-200 shadow-2xl"
                 >
-                    <div className="px-4 md:px-5 py-4 border-b border-white/10 flex items-center justify-between">
+                    <div className="px-4 md:px-5 py-4 border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
                         <h3 className="text-base md:text-lg font-semibold">{title}</h3>
                         <button onClick={onClose}
-                                className="text-gray-400 hover:text-gray-200 text-xl leading-none">&times;</button>
+                                className="text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-gray-200 text-xl leading-none">&times;</button>
                     </div>
                     <div className="p-4 md:p-5 h-[calc(100%-112px)] md:h-auto overflow-y-auto">{children}</div>
                     <div
-                        className="px-4 md:px-5 py-4 border-t border-white/10 bg-gray-900/60 flex items-center justify-end gap-2">
+                        className="px-4 md:px-5 py-4 border-t border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 flex items-center justify-end gap-2">
                         {footer}
                     </div>
                 </div>
@@ -96,7 +96,7 @@ function ItemPickerModal({open, onClose, onPick, items, title = "Select Item"}) 
             footer={
                 <button
                     onClick={onClose}
-                    className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm w-full md:w-auto"
+                    className="px-4 py-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm w-full md:w-auto"
                 >
                     Close
                 </button>
@@ -107,23 +107,23 @@ function ItemPickerModal({open, onClose, onPick, items, title = "Select Item"}) 
                     value={q}
                     onChange={e => setQ(e.target.value)}
                     placeholder="Search by ID, name, UoM, status"
-                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                 />
             </div>
 
             {/* Mobile: cards; Desktop: table */}
             <div className="space-y-2 md:hidden">
                 {filtered.map(it => (
-                    <div key={it.id} className="rounded-xl border border-white/10 bg-gray-900/60 p-3">
+                    <div key={it.id} className="rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-3">
                         <div className="flex items-center justify-between gap-3">
                             <div>
                                 <div className="font-mono text-sm text-gray-100">{it.id}</div>
-                                <div className="text-sm text-gray-300">{it.name}</div>
-                                <div className="text-xs text-gray-500 mt-1">UoM: {it.uom} • Status: {it.status}</div>
+                                <div className="text-sm text-slate-700 dark:text-gray-300">{it.name}</div>
+                                <div className="text-xs text-slate-600 dark:text-gray-500 mt-1">UoM: {it.uom} • Status: {it.status}</div>
                             </div>
                             <button
                                 onClick={() => onPick(it)}
-                                className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm whitespace-nowrap"
+                                className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm whitespace-nowrap"
                             >
                                 Use
                             </button>
@@ -131,13 +131,13 @@ function ItemPickerModal({open, onClose, onPick, items, title = "Select Item"}) 
                     </div>
                 ))}
                 {filtered.length === 0 && (
-                    <div className="text-center text-gray-400 py-6 text-sm">No matches</div>
+                    <div className="text-center text-slate-500 dark:text-gray-400 py-6 text-sm">No matches</div>
                 )}
             </div>
 
-            <div className="hidden md:block overflow-x-auto border border-white/10 rounded-xl bg-gray-900/40">
+            <div className="hidden md:block overflow-x-auto border border-slate-200 dark:border-white/10 rounded-xl bg-slate-100/70 dark:bg-gray-900/40">
                 <table className="min-w-full divide-y divide-gray-800 text-sm">
-                    <thead className="bg-gray-900/80">
+                    <thead className="bg-slate-100/80 dark:bg-gray-900/80">
                     <tr>
                         <th className="px-4 py-3 text-left">Item</th>
                         <th className="px-4 py-3 text-left">Name</th>
@@ -148,7 +148,7 @@ function ItemPickerModal({open, onClose, onPick, items, title = "Select Item"}) 
                     </thead>
                     <tbody className="divide-y divide-gray-800">
                     {filtered.map(it => (
-                        <tr key={it.id} className="hover:bg-gray-800/40">
+                        <tr key={it.id} className="hover:bg-slate-100/60 dark:hover:bg-gray-800/40">
                             <td className="px-4 py-3 font-mono">{it.id}</td>
                             <td className="px-4 py-3">{it.name}</td>
                             <td className="px-4 py-3">{it.uom}</td>
@@ -156,7 +156,7 @@ function ItemPickerModal({open, onClose, onPick, items, title = "Select Item"}) 
                             <td className="px-4 py-3 text-right">
                                 <button
                                     onClick={() => onPick(it)}
-                                    className="px-2.5 py-1.5 rounded-md border text-xs bg-gray-700/80 text-white border-white/10 hover:bg-gray-700"
+                                    className="px-2.5 py-1.5 rounded-md border text-xs bg-gray-700/80 text-white border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700"
                                 >
                                     Use Item
                                 </button>
@@ -165,7 +165,7 @@ function ItemPickerModal({open, onClose, onPick, items, title = "Select Item"}) 
                     ))}
                     {filtered.length === 0 && (
                         <tr>
-                            <td colSpan={5} className="px-4 py-6 text-center text-gray-400">No matches</td>
+                            <td colSpan={5} className="px-4 py-6 text-center text-slate-500 dark:text-gray-400">No matches</td>
                         </tr>
                     )}
                     </tbody>
@@ -387,15 +387,15 @@ export default function BOMDetailsPage() {
     };
 
     return (
-        <div className="relative text-gray-200 min-h-screen">
+        <div className="relative text-slate-900 dark:text-gray-200 min-h-screen">
             {/* Fixed, full-viewport responsive gradient layer (prevents partial coverage on tall pages) */}
             <div
                 className={classNames(
                     "pointer-events-none fixed inset-0 -z-10",
-                    "bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950",
-                    "sm:bg-gradient-to-br sm:from-gray-950 sm:via-gray-900 sm:to-gray-950",
-                    "md:bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] md:from-gray-950 md:via-gray-900 md:to-gray-950",
-                    "lg:bg-gradient-to-tr lg:from-gray-950 lg:via-gray-900 lg:to-gray-950"
+                    "bg-gradient-to-b from-slate-50 via-white to-slate-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950",
+                    "dark:sm:bg-gradient-to-br dark:sm:from-gray-950 dark:sm:via-gray-900 dark:sm:to-gray-950",
+                    "dark:md:bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] dark:md:from-gray-950 dark:md:via-gray-900 dark:md:to-gray-950",
+                    "dark:lg:bg-gradient-to-tr dark:lg:from-gray-950 dark:lg:via-gray-900 dark:lg:to-gray-950"
                 )}
             />
 
@@ -403,8 +403,8 @@ export default function BOMDetailsPage() {
             <header className="mx-auto px-4 pt-8 md:pt-10 pb-4 md:pb-6">
                 <div className="flex items-end justify-between gap-3 flex-wrap">
                     <div className="min-w-0">
-                        <h1 className="text-2xl md:text-3xl font-bold text-white">New BOM</h1>
-                        <p className="mt-1 md:mt-2 text-gray-400 text-sm md:text-base">Create a bill of materials — save
+                        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">New BOM</h1>
+                        <p className="mt-1 md:mt-2 text-slate-500 dark:text-gray-400 text-sm md:text-base">Create a bill of materials — save
                             when ready.</p>
                     </div>
                     <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
@@ -421,7 +421,7 @@ export default function BOMDetailsPage() {
                             onClick={handleCancel}
                             className={classNames(
                                 BTN_W,
-                                "px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm flex-1 sm:flex-none"
+                                "px-4 py-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm flex-1 sm:flex-none"
                             )}
                         >
                             Cancel
@@ -431,14 +431,14 @@ export default function BOMDetailsPage() {
 
                 {/* Unsaved banner */}
                 <div
-                    className="mt-3 md:mt-4 rounded-xl border border-white/10 bg-gray-900/60 px-3 md:px-4 py-3 text-sm flex items-center gap-3">
+                    className="mt-3 md:mt-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 px-3 md:px-4 py-3 text-sm flex items-center gap-3">
                     <span
                         className={`inline-flex h-2 w-2 rounded-full ${hasChanges ? "bg-yellow-400" : "bg-green-400"}`}/>
-                    <span className="text-gray-300 truncate">
+                    <span className="text-slate-700 dark:text-gray-300 truncate">
             {hasChanges ? "You have unsaved changes" : "No changes since open"}
           </span>
-                    <span className="ml-auto text-xs text-gray-500">
-            BOM ID: <span className="font-mono text-gray-300">{bomId}</span>
+                    <span className="ml-auto text-xs text-slate-600 dark:text-gray-500">
+            BOM ID: <span className="font-mono text-slate-700 dark:text-gray-300">{bomId}</span>
           </span>
                 </div>
             </header>
@@ -448,59 +448,59 @@ export default function BOMDetailsPage() {
                 {/* Left: form */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* General */}
-                    <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
-                        <h2 className="text-lg font-semibold text-white mb-3">General</h2>
+                    <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-4">
+                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">General</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {/* Parent Item */}
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">Parent Item / Finished Good</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Parent Item / Finished Good</label>
                                 <div className="flex gap-2">
                                     <input
                                         value={parentItemId}
                                         onChange={(e) => setParentItemId(e.target.value)}
                                         placeholder="e.g. ITM-006"
-                                        className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                        className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                     />
                                     <button
                                         onClick={() => setOpenParentPicker(true)}
-                                        className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                                        className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                                     >
                                         Pick
                                     </button>
                                 </div>
                                 {parentItem && (
-                                    <p className="mt-1 text-xs text-gray-500">
+                                    <p className="mt-1 text-xs text-slate-600 dark:text-gray-500">
                                         {parentItem.name} • UoM: {parentItem.uom} • Status: {parentItem.status}
                                     </p>
                                 )}
                             </div>
 
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">BOM ID</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">BOM ID</label>
                                 <input
                                     value={bomId}
                                     readOnly
                                     aria-readonly="true"
                                     placeholder={isEdit ? undefined : "Will be generated"}
-                                    className="w-full rounded-lg bg-gray-800/70 border border-white/10 px-3 py-2 text-sm cursor-not-allowed text-gray-300"
+                                    className="w-full rounded-lg bg-slate-100/70 dark:bg-gray-800/70 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm cursor-not-allowed text-slate-700 dark:text-gray-300"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">Revision</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Revision</label>
                                 <input
                                     value={revision}
                                     onChange={(e) => setRevision(e.target.value)}
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">Status</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Status</label>
                                 <select
                                     value={status}
                                     onChange={(e) => setStatus(e.target.value)}
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                 >
                                     <option>Draft</option>
                                     <option>Active</option>
@@ -510,12 +510,12 @@ export default function BOMDetailsPage() {
                             </div>
 
                             <div className="sm:col-span-2">
-                                <label className="block text-xs text-gray-400 mb-1">Description / Notes</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Description / Notes</label>
                                 <textarea
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
                                     rows={4}
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                     placeholder="Optional, visible on BOM details and shop traveler."
                                 />
                             </div>
@@ -523,12 +523,12 @@ export default function BOMDetailsPage() {
                     </div>
 
                     {/* Components */}
-                    <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
+                    <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-4">
                         <div className="flex items-center justify-between mb-3">
-                            <h2 className="text-lg font-semibold text-white">Components</h2>
+                            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Components</h2>
                             <button
                                 onClick={addRow}
-                                className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                                className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                             >
                                 + Add Row
                             </button>
@@ -545,12 +545,12 @@ export default function BOMDetailsPage() {
                                     sameAsParent: r.itemId && r.itemId === parentItemId,
                                 };
                                 return (
-                                    <div key={r.key} className="rounded-xl border border-white/10 bg-gray-900/40 p-3">
+                                    <div key={r.key} className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100/70 dark:bg-gray-900/40 p-3">
                                         <div className="flex items-start gap-2">
                                             <div className="flex-1 space-y-2">
                                                 {/* Item */}
                                                 <div>
-                                                    <label className="block text-[11px] text-gray-400 mb-1">Component
+                                                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1">Component
                                                         Item</label>
                                                     <div className="flex gap-2">
                                                         <input
@@ -565,8 +565,8 @@ export default function BOMDetailsPage() {
                                                             }}
                                                             placeholder="e.g. ITM-003"
                                                             className={classNames(
-                                                                "w-full rounded-lg bg-gray-800 px-3 py-2 text-sm border",
-                                                                rowErrors.itemId ? "border-red-500/60" : "border-white/10"
+                                                                "w-full rounded-lg bg-slate-100 dark:bg-gray-800 px-3 py-2 text-sm border",
+                                                                rowErrors.itemId ? "border-red-500/60" : "border-slate-200 dark:border-white/10"
                                                             )}
                                                         />
                                                         <button
@@ -574,13 +574,13 @@ export default function BOMDetailsPage() {
                                                                 open: true,
                                                                 rowKey: r.key
                                                             })}
-                                                            className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                                                            className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                                                         >
                                                             Pick
                                                         </button>
                                                     </div>
                                                     {it && (
-                                                        <div className="text-xs text-gray-500 mt-1">
+                                                        <div className="text-xs text-slate-600 dark:text-gray-500 mt-1">
                                                             {it.name} • Default UoM: {it.uom} • Status: {it.status}
                                                         </div>
                                                     )}
@@ -593,7 +593,7 @@ export default function BOMDetailsPage() {
                                                 {/* Qty & UoM */}
                                                 <div className="grid grid-cols-2 gap-2">
                                                     <div>
-                                                        <label className="block text-[11px] text-gray-400 mb-1">Qty / 1
+                                                        <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1">Qty / 1
                                                             pc</label>
                                                         <input
                                                             inputMode="decimal"
@@ -601,21 +601,21 @@ export default function BOMDetailsPage() {
                                                             onChange={(e) => updateRow(r.key, {qty: e.target.value})}
                                                             placeholder="0"
                                                             className={classNames(
-                                                                "w-full rounded-lg bg-gray-800 border px-3 py-2 text-sm",
-                                                                rowErrors.qty ? "border-red-500/60" : "border-white/10"
+                                                                "w-full rounded-lg bg-slate-100 dark:bg-gray-800 border px-3 py-2 text-sm",
+                                                                rowErrors.qty ? "border-red-500/60" : "border-slate-200 dark:border-white/10"
                                                             )}
                                                         />
                                                     </div>
                                                     <div>
                                                         <label
-                                                            className="block text-[11px] text-gray-400 mb-1">UoM</label>
+                                                            className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1">UoM</label>
                                                         <input
                                                             value={r.uom}
                                                             onChange={(e) => updateRow(r.key, {uom: e.target.value})}
                                                             placeholder={it ? it.uom : "e.g. pcs"}
                                                             className={classNames(
-                                                                "w-full rounded-lg bg-gray-800 border px-3 py-2 text-sm",
-                                                                rowErrors.uom ? "border-red-500/60" : "border-white/10"
+                                                                "w-full rounded-lg bg-slate-100 dark:bg-gray-800 border px-3 py-2 text-sm",
+                                                                rowErrors.uom ? "border-red-500/60" : "border-slate-200 dark:border-white/10"
                                                             )}
                                                         />
                                                     </div>
@@ -624,12 +624,12 @@ export default function BOMDetailsPage() {
                                                 {/* Notes */}
                                                 <div>
                                                     <label
-                                                        className="block text-[11px] text-gray-400 mb-1">Notes</label>
+                                                        className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1">Notes</label>
                                                     <input
                                                         value={r.notes}
                                                         onChange={(e) => updateRow(r.key, {notes: e.target.value})}
                                                         placeholder="Optional notes"
-                                                        className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                                        className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                                     />
                                                 </div>
                                             </div>
@@ -640,7 +640,7 @@ export default function BOMDetailsPage() {
                                                     onClick={() => cloneRow(r.key)}
                                                     title="Clone row"
                                                     className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md border text-xs font-medium
-                                     bg-gray-800/60 border-white/10 text-gray-200 hover:bg-gray-700/60"
+                                     bg-slate-100/70 dark:bg-gray-800/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-gray-200 hover:bg-slate-200 dark:hover:bg-gray-700/60"
                                                 >
                                                     Clone
                                                 </button>
@@ -661,9 +661,9 @@ export default function BOMDetailsPage() {
 
                         {/* Desktop: Table */}
                         <div
-                            className="hidden md:block overflow-x-auto border border-white/10 rounded-xl bg-gray-900/40">
+                            className="hidden md:block overflow-x-auto border border-slate-200 dark:border-white/10 rounded-xl bg-slate-100/70 dark:bg-gray-900/40">
                             <table className="min-w-full divide-y divide-gray-800 text-sm">
-                                <thead className="bg-gray-900/80">
+                                <thead className="bg-slate-100/80 dark:bg-gray-900/80">
                                 <tr>
                                     <th className="px-4 py-3 text-left">Component Item</th>
                                     <th className="px-4 py-3 text-left">Qty / 1 pc</th>
@@ -683,7 +683,7 @@ export default function BOMDetailsPage() {
                                     };
 
                                     return (
-                                        <tr key={r.key} className="hover:bg-gray-800/40 transition">
+                                        <tr key={r.key} className="hover:bg-slate-100/60 dark:hover:bg-gray-800/40 transition">
                                             <td className="px-4 py-3 align-top">
                                                 <div className="flex flex-col gap-1">
                                                     <div className="flex gap-2">
@@ -699,8 +699,8 @@ export default function BOMDetailsPage() {
                                                             }}
                                                             placeholder="e.g. ITM-003"
                                                             className={classNames(
-                                                                "w-full rounded-lg bg-gray-800 px-3 py-2 text-sm border",
-                                                                rowErrors.itemId ? "border-red-500/60" : "border-white/10"
+                                                                "w-full rounded-lg bg-slate-100 dark:bg-gray-800 px-3 py-2 text-sm border",
+                                                                rowErrors.itemId ? "border-red-500/60" : "border-slate-200 dark:border-white/10"
                                                             )}
                                                         />
                                                         <button
@@ -708,13 +708,13 @@ export default function BOMDetailsPage() {
                                                                 open: true,
                                                                 rowKey: r.key
                                                             })}
-                                                            className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm whitespace-nowrap"
+                                                            className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm whitespace-nowrap"
                                                         >
                                                             Pick
                                                         </button>
                                                     </div>
                                                     {it && (
-                                                        <div className="text-xs text-gray-500">
+                                                        <div className="text-xs text-slate-600 dark:text-gray-500">
                                                             {it.name} • Default UoM: {it.uom} • Status: {it.status}
                                                         </div>
                                                     )}
@@ -732,8 +732,8 @@ export default function BOMDetailsPage() {
                                                     onChange={(e) => updateRow(r.key, {qty: e.target.value})}
                                                     placeholder="0"
                                                     className={classNames(
-                                                        "w-28 rounded-lg bg-gray-800 border px-3 py-2 text-sm",
-                                                        rowErrors.qty ? "border-red-500/60" : "border-white/10"
+                                                        "w-28 rounded-lg bg-slate-100 dark:bg-gray-800 border px-3 py-2 text-sm",
+                                                        rowErrors.qty ? "border-red-500/60" : "border-slate-200 dark:border-white/10"
                                                     )}
                                                 />
                                             </td>
@@ -744,8 +744,8 @@ export default function BOMDetailsPage() {
                                                     onChange={(e) => updateRow(r.key, {uom: e.target.value})}
                                                     placeholder={it ? it.uom : "e.g. pcs"}
                                                     className={classNames(
-                                                        "w-28 rounded-lg bg-gray-800 border px-3 py-2 text-sm",
-                                                        rowErrors.uom ? "border-red-500/60" : "border-white/10"
+                                                        "w-28 rounded-lg bg-slate-100 dark:bg-gray-800 border px-3 py-2 text-sm",
+                                                        rowErrors.uom ? "border-red-500/60" : "border-slate-200 dark:border-white/10"
                                                     )}
                                                 />
                                             </td>
@@ -755,7 +755,7 @@ export default function BOMDetailsPage() {
                                                     value={r.notes}
                                                     onChange={(e) => updateRow(r.key, {notes: e.target.value})}
                                                     placeholder="Optional notes"
-                                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                                 />
                                             </td>
 
@@ -765,7 +765,7 @@ export default function BOMDetailsPage() {
                                                         onClick={() => cloneRow(r.key)}
                                                         title="Clone row"
                                                         className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md border text-xs font-medium
-                                         bg-gray-800/60 border-white/10 text-gray-200 hover:bg-gray-700/60"
+                                         bg-slate-100/70 dark:bg-gray-800/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-gray-200 hover:bg-slate-200 dark:hover:bg-gray-700/60"
                                                     >
                                                         Clone
                                                     </button>
@@ -787,21 +787,21 @@ export default function BOMDetailsPage() {
                         </div>
 
                         {/* Table footer helper */}
-                        <div className="mt-3 text-xs text-gray-500 flex items-center justify-between flex-wrap gap-3">
+                        <div className="mt-3 text-xs text-slate-600 dark:text-gray-500 flex items-center justify-between flex-wrap gap-3">
                             <div className="hidden md:block">
-                                Shortcuts: <span className="text-gray-300">Enter</span> add row • <span
-                                className="text-gray-300">Ctrl/⌘+D</span> duplicate focused row • <span
-                                className="text-gray-300">Delete</span> remove focused row
+                                Shortcuts: <span className="text-slate-700 dark:text-gray-300">Enter</span> add row • <span
+                                className="text-slate-700 dark:text-gray-300">Ctrl/⌘+D</span> duplicate focused row • <span
+                                className="text-slate-700 dark:text-gray-300">Delete</span> remove focused row
                             </div>
                             <div className="md:hidden">
-                                Tip: Use the <span className="text-gray-300">Pick</span> button to search items quickly.
+                                Tip: Use the <span className="text-slate-700 dark:text-gray-300">Pick</span> button to search items quickly.
                             </div>
                             <div className="flex items-center gap-3">
                                 {componentsCount === 0 ? (
                                     <span className="text-yellow-400">No valid components yet</span>
                                 ) : (
                                     <span>Valid components: <span
-                                        className="text-gray-300">{componentsCount}</span></span>
+                                        className="text-slate-700 dark:text-gray-300">{componentsCount}</span></span>
                                 )}
                             </div>
                         </div>
@@ -818,9 +818,9 @@ export default function BOMDetailsPage() {
                     )}
 
                     {/* Attachments (placeholder) */}
-                    <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
-                        <h2 className="text-lg font-semibold text-white mb-3">Attachments</h2>
-                        <div className="text-sm text-gray-400">
+                    <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-4">
+                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">Attachments</h2>
+                        <div className="text-sm text-slate-500 dark:text-gray-400">
                             Upload drawings/specs here in the future. (Placeholder)
                         </div>
                     </div>
@@ -828,15 +828,15 @@ export default function BOMDetailsPage() {
 
                 {/* Right: sticky summary */}
                 <aside className="lg:sticky lg:top-6 space-y-4">
-                    <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
-                        <h3 className="text-base font-semibold text-white">Summary</h3>
+                    <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-4">
+                        <h3 className="text-base font-semibold text-slate-900 dark:text-white">Summary</h3>
                         <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-                            <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
-                                <div className="text-xs text-gray-400">Components</div>
+                            <div className="rounded-xl bg-slate-100/70 dark:bg-gray-800/60 p-3 border border-slate-200 dark:border-white/10">
+                                <div className="text-xs text-slate-500 dark:text-gray-400">Components</div>
                                 <div className="text-lg font-semibold text-gray-100">{componentsCount}</div>
                             </div>
-                            <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
-                                <div className="text-xs text-gray-400">Status</div>
+                            <div className="rounded-xl bg-slate-100/70 dark:bg-gray-800/60 p-3 border border-slate-200 dark:border-white/10">
+                                <div className="text-xs text-slate-500 dark:text-gray-400">Status</div>
                                 <div className="mt-1">
                                   <span
                                       className={classNames(
@@ -851,18 +851,18 @@ export default function BOMDetailsPage() {
                                   </span>
                                 </div>
                             </div>
-                            <div className="rounded-2xl bg-gray-800/60 p-3 border border-white/10 col-span-2">
-                                <div className="text-xs text-gray-400">Parent Item</div>
-                                <div className="text-sm text-gray-200 min-h-[20px]">
+                            <div className="rounded-2xl bg-slate-100/70 dark:bg-gray-800/60 p-3 border border-slate-200 dark:border-white/10 col-span-2">
+                                <div className="text-xs text-slate-500 dark:text-gray-400">Parent Item</div>
+                                <div className="text-sm text-slate-900 dark:text-gray-200 min-h-[20px]">
                                     {parentItem ? `${parentItem.id} — ${parentItem.name}` :
-                                        <span className="text-gray-500">(not set)</span>}
+                                        <span className="text-slate-600 dark:text-gray-500">(not set)</span>}
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4 text-xs text-gray-400">
-                        <div className="font-semibold text-gray-300 mb-2">Tips</div>
+                    <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-4 text-xs text-slate-500 dark:text-gray-400">
+                        <div className="font-semibold text-slate-700 dark:text-gray-300 mb-2">Tips</div>
                         <ul className="list-disc pl-5 space-y-1">
                             <li>Use the row “Pick” button to search and select component items.</li>
                             <li>Default UoM is prefilled from the selected component when available.</li>
@@ -875,13 +875,13 @@ export default function BOMDetailsPage() {
 
             {/* Sticky bottom action bar (mobile) */}
             <div
-                className="fixed md:hidden bottom-0 inset-x-0 z-30 border-t border-white/10 bg-gray-900/80 backdrop-blur supports-[backdrop-filter]:bg-gray-900/60"
+                className="fixed md:hidden bottom-0 inset-x-0 z-30 border-t border-slate-200 dark:border-white/10 bg-slate-100/80 dark:bg-gray-900/80 backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:bg-gray-900/60"
                 style={{paddingBottom: "env(safe-area-inset-bottom)"}}
             >
                 <div className="px-4 py-3 flex items-center gap-2">
                     <button
                         onClick={handleCancel}
-                        className="flex-1 px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                        className="flex-1 px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                     >
                         Cancel
                     </button>
@@ -903,7 +903,7 @@ export default function BOMDetailsPage() {
                     <>
                         <button
                             onClick={() => setOpenConfirmLeave(false)}
-                            className="w-full md:w-28 px-3 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                            className="w-full md:w-28 px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                         >
                             Stay
                         </button>
@@ -916,15 +916,15 @@ export default function BOMDetailsPage() {
                     </>
                 }
             >
-                <div className="text-gray-300">If you leave, your latest unsaved edits will be lost.</div>
+                <div className="text-slate-700 dark:text-gray-300">If you leave, your latest unsaved edits will be lost.</div>
             </Modal>
 
             {/* Inline load/save states and errors */}
             {loading && (
-                <div className="fixed top-2 left-1/2 -translate-x-1/2 z-40 px-3 py-2 rounded bg-gray-800/90 border border-white/10 text-sm">Loading BOM…</div>
+                <div className="fixed top-2 left-1/2 -translate-x-1/2 z-40 px-3 py-2 rounded bg-slate-100 dark:bg-gray-800/90 border border-slate-200 dark:border-white/10 text-sm">Loading BOM…</div>
             )}
             {saving && (
-                <div className="fixed top-2 left-1/2 -translate-x-1/2 z-40 px-3 py-2 rounded bg-blue-800/80 border border-white/10 text-sm">Saving…</div>
+                <div className="fixed top-2 left-1/2 -translate-x-1/2 z-40 px-3 py-2 rounded bg-blue-800/80 border border-slate-200 dark:border-white/10 text-sm">Saving…</div>
             )}
             {error && (
                 <div className="fixed top-2 left-1/2 -translate-x-1/2 z-40 px-3 py-2 rounded bg-red-800/80 border border-red-400/40 text-sm text-red-100 shadow">{error}</div>

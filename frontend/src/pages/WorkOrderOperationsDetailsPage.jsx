@@ -17,7 +17,7 @@ const STATUS_LIST = ["Open", "In Progress", "Hold", "Completed"];
 const PRIORITIES = ["Low", "Medium", "High", "Rush"];
 
 const PRIORITY_CLS = {
-    Low: "bg-gray-600/30 text-gray-300",
+    Low: "bg-gray-600/30 text-slate-700 dark:text-gray-300",
     Medium: "bg-sky-600/30 text-sky-300",
     High: "bg-orange-600/30 text-orange-300",
     Rush: "bg-red-600/30 text-red-300",
@@ -134,13 +134,13 @@ export default function WorkOrderOperationsDetailsPage() {
     );
 
     return (
-        <div className="bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200 min-h-screen">
+        <div className="bg-gradient-to-b from-slate-50 via-white to-slate-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 text-slate-900 dark:text-gray-200 min-h-screen">
             {/* Header */}
             <header className="mx-auto px-4 pt-10 pb-6">
                 <div className="flex items-end justify-between gap-4 flex-wrap">
                     <div>
-                        <h1 className="text-3xl font-bold text-white">New Operation • {woId}</h1>
-                        <p className="mt-2 text-gray-400">Create an operation for this work order. Fields marked with *
+                        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">New Operation • {woId}</h1>
+                        <p className="mt-2 text-slate-500 dark:text-gray-400">Create an operation for this work order. Fields marked with *
                             are required.</p>
                     </div>
                     <div className="flex gap-3">
@@ -157,7 +157,7 @@ export default function WorkOrderOperationsDetailsPage() {
                         </button>
                         <button
                             onClick={handleCancel}
-                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                            className="px-4 py-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm"
                         >
                             Cancel
                         </button>
@@ -166,13 +166,13 @@ export default function WorkOrderOperationsDetailsPage() {
 
                 {/* Autosave banner */}
                 <div
-                    className="mt-4 rounded-xl border border-white/10 bg-gray-900/60 px-4 py-3 text-sm flex items-center gap-3">
+                    className="mt-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 px-4 py-3 text-sm flex items-center gap-3">
                     <span className={`inline-flex h-2 w-2 rounded-full ${dirty ? "bg-yellow-400" : "bg-green-400"}`}/>
-                    <span className="text-gray-300">
+                    <span className="text-slate-700 dark:text-gray-300">
             {dirty ? "Saving draft…" : lastSavedAt ? `Last saved ${lastSavedAt.toLocaleTimeString()}` : "No changes yet"}
           </span>
-                    <span className="ml-auto text-xs text-gray-500">
-            Operation ID: <span className="font-mono text-gray-300">{opId}</span>
+                    <span className="ml-auto text-xs text-slate-600 dark:text-gray-500">
+            Operation ID: <span className="font-mono text-slate-700 dark:text-gray-300">{opId}</span>
           </span>
                 </div>
             </header>
@@ -182,23 +182,23 @@ export default function WorkOrderOperationsDetailsPage() {
                 {/* Left column (form) */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* General */}
-                    <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
-                        <h2 className="text-lg font-semibold text-white mb-3">General</h2>
+                    <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-4">
+                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">General</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">Operation ID *</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Operation ID *</label>
                                 <input
                                     value={opId}
                                     onChange={(e) => setOpId(e.target.value)}
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm font-mono"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm font-mono"
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">Status *</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Status *</label>
                                 <select
                                     value={status}
                                     onChange={(e) => setStatus(e.target.value)}
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                 >
                                     {STATUS_LIST.map((s) => (
                                         <option key={s}>{s}</option>
@@ -207,21 +207,21 @@ export default function WorkOrderOperationsDetailsPage() {
                             </div>
 
                             <div className="sm:col-span-2">
-                                <label className="block text-xs text-gray-400 mb-1">Title *</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Title *</label>
                                 <input
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
                                     placeholder="e.g. CNC milling, Final assembly, QA inspection"
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">Priority *</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Priority *</label>
                                 <select
                                     value={priority}
                                     onChange={(e) => setPriority(e.target.value)}
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                 >
                                     {PRIORITIES.map((p) => (
                                         <option key={p}>{p}</option>
@@ -230,33 +230,33 @@ export default function WorkOrderOperationsDetailsPage() {
                             </div>
 
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">Assignee *</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Assignee *</label>
                                 <input
                                     value={assignee}
                                     onChange={(e) => setAssignee(e.target.value)}
                                     placeholder="e.g. Alice Chen"
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">Estimation</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Estimation</label>
                                 <input
                                     value={estimate}
                                     onChange={(e) => setEstimate(e.target.value)}
                                     placeholder="e.g. 30m, 6h, 2d"
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                 />
                             </div>
 
                             <div className="sm:col-span-2">
-                                <label className="block text-xs text-gray-400 mb-1">Notes</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Notes</label>
                                 <textarea
                                     rows={3}
                                     value={notes}
                                     onChange={(e) => setNotes(e.target.value)}
                                     placeholder="Optional description, work instructions, fixtures, etc."
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                 />
                             </div>
                         </div>
@@ -277,47 +277,47 @@ export default function WorkOrderOperationsDetailsPage() {
 
                 {/* Right sticky summary */}
                 <aside className="lg:sticky lg:top-6 space-y-4">
-                    <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
-                        <h3 className="text-base font-semibold text-white">Summary</h3>
+                    <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-4">
+                        <h3 className="text-base font-semibold text-slate-900 dark:text-white">Summary</h3>
                         <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-                            <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
-                                <div className="text-xs text-gray-400">Work Order</div>
-                                <div className="text-sm text-gray-200">{woId}</div>
+                            <div className="rounded-xl bg-slate-100/70 dark:bg-gray-800/60 p-3 border border-slate-200 dark:border-white/10">
+                                <div className="text-xs text-slate-500 dark:text-gray-400">Work Order</div>
+                                <div className="text-sm text-slate-900 dark:text-gray-200">{woId}</div>
                             </div>
-                            <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
-                                <div className="text-xs text-gray-400">Operation</div>
-                                <div className="text-sm text-gray-200 font-mono">{opId || "—"}</div>
+                            <div className="rounded-xl bg-slate-100/70 dark:bg-gray-800/60 p-3 border border-slate-200 dark:border-white/10">
+                                <div className="text-xs text-slate-500 dark:text-gray-400">Operation</div>
+                                <div className="text-sm text-slate-900 dark:text-gray-200 font-mono">{opId || "—"}</div>
                             </div>
-                            <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
-                                <div className="text-xs text-gray-400">Status</div>
-                                <div className="text-sm text-gray-200">{status}</div>
+                            <div className="rounded-xl bg-slate-100/70 dark:bg-gray-800/60 p-3 border border-slate-200 dark:border-white/10">
+                                <div className="text-xs text-slate-500 dark:text-gray-400">Status</div>
+                                <div className="text-sm text-slate-900 dark:text-gray-200">{status}</div>
                             </div>
-                            <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
-                                <div className="text-xs text-gray-400">Priority</div>
-                                <div className="text-sm text-gray-200">
+                            <div className="rounded-xl bg-slate-100/70 dark:bg-gray-800/60 p-3 border border-slate-200 dark:border-white/10">
+                                <div className="text-xs text-slate-500 dark:text-gray-400">Priority</div>
+                                <div className="text-sm text-slate-900 dark:text-gray-200">
                                     <PriorityBadge value={priority}/>
                                 </div>
                             </div>
-                            <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
-                                <div className="text-xs text-gray-400">Assignee</div>
-                                <div className="text-sm text-gray-200">{assignee ||
-                                    <span className="text-gray-500">(not set)</span>}</div>
+                            <div className="rounded-xl bg-slate-100/70 dark:bg-gray-800/60 p-3 border border-slate-200 dark:border-white/10">
+                                <div className="text-xs text-slate-500 dark:text-gray-400">Assignee</div>
+                                <div className="text-sm text-slate-900 dark:text-gray-200">{assignee ||
+                                    <span className="text-slate-600 dark:text-gray-500">(not set)</span>}</div>
                             </div>
-                            <div className="rounded-xl bg-gray-800/60 p-3 border border-white/10">
-                                <div className="text-xs text-gray-400">Estimation</div>
+                            <div className="rounded-xl bg-slate-100/70 dark:bg-gray-800/60 p-3 border border-slate-200 dark:border-white/10">
+                                <div className="text-xs text-slate-500 dark:text-gray-400">Estimation</div>
                                 <div className="text-lg font-semibold text-gray-100">{estimate || "—"}</div>
                             </div>
 
                             <div
-                                className="col-span-2 rounded-2xl bg-gray-900/60 p-4 text-xs text-gray-400 border border-white/10">
-                                <div className="font-semibold text-gray-300 mb-2">Tips</div>
+                                className="col-span-2 rounded-2xl bg-white/80 dark:bg-gray-900/60 p-4 text-xs text-slate-500 dark:text-gray-400 border border-slate-200 dark:border-white/10">
+                                <div className="font-semibold text-slate-700 dark:text-gray-300 mb-2">Tips</div>
                                 <ul className="list-disc pl-5 space-y-1">
                                     <li>Use clear, action-based titles (e.g., “CNC milling – top plate”).</li>
                                     <li>
                                         Estimation supports minutes (m), hours (h), and days (d), e.g., <span
-                                        className="text-gray-300">30m</span>,{" "}
-                                        <span className="text-gray-300">6h</span>, <span
-                                        className="text-gray-300">2d</span>.
+                                        className="text-slate-700 dark:text-gray-300">30m</span>,{" "}
+                                        <span className="text-slate-700 dark:text-gray-300">6h</span>, <span
+                                        className="text-slate-700 dark:text-gray-300">2d</span>.
                                     </li>
                                     <li>You can edit fields on the Kanban card later via inline editing.</li>
                                 </ul>

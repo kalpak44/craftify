@@ -233,12 +233,12 @@ export default function CalendarPage() {
         };
 
         return (
-            <div className="border border-white/10 rounded-2xl overflow-hidden bg-gray-900/60">
+            <div className="border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden bg-white/80 dark:bg-gray-900/60">
                 <div className="grid grid-cols-[64px_1fr]">
                     {/* hour gutter */}
-                    <div className="bg-gray-900/70 border-r border-white/10">
+                    <div className="bg-slate-100/70 dark:bg-gray-900/70 border-r border-slate-200 dark:border-white/10">
                         {Array.from({length: 24}, (_, h) => (
-                            <div key={h} className="h-12 px-2 text-xs text-gray-400 flex items-start justify-end pt-1">
+                            <div key={h} className="h-12 px-2 text-xs text-slate-500 dark:text-gray-400 flex items-start justify-end pt-1">
                                 {String(h).padStart(2, "0")}:00
                             </div>
                         ))}
@@ -298,17 +298,17 @@ export default function CalendarPage() {
         };
 
         return (
-            <div className="border border-white/10 rounded-2xl overflow-hidden bg-gray-900/60">
+            <div className="border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden bg-white/80 dark:bg-gray-900/60">
                 {/* header row with weekdays */}
-                <div className="grid grid-cols-[64px_repeat(7,minmax(0,1fr))] bg-gray-900/70 border-b border-white/10">
+                <div className="grid grid-cols-[64px_repeat(7,minmax(0,1fr))] bg-slate-100/70 dark:bg-gray-900/70 border-b border-slate-200 dark:border-white/10">
                     <div className="h-10"/>
                     {days.map((d) => (
                         <div key={d.toISOString()}
-                             className="h-10 flex items-center justify-center text-xs sm:text-sm text-gray-300">
+                             className="h-10 flex items-center justify-center text-xs sm:text-sm text-slate-700 dark:text-gray-300">
                             <div
-                                className={`flex items-baseline gap-2 ${isSameDay(d, new Date()) ? "text-white font-semibold" : ""}`}>
+                                className={`flex items-baseline gap-2 ${isSameDay(d, new Date()) ? "text-slate-900 dark:text-white font-semibold" : ""}`}>
                                 <span>{weekdayLabels[(d.getDay() + 6) % 7]}</span>
-                                <span className="text-gray-400">{d.getDate()}</span>
+                                <span className="text-slate-500 dark:text-gray-400">{d.getDate()}</span>
                             </div>
                         </div>
                     ))}
@@ -316,9 +316,9 @@ export default function CalendarPage() {
 
                 <div className="grid grid-cols-[64px_repeat(7,minmax(0,1fr))]">
                     {/* hour gutter */}
-                    <div className="bg-gray-900/70 border-r border-white/10">
+                    <div className="bg-slate-100/70 dark:bg-gray-900/70 border-r border-slate-200 dark:border-white/10">
                         {Array.from({length: 24}, (_, h) => (
-                            <div key={h} className="h-12 px-2 text-xs text-gray-400 flex items-start justify-end pt-1">
+                            <div key={h} className="h-12 px-2 text-xs text-slate-500 dark:text-gray-400 flex items-start justify-end pt-1">
                                 {String(h).padStart(2, "0")}:00
                             </div>
                         ))}
@@ -332,7 +332,7 @@ export default function CalendarPage() {
                         return (
                             <div
                                 key={day.toISOString()}
-                                className="relative border-l border-white/10"
+                                className="relative border-l border-slate-200 dark:border-white/10"
                                 style={{height: containerHeight}}
                                 onClick={(e) => handleDayGridClick(e, day)}
                             >
@@ -384,39 +384,39 @@ export default function CalendarPage() {
         };
 
         return (
-            <div className="border border-white/10 rounded-2xl overflow-hidden bg-gray-900/60">
-                <div className="grid grid-cols-7 bg-gray-900/70 border-b border-white/10">
+            <div className="border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden bg-white/80 dark:bg-gray-900/60">
+                <div className="grid grid-cols-7 bg-slate-100/70 dark:bg-gray-900/70 border-b border-slate-200 dark:border-white/10">
                     {weekdayLabels.map((w) => (
-                        <div key={w} className="h-10 text-xs sm:text-sm text-gray-300 flex items-center justify-center">
+                        <div key={w} className="h-10 text-xs sm:text-sm text-slate-700 dark:text-gray-300 flex items-center justify-center">
                             {w}
                         </div>
                     ))}
                 </div>
-                <div className="grid grid-cols-7 gap-px bg-gray-800/40">
+                <div className="grid grid-cols-7 gap-px bg-slate-100/60 dark:bg-gray-800/40">
                     {days.map((d) => {
                         const evs = eventsOnDay(d);
                         return (
                             <div
                                 key={d.toISOString()}
-                                className={`min-h-28 bg-gray-900 p-2 hover:bg-gray-800/50 transition ${isOutside(d) ? "opacity-50" : ""} ${
+                                className={`min-h-28 bg-white dark:bg-gray-900 p-2 hover:bg-slate-100 dark:hover:bg-gray-800/50 transition ${isOutside(d) ? "opacity-50" : ""} ${
                                     isSameDay(d, new Date()) ? "ring-1 ring-blue-400" : ""
                                 }`}
                                 onDoubleClick={() => onDayDoubleClick(d)}
                                 title="Double-click to add an event"
                             >
                                 <div className="flex items-center justify-between">
-                                    <div className="text-xs text-gray-400">{d.getDate()}</div>
+                                    <div className="text-xs text-slate-500 dark:text-gray-400">{d.getDate()}</div>
                                 </div>
                                 <div className="mt-1 space-y-1">
                                     {evs.slice(0, 3).map((ev) => (
                                         <div key={ev.id} className="flex items-center gap-1">
                                             <span
                                                 className={`inline-block w-2 h-2 rounded ${COLORS[ev.color] || COLORS.slate}`}/>
-                                            <span className="truncate text-xs text-gray-200">{ev.title}</span>
+                                            <span className="truncate text-xs text-slate-900 dark:text-gray-200">{ev.title}</span>
                                         </div>
                                     ))}
                                     {evs.length > 3 &&
-                                        <div className="text-[11px] text-gray-400">+{evs.length - 3} more</div>}
+                                        <div className="text-[11px] text-slate-500 dark:text-gray-400">+{evs.length - 3} more</div>}
                                 </div>
                             </div>
                         );
@@ -443,22 +443,22 @@ export default function CalendarPage() {
         const label = monthDate.toLocaleDateString(undefined, {month: "long"});
 
         return (
-            <div className="border border-white/10 rounded-xl overflow-hidden bg-gray-900/60">
+            <div className="border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden bg-white/80 dark:bg-gray-900/60">
                 <div
-                    className="px-3 py-2 bg-gray-900/70 border-b border-white/10 text-sm font-semibold text-white">{label}</div>
-                <div className="grid grid-cols-7 text-[11px] text-gray-400 bg-gray-900/40">
+                    className="px-3 py-2 bg-slate-100/70 dark:bg-gray-900/70 border-b border-slate-200 dark:border-white/10 text-sm font-semibold text-slate-900 dark:text-white">{label}</div>
+                <div className="grid grid-cols-7 text-[11px] text-slate-500 dark:text-gray-400 bg-slate-100/70 dark:bg-gray-900/40">
                     {weekdayLabels.map((w) => (
                         <div key={w} className="px-2 py-1 text-center">
                             {w[0]}
                         </div>
                     ))}
                 </div>
-                <div className="grid grid-cols-7 gap-px bg-gray-800/40">
+                <div className="grid grid-cols-7 gap-px bg-slate-100/60 dark:bg-gray-800/40">
                     {days.map((d) => (
                         <button
                             key={d.toISOString()}
                             onClick={() => onPickDay(new Date(d.getFullYear(), d.getMonth(), d.getDate()))}
-                            className={`min-h-9 bg-gray-900 hover:bg-gray-800/60 transition text-xs text-gray-300 p-1 text-center ${
+                            className={`min-h-9 bg-white dark:bg-gray-900 hover:bg-slate-100/70 dark:hover:bg-gray-800/60 transition text-xs text-slate-700 dark:text-gray-300 p-1 text-center ${
                                 d.getMonth() !== monthDate.getMonth() ? "opacity-40" : ""
                             } ${isSameDay(d, new Date()) ? "ring-1 ring-blue-400" : ""}`}
                             title="Open this date"
@@ -498,13 +498,13 @@ export default function CalendarPage() {
 
     // ---------- Render ----------
     return (
-        <div className="min-h-100vh bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
+        <div className="min-h-100vh bg-gradient-to-b from-slate-50 via-white to-slate-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 text-slate-900 dark:text-gray-200">
             {/* Page header (aligned with other pages) */}
             <header className="mx-auto max-w-6xl px-4 pt-10 pb-6">
                 <div className="flex items-end justify-between gap-4 flex-wrap">
                     <div>
-                        <h1 className="text-3xl font-bold text-white">Calendar</h1>
-                        <p className="mt-2 text-gray-400">Plan, schedule, and track your events.</p>
+                        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Calendar</h1>
+                        <p className="mt-2 text-slate-500 dark:text-gray-400">Plan, schedule, and track your events.</p>
                     </div>
                     <div className="flex gap-2 items-center">
                         <ViewToggle view={view} setView={setView}/>
@@ -523,11 +523,11 @@ export default function CalendarPage() {
 
             {/* Toolbar (aligned card with Upcoming on the right) */}
             <div className="mx-auto max-w-6xl px-4 pb-4">
-                <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4">
+                <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-4">
                     <div className="flex flex-col md:flex-row md:items-center gap-3">
                         <div className="flex items-center gap-2">
                             <button
-                                className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm hover:bg-gray-700"
+                                className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm hover:bg-slate-200 dark:hover:bg-gray-700"
                                 onClick={goToday}
                                 title="Jump to today"
                             >
@@ -535,7 +535,7 @@ export default function CalendarPage() {
                             </button>
                             <div className="flex items-center gap-1">
                                 <button
-                                    className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm hover:bg-gray-700"
+                                    className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm hover:bg-slate-200 dark:hover:bg-gray-700"
                                     onClick={goPrev}
                                     aria-label="Previous"
                                     title="Previous"
@@ -543,7 +543,7 @@ export default function CalendarPage() {
                                     ←
                                 </button>
                                 <button
-                                    className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm hover:bg-gray-700"
+                                    className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm hover:bg-slate-200 dark:hover:bg-gray-700"
                                     onClick={goNext}
                                     aria-label="Next"
                                     title="Next"
@@ -553,12 +553,12 @@ export default function CalendarPage() {
                             </div>
                         </div>
 
-                        <div className="md:ml-2 text-lg font-semibold text-white">{labelByView}</div>
+                        <div className="md:ml-2 text-lg font-semibold text-slate-900 dark:text-white">{labelByView}</div>
 
                         {/* Right-side: Upcoming events to fill the space (replaces duplicate Create) */}
                         <div className="ml-auto w-full md:w-auto">
                             <div className="flex items-center gap-3 justify-between md:justify-end">
-                                <span className="text-sm text-gray-400">Upcoming</span>
+                                <span className="text-sm text-slate-500 dark:text-gray-400">Upcoming</span>
                                 <ul className="hidden md:flex items-center gap-4">
                                     {upcoming.length > 0 ? (
                                         upcoming.map((e) => {
@@ -569,13 +569,13 @@ export default function CalendarPage() {
                                                     <span
                                                         className={`inline-block w-2.5 h-2.5 rounded-full ${COLORS[e.color] || COLORS.slate}`}/>
                                                     <span
-                                                        className="text-sm text-gray-200 truncate max-w-[10rem]">{e.title}</span>
-                                                    <span className="text-xs text-gray-400">{formatDateTime(ds)}</span>
+                                                        className="text-sm text-slate-900 dark:text-gray-200 truncate max-w-[10rem]">{e.title}</span>
+                                                    <span className="text-xs text-slate-500 dark:text-gray-400">{formatDateTime(ds)}</span>
                                                 </li>
                                             );
                                         })
                                     ) : (
-                                        <li className="text-sm text-gray-500">No upcoming events</li>
+                                        <li className="text-sm text-slate-600 dark:text-gray-500">No upcoming events</li>
                                     )}
                                 </ul>
                             </div>
@@ -597,8 +597,8 @@ export default function CalendarPage() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/60" onClick={() => setShowAdd(false)}/>
                     <div
-                        className="relative z-10 w-[95%] max-w-xl rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
-                        <h2 className="text-lg font-semibold text-white">Create event</h2>
+                        className="relative z-10 w-[95%] max-w-xl rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 p-5 shadow-xl">
+                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Create event</h2>
                         <form
                             className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3"
                             onSubmit={(e) => {
@@ -630,9 +630,9 @@ export default function CalendarPage() {
                             }}
                         >
                             <div className="sm:col-span-2">
-                                <label className="block text-sm text-gray-300 mb-1">Title</label>
+                                <label className="block text-sm text-slate-700 dark:text-gray-300 mb-1">Title</label>
                                 <input
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                     value={draft.title}
                                     onChange={(e) => setDraft((d) => ({...d, title: e.target.value}))}
                                     placeholder="Event name"
@@ -640,28 +640,28 @@ export default function CalendarPage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm text-gray-300 mb-1">Start</label>
+                                <label className="block text-sm text-slate-700 dark:text-gray-300 mb-1">Start</label>
                                 <input
                                     type="datetime-local"
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                     value={draft.start}
                                     onChange={(e) => setDraft((d) => ({...d, start: e.target.value}))}
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm text-gray-300 mb-1">End</label>
+                                <label className="block text-sm text-slate-700 dark:text-gray-300 mb-1">End</label>
                                 <input
                                     type="datetime-local"
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                     value={draft.end}
                                     onChange={(e) => setDraft((d) => ({...d, end: e.target.value}))}
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm text-gray-300 mb-1">Calendar</label>
+                                <label className="block text-sm text-slate-700 dark:text-gray-300 mb-1">Calendar</label>
                                 <input
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                     placeholder="e.g., Production, Team"
                                     value={draft.calendar}
                                     onChange={(e) => setDraft((d) => ({...d, calendar: e.target.value}))}
@@ -669,9 +669,9 @@ export default function CalendarPage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm text-gray-300 mb-1">Color</label>
+                                <label className="block text-sm text-slate-700 dark:text-gray-300 mb-1">Color</label>
                                 <select
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                     value={draft.color}
                                     onChange={(e) => setDraft((d) => ({...d, color: e.target.value}))}
                                 >
@@ -684,19 +684,19 @@ export default function CalendarPage() {
                             </div>
 
                             <div className="sm:col-span-2">
-                                <label className="block text-sm text-gray-300 mb-1">Location</label>
+                                <label className="block text-sm text-slate-700 dark:text-gray-300 mb-1">Location</label>
                                 <input
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                     value={draft.location}
                                     onChange={(e) => setDraft((d) => ({...d, location: e.target.value}))}
                                 />
                             </div>
 
                             <div className="sm:col-span-2">
-                                <label className="block text-sm text-gray-300 mb-1">Description</label>
+                                <label className="block text-sm text-slate-700 dark:text-gray-300 mb-1">Description</label>
                                 <textarea
                                     rows={3}
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                     value={draft.description}
                                     onChange={(e) => setDraft((d) => ({...d, description: e.target.value}))}
                                 />
@@ -706,7 +706,7 @@ export default function CalendarPage() {
                                 <button
                                     type="button"
                                     onClick={() => setShowAdd(false)}
-                                    className="px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                                    className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                                 >
                                     Cancel
                                 </button>
@@ -725,9 +725,9 @@ export default function CalendarPage() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/60" onClick={() => setMsg(null)}/>
                     <div
-                        className="relative z-10 w-[90%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
-                        <h2 className="text-lg font-semibold text-white">{msg.title}</h2>
-                        <p className="mt-2 text-sm text-gray-300">{msg.message}</p>
+                        className="relative z-10 w-[90%] max-w-md rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 p-5 shadow-xl">
+                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{msg.title}</h2>
+                        <p className="mt-2 text-sm text-slate-700 dark:text-gray-300">{msg.message}</p>
                         <div className="mt-4 flex justify-end gap-2">
                             <button
                                 onClick={() => setMsg(null)}
@@ -748,7 +748,7 @@ export default function CalendarPage() {
             <button
                 onClick={() => setView(v)}
                 className={`px-3 py-2 text-sm rounded-lg border ${
-                    view === v ? "bg-blue-600 text-white border-blue-600" : "bg-gray-800 text-gray-200 border-white/10 hover:bg-gray-700"
+                    view === v ? "bg-blue-600 text-white border-blue-600" : "bg-slate-100 dark:bg-gray-800 text-slate-900 dark:text-gray-200 border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700"
                 }`}
             >
                 {label}

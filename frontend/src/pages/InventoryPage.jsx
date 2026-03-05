@@ -282,11 +282,11 @@ export default function InventoryPage() {
                 setSort((s) => ({ key, dir: s.key === key && s.dir === "asc" ? "desc" : "asc" }));
                 setPage(1);
             }}
-            className={`px-4 py-3 font-semibold text-gray-300 select-none cursor-pointer ${right ? "text-right" : "text-left"}`}
+            className={`px-4 py-3 font-semibold text-slate-700 dark:text-gray-300 select-none cursor-pointer ${right ? "text-right" : "text-left"}`}
         >
       <span className="inline-flex items-center gap-1">
         {label}
-          {sort.key === key && <span className="text-gray-500">{sort.dir === "asc" ? "▲" : "▼"}</span>}
+          {sort.key === key && <span className="text-slate-600 dark:text-gray-500">{sort.dir === "asc" ? "▲" : "▼"}</span>}
       </span>
         </th>
     );
@@ -295,7 +295,7 @@ export default function InventoryPage() {
     const MenuItems = ({ id, onDone }) => (
         <div className="py-1">
             <button
-                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-800"
+                className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-gray-800"
                 onClick={(e) => {
                     e.stopPropagation();
                     goToDetails(id);
@@ -304,7 +304,7 @@ export default function InventoryPage() {
             >
                 Open details
             </button>
-            <div className="my-1 border-t border-white/10" />
+            <div className="my-1 border-t border-slate-200 dark:border-white/10" />
             <button
                 className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-950/40 hover:text-red-300"
                 onClick={(e) => {
@@ -319,13 +319,13 @@ export default function InventoryPage() {
     );
 
     return (
-        <div className="min-h-[calc(100vh-140px)] bg-gray-950 text-gray-200">
+        <div className="min-h-full text-slate-900 dark:text-gray-200">
             {/* Header */}
             <header className="mx-auto px-4 pt-8 pb-5">
                 <div className="flex items-start md:items-end justify-between gap-4 flex-wrap">
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-bold text-white">Inventory</h1>
-                        <p className="mt-1 md:mt-2 text-gray-400 text-sm md:text-base">Quick view of item stock levels.</p>
+                        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Inventory</h1>
+                        <p className="mt-1 md:mt-2 text-slate-500 dark:text-gray-400 text-sm md:text-base">Quick view of item stock levels.</p>
                     </div>
                     <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
                         <button
@@ -335,7 +335,7 @@ export default function InventoryPage() {
                             + New Entry
                         </button>
                         <button
-                            className="flex-1 sm:flex-none px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                            className="flex-1 sm:flex-none px-4 py-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm"
                             onClick={() => {}}
                             title="Import CSV"
                         >
@@ -347,14 +347,14 @@ export default function InventoryPage() {
 
             {/* Filters / Toolbar */}
             <div className="mx-auto px-4 pb-4">
-                <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-3 md:p-4">
+                <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-3 md:p-4">
                     <div className="flex flex-col md:flex-row md:items-center gap-3">
                         <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-3">
                             {/* Category */}
                             <select
                                 value={categoryFilter}
                                 onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
-                                className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                className="rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                 title="Filter by category"
                             >
                                 {categories.map((c) => (
@@ -366,7 +366,7 @@ export default function InventoryPage() {
                             <select
                                 value={uomFilter}
                                 onChange={(e) => { setUomFilter(e.target.value); setPage(1); }}
-                                className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                className="rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                 title="Filter by unit of measure"
                             >
                                 {uoms.map((u) => (
@@ -381,23 +381,23 @@ export default function InventoryPage() {
                                 placeholder="Search Item or Item ID…"
                                 value={query}
                                 onChange={(e) => { setQuery(e.target.value); setPage(1); }}
-                                className="w-full rounded-lg bg-gray-800 border border-white/10 pl-3 pr-10 py-2 text-sm"
+                                className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 pl-3 pr-10 py-2 text-sm"
                             />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">⌕</span>
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 dark:text-gray-500">⌕</span>
                         </div>
 
                         {/* Bulk actions */}
                         <div className="flex items-center gap-2 md:ml-auto">
                             <button
                                 onClick={handleExportCSV}
-                                className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm hover:bg-gray-700"
+                                className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm hover:bg-slate-200 dark:hover:bg-gray-700"
                                 title={`Export ${selectedCount ? "selected" : "filtered"} rows to CSV`}
                             >
                                 Export CSV
                             </button>
                             <button
                                 onClick={handlePrint}
-                                className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm hover:bg-gray-700"
+                                className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm hover:bg-slate-200 dark:hover:bg-gray-700"
                                 title="Open print dialog (save as PDF)"
                             >
                                 Print / PDF
@@ -421,11 +421,11 @@ export default function InventoryPage() {
                 <div className="md:hidden">
                     {/* Select-all toolbar for mobile */}
                     <div className="mb-2 flex items-center justify-between">
-                        <label className="inline-flex items-center gap-2 text-sm text-gray-300">
+                        <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-gray-300">
                             <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll} onClick={stop} />
                             <span>Select all on page</span>
                         </label>
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-slate-500 dark:text-gray-400">
               {filtered.length === 0 ? 0 : pageStart + 1}–{Math.min(filtered.length, pageStart + pageSize)} of {filtered.length}
             </span>
                     </div>
@@ -436,11 +436,11 @@ export default function InventoryPage() {
                             const available = r.onHand - r.allocated;
                             const availClass =
                                 available < 0 ? "text-red-300" :
-                                    available <= (r.reorderPt || 0) ? "text-yellow-300" : "text-gray-200";
+                                    available <= (r.reorderPt || 0) ? "text-yellow-300" : "text-slate-900 dark:text-gray-200";
                             return (
                                 <div
                                     key={id}
-                                    className="rounded-xl border border-white/10 bg-gray-900/60 p-3 active:bg-gray-800/40 cursor-pointer"
+                                    className="rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-3 active:bg-slate-100/60 dark:active:bg-gray-800/40 cursor-pointer"
                                     title="Open Details"
                                     onClick={() => goToDetails(id)}
                                 >
@@ -454,12 +454,12 @@ export default function InventoryPage() {
                                         />
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center justify-between gap-2">
-                                                <div className="font-mono text-white text-sm">
+                                                <div className="font-mono text-slate-900 dark:text-white text-sm">
                                                     <span className="underline decoration-dotted">{r.itemId}</span>
                                                 </div>
                                                 {/* Mobile actions trigger */}
                                                 <button
-                                                    className="shrink-0 px-2 py-1 rounded-md hover:bg-gray-800/60 text-gray-300"
+                                                    className="shrink-0 px-2 py-1 rounded-md hover:bg-slate-100/70 dark:hover:bg-gray-800/60 text-slate-700 dark:text-gray-300"
                                                     onClick={(e) => { e.stopPropagation(); setSheetId(id); }}
                                                     aria-label="Actions"
                                                     title="Actions"
@@ -467,8 +467,8 @@ export default function InventoryPage() {
                                                     …
                                                 </button>
                                             </div>
-                                            <div className="mt-1 text-gray-200 text-sm line-clamp-2">{r.item}</div>
-                                            <div className="mt-1 text-xs text-gray-400 flex items-center gap-2 flex-wrap">
+                                            <div className="mt-1 text-slate-900 dark:text-gray-200 text-sm line-clamp-2">{r.item}</div>
+                                            <div className="mt-1 text-xs text-slate-500 dark:text-gray-400 flex items-center gap-2 flex-wrap">
                                                 <span className="truncate">{r.category}</span>
                                                 <span>•</span>
                                                 <span>{r.uom}</span>
@@ -482,16 +482,16 @@ export default function InventoryPage() {
                                                 )}
                                             </div>
                                             <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
-                                                <div className="rounded-lg border border-white/10 bg-gray-800/40 p-2">
-                                                    <div className="text-gray-400">On hand</div>
-                                                    <div className="font-medium text-gray-200">{r.onHand}</div>
+                                                <div className="rounded-lg border border-slate-200 dark:border-white/10 bg-slate-100/60 dark:bg-gray-800/40 p-2">
+                                                    <div className="text-slate-500 dark:text-gray-400">On hand</div>
+                                                    <div className="font-medium text-slate-900 dark:text-gray-200">{r.onHand}</div>
                                                 </div>
-                                                <div className="rounded-lg border border-white/10 bg-gray-800/40 p-2">
-                                                    <div className="text-gray-400">Allocated</div>
-                                                    <div className="font-medium text-gray-200">{r.allocated}</div>
+                                                <div className="rounded-lg border border-slate-200 dark:border-white/10 bg-slate-100/60 dark:bg-gray-800/40 p-2">
+                                                    <div className="text-slate-500 dark:text-gray-400">Allocated</div>
+                                                    <div className="font-medium text-slate-900 dark:text-gray-200">{r.allocated}</div>
                                                 </div>
-                                                <div className="rounded-lg border border-white/10 bg-gray-800/40 p-2">
-                                                    <div className="text-gray-400">Available</div>
+                                                <div className="rounded-lg border border-slate-200 dark:border-white/10 bg-slate-100/60 dark:bg-gray-800/40 p-2">
+                                                    <div className="text-slate-500 dark:text-gray-400">Available</div>
                                                     <div className={`font-medium ${availClass}`}>{available}</div>
                                                 </div>
                                             </div>
@@ -501,7 +501,7 @@ export default function InventoryPage() {
                             );
                         })}
                         {paged.length === 0 && (
-                            <div className="rounded-xl border border-white/10 bg-gray-900/60 p-6 text-center text-gray-400">
+                            <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-6 text-center text-slate-500 dark:text-gray-400">
                                 No inventory items found.
                             </div>
                         )}
@@ -509,9 +509,9 @@ export default function InventoryPage() {
                 </div>
 
                 {/* Desktop table */}
-                <div className="hidden md:block overflow-x-auto border border-white/10 rounded-xl bg-gray-900/60">
+                <div className="hidden md:block overflow-x-auto border border-slate-200 dark:border-white/10 rounded-xl bg-white/80 dark:bg-gray-900/60">
                     <table className="min-w-full divide-y divide-gray-800 text-sm">
-                        <thead className="bg-gray-900/80">
+                        <thead className="bg-slate-100/80 dark:bg-gray-900/80">
                         <tr>
                             <th className="px-4 py-3">
                                 <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll} onClick={stop} />
@@ -524,7 +524,7 @@ export default function InventoryPage() {
                             {th("Allocated", "allocated", true)}
                             {th("Available", "available", true)}
                             {th("Reorder pt", "reorderPt", true)}
-                            <th className="px-4 py-3 text-right font-semibold text-gray-300">Actions</th>
+                            <th className="px-4 py-3 text-right font-semibold text-slate-700 dark:text-gray-300">Actions</th>
                         </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-800">
@@ -533,31 +533,31 @@ export default function InventoryPage() {
                             const available = r.onHand - r.allocated;
                             const availClass =
                                 available < 0 ? "text-red-300" :
-                                    available <= (r.reorderPt || 0) ? "text-yellow-300" : "text-gray-200";
+                                    available <= (r.reorderPt || 0) ? "text-yellow-300" : "text-slate-900 dark:text-gray-200";
                             return (
                                 <tr
                                     key={id}
-                                    className="hover:bg-gray-800/40 transition cursor-pointer"
+                                    className="hover:bg-slate-100/60 dark:hover:bg-gray-800/40 transition cursor-pointer"
                                     title="Open Details"
                                     onClick={() => goToDetails(id)}
                                 >
                                     <td className="px-4 py-3" onClick={stop}>
                                         <input type="checkbox" checked={!!selected[id]} onChange={() => toggleOne(id)} />
                                     </td>
-                                    <td className="px-4 py-3 font-mono text-white">
+                                    <td className="px-4 py-3 font-mono text-slate-900 dark:text-white">
                                         <span className="underline decoration-dotted">{r.itemId}</span>
                                     </td>
-                                    <td className="px-4 py-3 text-gray-200">{r.item}</td>
-                                    <td className="px-4 py-3 text-gray-400">{r.category}</td>
-                                    <td className="px-4 py-3 text-gray-400">{r.uom}</td>
-                                    <td className="px-4 py-3 text-right text-gray-200">{r.onHand}</td>
-                                    <td className="px-4 py-3 text-right text-gray-200">{r.allocated}</td>
+                                    <td className="px-4 py-3 text-slate-900 dark:text-gray-200">{r.item}</td>
+                                    <td className="px-4 py-3 text-slate-500 dark:text-gray-400">{r.category}</td>
+                                    <td className="px-4 py-3 text-slate-500 dark:text-gray-400">{r.uom}</td>
+                                    <td className="px-4 py-3 text-right text-slate-900 dark:text-gray-200">{r.onHand}</td>
+                                    <td className="px-4 py-3 text-right text-slate-900 dark:text-gray-200">{r.allocated}</td>
                                     <td className={`px-4 py-3 text-right ${availClass}`}>{available}</td>
-                                    <td className="px-4 py-3 text-right text-gray-200">{r.reorderPt}</td>
+                                    <td className="px-4 py-3 text-right text-slate-900 dark:text-gray-200">{r.reorderPt}</td>
                                     <td className="px-4 py-3 text-right" onClick={stop}>
                                         {/* Desktop actions trigger */}
                                         <button
-                                            className="inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-800/60 text-gray-300"
+                                            className="inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-slate-100/70 dark:hover:bg-gray-800/60 text-slate-700 dark:text-gray-300"
                                             aria-label="Actions"
                                             title="Actions"
                                             onClick={(e) => openDesktopMenu(e, id)}
@@ -570,7 +570,7 @@ export default function InventoryPage() {
                         })}
                         {paged.length === 0 && (
                             <tr>
-                                <td className="px-4 py-6 text-center text-gray-400" colSpan={10}>
+                                <td className="px-4 py-6 text-center text-slate-500 dark:text-gray-400" colSpan={10}>
                                     No inventory items found.
                                 </td>
                             </tr>
@@ -580,13 +580,13 @@ export default function InventoryPage() {
                 </div>
 
                 {/* Pagination */}
-                <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-gray-400">
+                <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-slate-500 dark:text-gray-400">
                     <div className="flex items-center gap-2">
                         <span>Rows per page</span>
                         <select
                             value={pageSize}
                             onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
-                            className="rounded bg-gray-800 border border-white/10 px-2 py-1"
+                            className="rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-2 py-1"
                         >
                             {[8, 16, 24].map((n) => (
                                 <option key={n} value={n}>{n}</option>
@@ -594,16 +594,16 @@ export default function InventoryPage() {
                         </select>
                         <span className="hidden sm:inline">•</span>
                         <span>
-              Showing <span className="text-gray-300">{filtered.length === 0 ? 0 : pageStart + 1}</span>–
-              <span className="text-gray-300">{Math.min(filtered.length, pageStart + pageSize)}</span> of
-              <span className="text-gray-300"> {filtered.length}</span>
+              Showing <span className="text-slate-700 dark:text-gray-300">{filtered.length === 0 ? 0 : pageStart + 1}</span>–
+              <span className="text-slate-700 dark:text-gray-300">{Math.min(filtered.length, pageStart + pageSize)}</span> of
+              <span className="text-slate-700 dark:text-gray-300"> {filtered.length}</span>
             </span>
                     </div>
                     <div className="flex items-center gap-2">
                         <button
                             disabled={page === 1}
                             onClick={() => setPage((p) => Math.max(1, p - 1))}
-                            className="px-3 py-1 rounded bg-gray-800 border border-white/10 disabled:opacity-40"
+                            className="px-3 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 disabled:opacity-40"
                         >
                             Prev
                         </button>
@@ -611,7 +611,7 @@ export default function InventoryPage() {
                         <button
                             disabled={page === totalPages}
                             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                            className="px-3 py-1 rounded bg-gray-800 border border-white/10 disabled:opacity-40"
+                            className="px-3 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 disabled:opacity-40"
                         >
                             Next
                         </button>
@@ -623,7 +623,7 @@ export default function InventoryPage() {
             {menu && (
                 <div
                     ref={menuRef}
-                    className="fixed z-50 min-w-[200px] rounded-xl border border-white/10 bg-gray-900 shadow-2xl"
+                    className="fixed z-50 min-w-[200px] rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 shadow-2xl"
                     style={{ left: `${menu.x}px`, top: `${menu.y}px` }}
                     onClick={(e) => e.stopPropagation()}
                 >
@@ -635,17 +635,17 @@ export default function InventoryPage() {
             {sheetId && (
                 <div className="fixed inset-0 z-50">
                     <div className="absolute inset-0 bg-black/60" onClick={() => setSheetId(null)} />
-                    <div className="absolute inset-x-0 bottom-0 rounded-t-2xl border border-white/10 bg-gray-900 p-2 pt-3 shadow-2xl">
+                    <div className="absolute inset-x-0 bottom-0 rounded-t-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 p-2 pt-3 shadow-2xl">
                         <div className="mx-auto h-1 w-10 rounded-full bg-white/20 mb-1.5" />
                         <div className="px-2 pb-2">
-                            <div className="text-xs text-gray-400 mb-2 px-1">
-                                Actions for <span className="font-mono text-gray-300">{sheetId}</span>
+                            <div className="text-xs text-slate-500 dark:text-gray-400 mb-2 px-1">
+                                Actions for <span className="font-mono text-slate-700 dark:text-gray-300">{sheetId}</span>
                             </div>
-                            <div className="rounded-xl overflow-hidden border border-white/10 divide-y divide-white/10">
+                            <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 divide-y divide-white/10">
                                 <MenuItems id={sheetId} onDone={() => setSheetId(null)} />
                             </div>
                             <button
-                                className="mt-2 w-full px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                                className="mt-2 w-full px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                                 onClick={() => setSheetId(null)}
                             >
                                 Close
@@ -659,15 +659,15 @@ export default function InventoryPage() {
             {showDeleteModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/60" onClick={() => setShowDeleteModal(false)} />
-                    <div className="relative z-10 w-[92%] sm:w-[80%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
-                        <h2 className="text-lg font-semibold text-white">Confirm deletion</h2>
-                        <p className="mt-2 text-sm text-gray-300">
-                            You are about to delete <span className="font-medium text-white">{selectedCount}</span> {selectedCount === 1 ? "entry" : "entries"}. This action cannot be undone.
+                    <div className="relative z-10 w-[92%] sm:w-[80%] max-w-md rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 p-5 shadow-xl">
+                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Confirm deletion</h2>
+                        <p className="mt-2 text-sm text-slate-700 dark:text-gray-300">
+                            You are about to delete <span className="font-medium text-slate-900 dark:text-white">{selectedCount}</span> {selectedCount === 1 ? "entry" : "entries"}. This action cannot be undone.
                         </p>
                         <div className="mt-4 flex flex-col sm:flex-row justify-end gap-2">
                             <button
                                 onClick={() => setShowDeleteModal(false)}
-                                className="px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                                className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                             >
                                 Cancel
                             </button>
@@ -686,15 +686,15 @@ export default function InventoryPage() {
             {deleteOneId && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/60" onClick={() => setDeleteOneId(null)} />
-                    <div className="relative z-10 w-[92%] sm:w-[80%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
-                        <h2 className="text-lg font-semibold text-white">Delete inventory item</h2>
-                        <p className="mt-2 text-sm text-gray-300">
-                            You are about to delete <span className="font-mono text-white">{deleteOneId}</span>. This action cannot be undone.
+                    <div className="relative z-10 w-[92%] sm:w-[80%] max-w-md rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 p-5 shadow-xl">
+                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Delete inventory item</h2>
+                        <p className="mt-2 text-sm text-slate-700 dark:text-gray-300">
+                            You are about to delete <span className="font-mono text-slate-900 dark:text-white">{deleteOneId}</span>. This action cannot be undone.
                         </p>
                         <div className="mt-4 flex flex-col sm:flex-row justify-end gap-2">
                             <button
                                 onClick={() => setDeleteOneId(null)}
-                                className="px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                                className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                             >
                                 Cancel
                             </button>

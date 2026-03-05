@@ -26,7 +26,7 @@ import {useNavigate, useParams} from "react-router-dom";
 
 const STATUS_LIST = ["Open", "In Progress", "Hold", "Completed"];
 const PRIORITY_CLS = {
-    Low: "bg-gray-600/30 text-gray-300",
+    Low: "bg-gray-600/30 text-slate-700 dark:text-gray-300",
     Medium: "bg-sky-600/30 text-sky-300",
     High: "bg-orange-600/30 text-orange-300",
     Rush: "bg-red-600/30 text-red-300",
@@ -46,7 +46,7 @@ const PRIORITY_DOT = {
 
 const pill = (value, map) => (
     <span
-        className={`px-2.5 py-1 text-xs rounded-full border border-white/10 ${map[value] || "bg-gray-600/30 text-gray-300"}`}>{value}</span>
+        className={`px-2.5 py-1 text-xs rounded-full border border-slate-200 dark:border-white/10 ${map[value] || "bg-gray-600/30 text-slate-700 dark:text-gray-300"}`}>{value}</span>
 );
 
 // Tiny icons
@@ -74,16 +74,16 @@ function Modal({open, title, onClose, children, footer}) {
             <div className="absolute inset-0 bg-black/60" onClick={onClose}/>
             <div className="absolute inset-0 flex items-end sm:items-center justify-center p-3 sm:p-6">
                 <div
-                    className="w-full h-[92dvh] sm:h-auto sm:max-h-[80dvh] sm:max-w-5xl rounded-2xl border border-white/10 bg-gray-900 text-gray-200 shadow-2xl"
+                    className="w-full h-[92dvh] sm:h-auto sm:max-h-[80dvh] sm:max-w-5xl rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 text-slate-900 dark:text-gray-200 shadow-2xl"
                 >
                     <div
-                        className="px-6 sm:px-8 py-5 border-b border-white/10 flex items-center justify-between bg-gray-900 rounded-t-2xl"
+                        className="px-6 sm:px-8 py-5 border-b border-slate-200 dark:border-white/10 flex items-center justify-between bg-white dark:bg-gray-900 rounded-t-2xl"
                         style={{paddingTop: "env(safe-area-inset-top)"}}
                     >
                         <h3 className="text-base sm:text-lg font-semibold">{title}</h3>
                         <button
                             onClick={onClose}
-                            className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-white/10 text-gray-300 hover:text-white hover:bg-gray-800/60 text-xl leading-none"
+                            className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-slate-200 dark:border-white/10 text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-gray-800/60 text-xl leading-none"
                             aria-label="Close modal"
                         >
                             &times;
@@ -95,7 +95,7 @@ function Modal({open, title, onClose, children, footer}) {
                     </div>
 
                     <div
-                        className="px-6 sm:px-8 py-4 sm:py-5 border-t border-white/10 bg-gray-900/60 flex items-center justify-end gap-2 rounded-b-2xl"
+                        className="px-6 sm:px-8 py-4 sm:py-5 border-t border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 flex items-center justify-end gap-2 rounded-b-2xl"
                         style={{paddingBottom: "env(safe-area-inset-bottom)"}}
                     >
                         {footer}
@@ -480,7 +480,7 @@ const WorkOrderOperationsPage = () => {
     // ---- Column
     const Column = ({title, items}) => (
         <div
-            className={`flex flex-col rounded-xl border border-white/10 bg-gray-900/60 min-h-[520px] md:min-h-[520px] md:w-auto w-[86%] sm:w-[72%] snap-center ${dragOverCol === title ? "ring-2 ring-blue-500/60" : ""}`}
+            className={`flex flex-col rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 min-h-[520px] md:min-h-[520px] md:w-auto w-[86%] sm:w-[72%] snap-center ${dragOverCol === title ? "ring-2 ring-blue-500/60" : ""}`}
             onDragOver={(e) => onDragOver(e, title)}
             onDragLeave={onDragLeave}
             onDrop={(e) => onDrop(e, title)}
@@ -488,14 +488,14 @@ const WorkOrderOperationsPage = () => {
             aria-label={`${title} column`}
         >
             <div
-                className="flex items-center justify-between px-4 py-3 border-b border-gray-800/60 bg-gray-900/60 backdrop-blur z-10 rounded-t-xl">
+                className="flex items-center justify-between px-4 py-3 border-b border-slate-300 dark:border-gray-800/60 bg-white/80 dark:bg-gray-900/60 backdrop-blur z-10 rounded-t-xl">
                 <div className="flex items-center gap-2">
           <span
               className={`h-2.5 w-2.5 rounded-full ${title === "Open" ? "bg-blue-400" : title === "In Progress" ? "bg-indigo-400" : title === "Completed" ? "bg-green-400" : "bg-yellow-400"}`}/>
-                    <h3 className="font-semibold text-gray-200 text-sm">{title}</h3>
+                    <h3 className="font-semibold text-slate-900 dark:text-gray-200 text-sm">{title}</h3>
                 </div>
                 <span
-                    className="text-xs text-gray-400 px-2 py-1 rounded bg-gray-800/60 border border-white/10">{items.length}</span>
+                    className="text-xs text-slate-500 dark:text-gray-400 px-2 py-1 rounded bg-slate-100/70 dark:bg-gray-800/60 border border-slate-200 dark:border-white/10">{items.length}</span>
             </div>
 
             <div className="flex flex-col gap-3 p-3">
@@ -504,7 +504,7 @@ const WorkOrderOperationsPage = () => {
                         key={op.id}
                         draggable
                         onDragStart={(e) => onDragStart(e, op.id)}
-                        className={`group border-l-4 ${PRIORITY_BORDER[op.priority]} rounded-xl bg-gray-800/70 border border-gray-800/80 hover:bg-gray-800 transition shadow-sm`}
+                        className={`group border-l-4 ${PRIORITY_BORDER[op.priority]} rounded-xl bg-slate-100/70 dark:bg-gray-800/70 border border-slate-300 dark:border-gray-800/80 hover:bg-slate-100 dark:hover:bg-gray-800 transition shadow-sm`}
                         role="listitem"
                         aria-label={`${op.id} card`}
                     >
@@ -514,8 +514,8 @@ const WorkOrderOperationsPage = () => {
                                 <div className="flex items-center justify-between gap-2">
                                     <div className="flex items-center gap-2 min-w-0">
                                         <span
-                                            className="font-mono text-white shrink-0 px-1.5 py-0.5 rounded bg-gray-900/60 border border-white/10">{op.id}</span>
-                                        <span className="text-xs text-gray-500 shrink-0">•</span>
+                                            className="font-mono text-slate-900 dark:text-white shrink-0 px-1.5 py-0.5 rounded bg-white/80 dark:bg-gray-900/60 border border-slate-200 dark:border-white/10">{op.id}</span>
+                                        <span className="text-xs text-slate-600 dark:text-gray-500 shrink-0">•</span>
                                         <button
                                             className="text-sm text-blue-200 hover:underline truncate"
                                             onClick={() => gotoEdit(op.id)}
@@ -532,14 +532,14 @@ const WorkOrderOperationsPage = () => {
                                 </div>
 
                                 {/* Meta row (read-only) — widened space for Updated */}
-                                <div className="grid grid-cols-6 gap-2 text-xs text-gray-400">
+                                <div className="grid grid-cols-6 gap-2 text-xs text-slate-500 dark:text-gray-400">
                                     <div className="col-span-3 sm:col-span-2 flex items-center gap-1 min-w-0">
-                                        <span className="text-gray-500">Assignee:</span>
-                                        <span className="text-gray-300 truncate">{op.assignee}</span>
+                                        <span className="text-slate-600 dark:text-gray-500">Assignee:</span>
+                                        <span className="text-slate-700 dark:text-gray-300 truncate">{op.assignee}</span>
                                     </div>
                                     <div className="col-span-2 hidden sm:flex items-center gap-1">
-                                        <span className="text-gray-500">Est:</span>
-                                        <span className="text-gray-300">{op.estimate}</span>
+                                        <span className="text-slate-600 dark:text-gray-500">Est:</span>
+                                        <span className="text-slate-700 dark:text-gray-300">{op.estimate}</span>
                                     </div>
                                     <div
                                         className="col-span-3 sm:col-span-2 text-right whitespace-nowrap">Updated {op.updated}</div>
@@ -553,7 +553,7 @@ const WorkOrderOperationsPage = () => {
 
                                         {op.status === "Hold" && (
                                             <button
-                                                className="px-2.5 py-1.5 rounded-lg bg-gray-900/60 border border-white/10 text-xs hover:bg-gray-800 flex items-center gap-1"
+                                                className="px-2.5 py-1.5 rounded-lg bg-white/80 dark:bg-gray-900/60 border border-slate-200 dark:border-white/10 text-xs hover:bg-slate-100 dark:hover:bg-gray-800 flex items-center gap-1"
                                                 title="View Hold reason/history"
                                                 onClick={() => setHoldModal({
                                                     open: true,
@@ -569,7 +569,7 @@ const WorkOrderOperationsPage = () => {
                                         {/* Output only for Completed */}
                                         {op.status === "Completed" && (
                                             <button
-                                                className="px-2.5 py-1.5 rounded-lg bg-gray-900/60 border border-white/10 text-xs hover:bg-gray-800 flex items-center gap-1"
+                                                className="px-2.5 py-1.5 rounded-lg bg-white/80 dark:bg-gray-900/60 border border-slate-200 dark:border-white/10 text-xs hover:bg-slate-100 dark:hover:bg-gray-800 flex items-center gap-1"
                                                 title="Production & materials"
                                                 onClick={() => {
                                                     const rows = (op.bom || []).map(r => ({...r}));
@@ -601,7 +601,7 @@ const WorkOrderOperationsPage = () => {
 
                                         {/* Remove with confirmation */}
                                         <button
-                                            className="px-2.5 py-1.5 rounded-lg bg-gray-900/60 border border-white/10 text-xs hover:bg-gray-800 text-red-300 flex items-center gap-1"
+                                            className="px-2.5 py-1.5 rounded-lg bg-white/80 dark:bg-gray-900/60 border border-slate-200 dark:border-white/10 text-xs hover:bg-slate-100 dark:hover:bg-gray-800 text-red-300 flex items-center gap-1"
                                             onClick={() => requestDeleteOp(op.id)}
                                             title="Remove operation"
                                         >
@@ -615,7 +615,7 @@ const WorkOrderOperationsPage = () => {
                 ))}
                 {items.length === 0 && (
                     <div
-                        className="text-sm text-gray-500 px-3 py-6 text-center rounded-lg border border-dashed border-white/10">No
+                        className="text-sm text-slate-600 dark:text-gray-500 px-3 py-6 text-center rounded-lg border border-dashed border-slate-200 dark:border-white/10">No
                         operations here.</div>
                 )}
             </div>
@@ -623,13 +623,13 @@ const WorkOrderOperationsPage = () => {
     );
 
     return (
-        <div className="text-gray-200 min-h-screen">
+        <div className="text-slate-900 dark:text-gray-200 min-h-screen">
             {/* Header */}
             <header className="w-full mx-auto px-4 pt-8 sm:pt-10 pb-4 sm:pb-6">
                 <div className="flex items-end justify-between gap-4 flex-wrap">
                     <div className="min-w-0">
-                        <h1 className="text-2xl sm:text-3xl font-bold text-white truncate">Operations • {woId}</h1>
-                        <p className="mt-2 text-gray-400 text-sm sm:text-base">Kanban board. Drag on desktop; tap “Move”
+                        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white truncate">Operations • {woId}</h1>
+                        <p className="mt-2 text-slate-500 dark:text-gray-400 text-sm sm:text-base">Kanban board. Drag on desktop; tap “Move”
                             on mobile. Click a title to view details.</p>
                     </div>
                     <div className="flex gap-2 sm:gap-3 items-center w-full sm:w-auto">
@@ -648,13 +648,13 @@ const WorkOrderOperationsPage = () => {
                             + New
                         </button>
                         <button
-                            className="hidden sm:inline-flex px-4 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                            className="hidden sm:inline-flex px-4 py-2.5 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm"
                             onClick={() => navigate(`/work-orders/${woId}/edit`)}
                         >
                             Edit Work Order
                         </button>
                         <button
-                            className="hidden sm:inline-flex px-4 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                            className="hidden sm:inline-flex px-4 py-2.5 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm"
                             onClick={() => navigate("/work-orders")}
                         >
                             Back to List
@@ -665,40 +665,40 @@ const WorkOrderOperationsPage = () => {
 
             {/* Work Order Plan + Output + BOM Allocation */}
             <div className="w-full mx-auto px-4 pb-4">
-                <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-5 sm:p-6 space-y-5">
+                <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-5 sm:p-6 space-y-5">
                     {/* Top badges: dates & item */}
                     <div className="flex flex-wrap items-center gap-2 text-xs">
-            <span className="px-2.5 py-1 rounded-lg bg-gray-800 border border-white/10">Start: <span
-                className="text-gray-200">{woPlan.startDate}</span></span>
-                        <span className="px-2.5 py-1 rounded-lg bg-gray-800 border border-white/10">Due: <span
-                            className="text-gray-200">{woPlan.dueDate}</span></span>
-                        <span className="px-2.5 py-1 rounded-lg bg-gray-800 border border-white/10">
+            <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10">Start: <span
+                className="text-slate-900 dark:text-gray-200">{woPlan.startDate}</span></span>
+                        <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10">Due: <span
+                            className="text-slate-900 dark:text-gray-200">{woPlan.dueDate}</span></span>
+                        <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10">
               Item: <span className="font-mono text-gray-100">{woPlan.itemId}</span> — <span
-                            className="text-gray-200">{woPlan.itemName}</span>
+                            className="text-slate-900 dark:text-gray-200">{woPlan.itemName}</span>
             </span>
                     </div>
 
                     {/* Output progress */}
                     <div className="flex items-center justify-between">
-                        <div className="text-sm text-gray-300">
+                        <div className="text-sm text-slate-700 dark:text-gray-300">
                             Output Progress: <span
                             className="text-gray-100 font-semibold">{producedSoFar}</span> / {expectedQty}
                         </div>
-                        <div className="text-xs text-gray-400">{outputPct}% of expected output</div>
+                        <div className="text-xs text-slate-500 dark:text-gray-400">{outputPct}% of expected output</div>
                     </div>
-                    <div className="w-full h-2.5 rounded-full bg-gray-800 border border-white/10 overflow-hidden">
+                    <div className="w-full h-2.5 rounded-full bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 overflow-hidden">
                         <div className="h-full bg-sky-500/80" style={{width: `${outputPct}%`}}
                              title={`${outputPct}% of expected quantity`}/>
                     </div>
 
                     {/* BOM Components — Allocation & Usage */}
-                    <div className="rounded-2xl border border-white/10 bg-gray-900/60 overflow-hidden">
-                        <div className="px-4 py-3 border-b border-white/10 text-sm font-semibold">BOM Components —
+                    <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 overflow-hidden">
+                        <div className="px-4 py-3 border-b border-slate-200 dark:border-white/10 text-sm font-semibold">BOM Components —
                             Allocation & Usage
                         </div>
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-gray-800 text-sm">
-                                <thead className="bg-gray-900/80">
+                                <thead className="bg-slate-100/80 dark:bg-gray-900/80">
                                 <tr>
                                     <th className="px-4 py-2 text-left">Component</th>
                                     <th className="px-4 py-2 text-left">Name</th>
@@ -716,19 +716,19 @@ const WorkOrderOperationsPage = () => {
                                     const remain = Math.max(0, reserve - used);
                                     const pct = reserve > 0 ? Math.min(100, Math.round((used / reserve) * 100)) : 0;
                                     return (
-                                        <tr key={r.itemId} className="hover:bg-gray-900/40">
+                                        <tr key={r.itemId} className="hover:bg-slate-100/70 dark:hover:bg-gray-900/40">
                                             <td className="px-4 py-2 font-mono">{r.itemId}</td>
                                             <td className="px-4 py-2">{r.name}</td>
                                             <td className="px-4 py-2 font-mono">{reserve}</td>
                                             <td className="px-4 py-2">{r.consumed}</td>
                                             <td className="px-4 py-2">{r.scrap}</td>
                                             <td className="px-4 py-2">
-                                                <div className="text-[11px] text-gray-400 mb-1">
+                                                <div className="text-[11px] text-slate-500 dark:text-gray-400 mb-1">
                                                     Remaining Allocation: <span
-                                                    className="text-gray-200 font-mono">{remain}</span>
+                                                    className="text-slate-900 dark:text-gray-200 font-mono">{remain}</span>
                                                 </div>
                                                 <div
-                                                    className="w-full h-2.5 rounded-full bg-gray-800 border border-white/10 overflow-hidden"
+                                                    className="w-full h-2.5 rounded-full bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 overflow-hidden"
                                                     title={`${pct}% of allocation used`}>
                                                     <div className="h-full bg-emerald-500/80"
                                                          style={{width: `${pct}%`}}/>
@@ -738,7 +738,7 @@ const WorkOrderOperationsPage = () => {
                                                 <div className="flex items-center gap-2">
                                                     <input
                                                         inputMode="decimal"
-                                                        className="w-28 rounded-lg bg-gray-800 border border-white/10 px-2.5 py-1.5"
+                                                        className="w-28 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-2.5 py-1.5"
                                                         placeholder="Qty"
                                                         value={topRequests[r.itemId] ?? ""}
                                                         onChange={(e) => setTopReqQty(r.itemId, e.target.value)}
@@ -757,13 +757,13 @@ const WorkOrderOperationsPage = () => {
                                 })}
                                 {aggregatedBom.length === 0 && (
                                     <tr>
-                                        <td className="px-4 py-3 text-gray-500" colSpan={7}>No components found.</td>
+                                        <td className="px-4 py-3 text-slate-600 dark:text-gray-500" colSpan={7}>No components found.</td>
                                     </tr>
                                 )}
                                 </tbody>
                             </table>
                         </div>
-                        <div className="px-4 py-2 text-[11px] text-gray-400 border-t border-white/10">
+                        <div className="px-4 py-2 text-[11px] text-slate-500 dark:text-gray-400 border-t border-slate-200 dark:border-white/10">
                             Requests here are general (not tied to a specific operation).
                         </div>
                     </div>
@@ -771,10 +771,10 @@ const WorkOrderOperationsPage = () => {
                     {/* Usage summary badges */}
                     <div className="flex flex-wrap gap-2 text-xs">
                         <span
-                            className="px-2.5 py-1 rounded-lg bg-gray-800/60 border border-white/10">Total Consumed: <span
+                            className="px-2.5 py-1 rounded-lg bg-slate-100/70 dark:bg-gray-800/60 border border-slate-200 dark:border-white/10">Total Consumed: <span
                             className="font-mono text-gray-100">{usageTotals.consumed}</span></span>
                         <span
-                            className="px-2.5 py-1 rounded-lg bg-gray-800/60 border border-white/10">Total Scrap: <span
+                            className="px-2.5 py-1 rounded-lg bg-slate-100/70 dark:bg-gray-800/60 border border-slate-200 dark:border-white/10">Total Scrap: <span
                             className="font-mono text-gray-100">{usageTotals.scrap}</span></span>
                     </div>
                 </div>
@@ -782,23 +782,23 @@ const WorkOrderOperationsPage = () => {
 
             {/* Toolbar */}
             <div className="w-full mx-auto px-4 pb-4">
-                <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4 sm:p-5">
+                <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-4 sm:p-5">
                     <div className="flex flex-col md:flex-row md:items-center gap-3">
                         <div className="relative flex-1">
                             <input
                                 placeholder="Search operations by ID, title, or assignee…"
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
-                                className="w-full rounded-xl bg-gray-800 border border-white/10 pl-3 pr-10 py-2.5 text-sm"
+                                className="w-full rounded-xl bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 pl-3 pr-10 py-2.5 text-sm"
                             />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">⌕</span>
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 dark:text-gray-500">⌕</span>
                         </div>
 
                         <div className="grid grid-cols-2 md:flex md:flex-row gap-3">
                             <select
                                 value={priorityFilter}
                                 onChange={(e) => setPriorityFilter(e.target.value)}
-                                className="rounded-xl bg-gray-800 border border-white/10 px-3 py-2.5 text-sm"
+                                className="rounded-xl bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2.5 text-sm"
                             >
                                 <option value="all">All Priorities</option>
                                 {["Low", "Medium", "High", "Rush"].map((p) => (
@@ -809,7 +809,7 @@ const WorkOrderOperationsPage = () => {
                             <select
                                 value={assigneeFilter}
                                 onChange={(e) => setAssigneeFilter(e.target.value)}
-                                className="rounded-xl bg-gray-800 border border-white/10 px-3 py-2.5 text-sm"
+                                className="rounded-xl bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2.5 text-sm"
                             >
                                 <option value="all">All Assignees</option>
                                 {assignees.map((a) => (
@@ -829,9 +829,9 @@ const WorkOrderOperationsPage = () => {
                         <Column key={s} title={s} items={filtered.filter((o) => o.status === s)}/>
                     ))}
                 </div>
-                <div className="mt-4 text-xs text-gray-500 mx-auto px-1 sm:px-4">
+                <div className="mt-4 text-xs text-slate-600 dark:text-gray-500 mx-auto px-1 sm:px-4">
                     Tip: Drag cards to change status on desktop. On mobile, use <span
-                    className="text-blue-200">Move</span>. Click the <span className="text-gray-300">title</span> to
+                    className="text-blue-200">Move</span>. Click the <span className="text-slate-700 dark:text-gray-300">title</span> to
                     open details. The <span className="text-emerald-200">Output</span> button appears only on Completed
                     cards.
                 </div>
@@ -846,7 +846,7 @@ const WorkOrderOperationsPage = () => {
                     holdModal.viewOnly ? (
                         <button
                             onClick={() => setHoldModal({open: false, opId: null, reason: "", viewOnly: false})}
-                            className="px-4 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                            className="px-4 py-2.5 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm"
                         >
                             Close
                         </button>
@@ -854,7 +854,7 @@ const WorkOrderOperationsPage = () => {
                         <>
                             <button
                                 onClick={() => setHoldModal({open: false, opId: null, reason: "", viewOnly: false})}
-                                className="px-4 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                                className="px-4 py-2.5 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm"
                             >
                                 Cancel
                             </button>
@@ -872,16 +872,16 @@ const WorkOrderOperationsPage = () => {
                 {holdModal.viewOnly ? (
                     <div className="space-y-4">
                         <div className="text-sm">
-                            <div className="text-gray-400 mb-1">Current reason</div>
-                            <div className="px-4 py-3 rounded-lg bg-gray-800/60 border border-white/10 text-gray-200">
-                                {holdModal.reason || <span className="text-gray-500">No reason stored.</span>}
+                            <div className="text-slate-500 dark:text-gray-400 mb-1">Current reason</div>
+                            <div className="px-4 py-3 rounded-lg bg-slate-100/70 dark:bg-gray-800/60 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-gray-200">
+                                {holdModal.reason || <span className="text-slate-600 dark:text-gray-500">No reason stored.</span>}
                             </div>
                         </div>
                         <div>
-                            <div className="text-xs text-gray-400 mb-1">History</div>
-                            <div className="rounded-xl bg-gray-900/40 border border-white/10 overflow-hidden">
+                            <div className="text-xs text-slate-500 dark:text-gray-400 mb-1">History</div>
+                            <div className="rounded-xl bg-slate-100/70 dark:bg-gray-900/40 border border-slate-200 dark:border-white/10 overflow-hidden">
                                 <table className="min-w-full divide-y divide-gray-800 text-sm">
-                                    <thead className="bg-gray-900/80">
+                                    <thead className="bg-slate-100/80 dark:bg-gray-900/80">
                                     <tr>
                                         <th className="px-4 py-2 text-left">When</th>
                                         <th className="px-4 py-2 text-left">Reason</th>
@@ -896,7 +896,7 @@ const WorkOrderOperationsPage = () => {
                                     ))}
                                     {(ops.find(o => o.id === holdModal.opId)?.holdHistory || []).length === 0 && (
                                         <tr>
-                                            <td className="px-4 py-3 text-gray-500" colSpan={2}>No history.</td>
+                                            <td className="px-4 py-3 text-slate-600 dark:text-gray-500" colSpan={2}>No history.</td>
                                         </tr>
                                     )}
                                     </tbody>
@@ -906,16 +906,16 @@ const WorkOrderOperationsPage = () => {
                     </div>
                 ) : (
                     <div className="space-y-3">
-                        <label className="block text-xs text-gray-400">Reason</label>
+                        <label className="block text-xs text-slate-500 dark:text-gray-400">Reason</label>
                         <textarea
                             rows={5}
                             autoFocus
                             value={holdModal.reason}
                             onChange={(e) => setHoldModal(h => ({...h, reason: e.target.value}))}
                             placeholder="Explain why this operation must be on hold…"
-                            className="w-full rounded-lg bg-gray-800 border border-white/10 px-4 py-3 text-sm"
+                            className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-4 py-3 text-sm"
                         />
-                        <div className="text-xs text-gray-500">This reason will be stored and visible in history.</div>
+                        <div className="text-xs text-slate-600 dark:text-gray-500">This reason will be stored and visible in history.</div>
                     </div>
                 )}
             </Modal>
@@ -945,7 +945,7 @@ const WorkOrderOperationsPage = () => {
                                 viewOnly: false,
                                 targetStatus: "Completed"
                             })}
-                            className="px-4 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                            className="px-4 py-2.5 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm"
                         >
                             Cancel
                         </button>
@@ -961,9 +961,9 @@ const WorkOrderOperationsPage = () => {
             >
                 <div className="grid grid-cols-1 gap-5">
                     {/* Materials table */}
-                    <div className="rounded-xl bg-gray-900/40 border border-white/10 overflow-x-auto">
+                    <div className="rounded-xl bg-slate-100/70 dark:bg-gray-900/40 border border-slate-200 dark:border-white/10 overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-800 text-sm">
-                            <thead className="bg-gray-900/80">
+                            <thead className="bg-slate-100/80 dark:bg-gray-900/80">
                             <tr>
                                 <th className="px-4 py-2 text-left">Component</th>
                                 <th className="px-4 py-2 text-left">Per FG</th>
@@ -976,13 +976,13 @@ const WorkOrderOperationsPage = () => {
                                 <tr key={r.itemId}>
                                     <td className="px-4 py-2">
                                         <div className="font-mono">{r.itemId}</div>
-                                        <div className="text-[11px] text-gray-400">{r.name || ""}</div>
+                                        <div className="text-[11px] text-slate-500 dark:text-gray-400">{r.name || ""}</div>
                                     </td>
                                     <td className="px-4 py-2">{r.per}</td>
                                     <td className="px-4 py-2">
                                         <input
                                             inputMode="decimal"
-                                            className="w-28 rounded-lg bg-gray-800 border border-white/10 px-3 py-2"
+                                            className="w-28 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2"
                                             value={r.consumed ?? 0}
                                             onChange={(e) => updateRow(idx, "consumed", e.target.value)}
                                         />
@@ -990,7 +990,7 @@ const WorkOrderOperationsPage = () => {
                                     <td className="px-4 py-2">
                                         <input
                                             inputMode="decimal"
-                                            className="w-28 rounded-lg bg-gray-800 border border-white/10 px-3 py-2"
+                                            className="w-28 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2"
                                             value={r.scrap ?? 0}
                                             onChange={(e) => updateRow(idx, "scrap", e.target.value)}
                                         />
@@ -1004,10 +1004,10 @@ const WorkOrderOperationsPage = () => {
                     {/* Output confirmation */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                         <div>
-                            <label className="block text-xs text-gray-400 mb-1">Produced</label>
+                            <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Produced</label>
                             <input
                                 inputMode="decimal"
-                                className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                 value={completeModal.produced}
                                 onChange={(e) => setCompleteModal(m => ({...m, produced: Number(e.target.value || 0)}))}
                             />
@@ -1016,13 +1016,13 @@ const WorkOrderOperationsPage = () => {
 
                     {/* Notes (optional) */}
                     <div>
-                        <label className="block text-xs text-gray-400 mb-1">Notes</label>
+                        <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Notes</label>
                         <textarea
                             rows={4}
                             value={completeModal.notes}
                             onChange={(e) => setCompleteModal(m => ({...m, notes: e.target.value}))}
                             placeholder="Optional notes"
-                            className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                            className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                         />
                     </div>
                 </div>
@@ -1037,7 +1037,7 @@ const WorkOrderOperationsPage = () => {
                     <>
                         <button
                             onClick={() => setDeleteModal({open: false, opId: null})}
-                            className="px-4 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                            className="px-4 py-2.5 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm"
                         >
                             Cancel
                         </button>
@@ -1050,7 +1050,7 @@ const WorkOrderOperationsPage = () => {
                     </>
                 }
             >
-                <div className="text-sm text-gray-300">
+                <div className="text-sm text-slate-700 dark:text-gray-300">
                     This will permanently remove the operation{" "}
                     <span className="font-mono">{deleteModal.opId}</span> from this board. This action cannot be undone.
                 </div>
@@ -1081,7 +1081,7 @@ const WorkOrderOperationsPage = () => {
                                 releaseQty: 0,
                                 expiryDate: ""
                             })}
-                            className="px-4 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                            className="px-4 py-2.5 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm"
                         >
                             Cancel
                         </button>
@@ -1115,9 +1115,9 @@ const WorkOrderOperationsPage = () => {
                                 <IconInfo className="h-4 w-4 text-amber-300"/> Not all operations are completed. Review
                                 what’s pending:
                             </div>
-                            <div className="rounded-lg bg-gray-900/40 border border-white/10 overflow-hidden">
+                            <div className="rounded-lg bg-slate-100/70 dark:bg-gray-900/40 border border-slate-200 dark:border-white/10 overflow-hidden">
                                 <table className="min-w-full divide-y divide-gray-800 text-xs">
-                                    <thead className="bg-gray-900/80">
+                                    <thead className="bg-slate-100/80 dark:bg-gray-900/80">
                                     <tr>
                                         <th className="px-3 py-2 text-left">Operation</th>
                                         <th className="px-3 py-2 text-left">Title</th>
@@ -1144,23 +1144,23 @@ const WorkOrderOperationsPage = () => {
                     )}
 
                     {/* Output section */}
-                    <div className="rounded-2xl border border-white/10 bg-gray-900/60">
-                        <div className="px-4 py-3 border-b border-white/10 text-sm font-semibold">Output (Finished
+                    <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60">
+                        <div className="px-4 py-3 border-b border-slate-200 dark:border-white/10 text-sm font-semibold">Output (Finished
                             Good)
                         </div>
                         <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-1">
-                                <div className="text-xs text-gray-400">Item ID</div>
+                                <div className="text-xs text-slate-500 dark:text-gray-400">Item ID</div>
                                 <div
-                                    className="px-3 py-2 rounded-lg bg-gray-800/60 border border-white/10 font-mono">{woPlan.itemId}</div>
+                                    className="px-3 py-2 rounded-lg bg-slate-100/70 dark:bg-gray-800/60 border border-slate-200 dark:border-white/10 font-mono">{woPlan.itemId}</div>
                             </div>
                             <div className="space-y-1">
-                                <div className="text-xs text-gray-400">Item Name</div>
+                                <div className="text-xs text-slate-500 dark:text-gray-400">Item Name</div>
                                 <div
-                                    className="px-3 py-2 rounded-lg bg-gray-800/60 border border-white/10">{woPlan.itemName}</div>
+                                    className="px-3 py-2 rounded-lg bg-slate-100/70 dark:bg-gray-800/60 border border-slate-200 dark:border-white/10">{woPlan.itemName}</div>
                             </div>
                             <div className="space-y-1">
-                                <label className="block text-xs text-gray-400">Count to Release</label>
+                                <label className="block text-xs text-slate-500 dark:text-gray-400">Count to Release</label>
                                 <input
                                     inputMode="decimal"
                                     value={releaseModal.releaseQty}
@@ -1168,7 +1168,7 @@ const WorkOrderOperationsPage = () => {
                                         ...m,
                                         releaseQty: Math.max(0, Number(e.target.value || 0))
                                     }))}
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                 />
                                 {Number(releaseModal.releaseQty) > producedSoFar && (
                                     <div className="text-[11px] text-amber-300">Note: Count exceeds produced so far
@@ -1176,13 +1176,13 @@ const WorkOrderOperationsPage = () => {
                                 )}
                             </div>
                             <div className="space-y-1">
-                                <label className="block text-xs text-gray-400">Expiration Date <span
+                                <label className="block text-xs text-slate-500 dark:text-gray-400">Expiration Date <span
                                     className="text-red-300">*</span></label>
                                 <input
                                     type="date"
                                     value={releaseModal.expiryDate}
                                     onChange={(e) => setReleaseModal(m => ({...m, expiryDate: e.target.value}))}
-                                    className="w-full rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                                 />
                                 {!releaseModal.expiryDate && (
                                     <div className="text-[11px] text-red-300">Expiration date is required to
@@ -1202,14 +1202,14 @@ const WorkOrderOperationsPage = () => {
                 footer={
                     <button
                         onClick={() => setMoveModal({open: false, opId: null})}
-                        className="px-4 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                        className="px-4 py-2.5 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm"
                     >
                         Close
                     </button>
                 }
             >
                 <div className="space-y-4">
-                    <div className="text-sm text-gray-300">Select a target column:</div>
+                    <div className="text-sm text-slate-700 dark:text-gray-300">Select a target column:</div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {STATUS_LIST.map(s => (
                             <button
@@ -1219,13 +1219,13 @@ const WorkOrderOperationsPage = () => {
                                     setMoveModal({open: false, opId: null});
                                     applyStatusChange(id, s);
                                 }}
-                                className="px-3 py-2 rounded-lg border border-white/10 bg-gray-800 hover:bg-gray-700 text-sm"
+                                className="px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                             >
                                 {s}
                             </button>
                         ))}
                     </div>
-                    <div className="text-xs text-gray-500">Hold and Completed may require additional input.</div>
+                    <div className="text-xs text-slate-600 dark:text-gray-500">Hold and Completed may require additional input.</div>
                 </div>
             </Modal>
         </div>

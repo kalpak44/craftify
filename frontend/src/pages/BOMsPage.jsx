@@ -151,11 +151,11 @@ export const BOMsPage = () => {
     const th = (label, key, right = false) => (
         <th
             onClick={() => setSort((s) => ({key, dir: s.key === key && s.dir === "asc" ? "desc" : "asc"}))}
-            className={`px-4 py-3 font-semibold text-gray-300 select-none cursor-pointer ${right ? "text-right" : "text-left"}`}
+            className={`px-4 py-3 font-semibold text-slate-700 dark:text-gray-300 select-none cursor-pointer ${right ? "text-right" : "text-left"}`}
         >
       <span className="inline-flex items-center gap-1">
         {label}
-          {sort.key === key && <span className="text-gray-500">{sort.dir === "asc" ? "▲" : "▼"}</span>}
+          {sort.key === key && <span className="text-slate-600 dark:text-gray-500">{sort.dir === "asc" ? "▲" : "▼"}</span>}
       </span>
         </th>
     );
@@ -249,7 +249,7 @@ export const BOMsPage = () => {
     const MenuItems = ({id, onDone}) => (
         <div className="py-1">
             <button
-                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-800"
+                className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-gray-800"
                 onClick={(e) => {
                     e.stopPropagation();
                     goToDetails(id);
@@ -258,7 +258,7 @@ export const BOMsPage = () => {
             >
                 Open details
             </button>
-            <div className="my-1 border-t border-white/10"/>
+            <div className="my-1 border-t border-slate-200 dark:border-white/10"/>
             <button
                 className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-950/40 hover:text-red-300"
                 onClick={(e) => {
@@ -273,13 +273,13 @@ export const BOMsPage = () => {
     );
 
     return (
-        <div className="min-h-[calc(100vh-140px)] bg-gray-950 text-gray-200">
+        <div className="min-h-full text-slate-900 dark:text-gray-200">
             {/* Header */}
             <header className="mx-auto px-4 pt-8 pb-5">
                 <div className="flex items-start md:items-end justify-between gap-4 flex-wrap">
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-bold text-white">BOMs</h1>
-                        <p className="mt-1 md:mt-2 text-gray-400 text-sm md:text-base">Define and manage bill of
+                        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">BOMs</h1>
+                        <p className="mt-1 md:mt-2 text-slate-500 dark:text-gray-400 text-sm md:text-base">Define and manage bill of
                             materials.</p>
                     </div>
                     <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
@@ -290,7 +290,7 @@ export const BOMsPage = () => {
                             + New BOM
                         </button>
                         <button
-                            className="flex-1 sm:flex-none px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">
+                            className="flex-1 sm:flex-none px-4 py-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm">
                             Import CSV
                         </button>
                     </div>
@@ -299,7 +299,7 @@ export const BOMsPage = () => {
 
             {/* Toolbar */}
             <div className="mx-auto px-4 pb-4">
-                <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-3 md:p-4">
+                <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-3 md:p-4">
                     <div className="flex flex-col md:flex-row md:items-center gap-3">
                         <select
                             value={status}
@@ -307,7 +307,7 @@ export const BOMsPage = () => {
                                 setStatus(e.target.value);
                                 setPage(1);
                             }}
-                            className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
+                            className="rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                         >
                             <option value="all">All Statuses</option>
                             <option value="Active">Active</option>
@@ -324,18 +324,18 @@ export const BOMsPage = () => {
                                     setQuery(e.target.value);
                                     setPage(1);
                                 }}
-                                className="w-full rounded-lg bg-gray-800 border border-white/10 pl-3 pr-10 py-2 text-sm"
+                                className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 pl-3 pr-10 py-2 text-sm"
                             />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">⌕</span>
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 dark:text-gray-500">⌕</span>
                         </div>
 
                         <div className="flex items-center gap-2 md:ml-auto">
                             <button
-                                className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm hover:bg-gray-700">
+                                className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm hover:bg-slate-200 dark:hover:bg-gray-700">
                                 Export CSV
                             </button>
                             <button
-                                className="px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-sm hover:bg-gray-700">
+                                className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm hover:bg-slate-200 dark:hover:bg-gray-700">
                                 Print / PDF
                             </button>
                             <button
@@ -357,12 +357,12 @@ export const BOMsPage = () => {
                 <div className="md:hidden">
                     {/* Select-all toolbar for mobile */}
                     <div className="mb-2 flex items-center justify-between">
-                        <label className="inline-flex items-center gap-2 text-sm text-gray-300">
+                        <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-gray-300">
                             <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll}
                                    onClick={stopRowNav}/>
                             <span>Select all on page</span>
                         </label>
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-slate-500 dark:text-gray-400">
               {filtered.length === 0 ? 0 : pageStart + 1}–{Math.min(filtered.length, pageStart + pageSize)} of {filtered.length}
             </span>
                     </div>
@@ -371,7 +371,7 @@ export const BOMsPage = () => {
                         {paged.map((bom) => (
                             <div
                                 key={bom.id}
-                                className="rounded-xl border border-white/10 bg-gray-900/60 p-3 active:bg-gray-800/40"
+                                className="rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-3 active:bg-slate-100/60 dark:active:bg-gray-800/40"
                                 onClick={() => goToDetails(bom.id)}
                                 title="Open Details"
                             >
@@ -385,12 +385,12 @@ export const BOMsPage = () => {
                                     />
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-start justify-between gap-2">
-                                            <div className="font-mono text-white text-sm">
+                                            <div className="font-mono text-slate-900 dark:text-white text-sm">
                                                 <span className="underline decoration-dotted">{bom.id}</span>
                                             </div>
                                             {/* Mobile actions trigger */}
                                             <button
-                                                className="shrink-0 px-2 py-1 rounded-md hover:bg-gray-800/60 text-gray-300"
+                                                className="shrink-0 px-2 py-1 rounded-md hover:bg-slate-100/70 dark:hover:bg-gray-800/60 text-slate-700 dark:text-gray-300"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     setSheetId(bom.id);
@@ -401,8 +401,8 @@ export const BOMsPage = () => {
                                                 …
                                             </button>
                                         </div>
-                                        <div className="mt-1 text-gray-200 text-sm line-clamp-2">{bom.product}</div>
-                                        <div className="mt-1 text-xs text-gray-400 flex items-center gap-2 flex-wrap">
+                                        <div className="mt-1 text-slate-900 dark:text-gray-200 text-sm line-clamp-2">{bom.product}</div>
+                                        <div className="mt-1 text-xs text-slate-500 dark:text-gray-400 flex items-center gap-2 flex-wrap">
                                             <span className="truncate">{bom.productId}</span>
                                             <span>•</span>
                                             <span>{bom.revision}</span>
@@ -415,7 +415,7 @@ export const BOMsPage = () => {
                                                     bom.status === "Active" ? "bg-green-600/30 text-green-400"
                                                         : bom.status === "Draft" ? "bg-blue-600/30 text-blue-300"
                                                             : bom.status === "Hold" ? "bg-yellow-600/30 text-yellow-400"
-                                                                : "bg-gray-600/30 text-gray-400"}`}>
+                                                                : "bg-gray-600/30 text-slate-500 dark:text-gray-400"}`}>
                         {bom.status}
                       </span>
                                         </div>
@@ -425,7 +425,7 @@ export const BOMsPage = () => {
                         ))}
                         {paged.length === 0 && (
                             <div
-                                className="rounded-xl border border-white/10 bg-gray-900/60 p-6 text-center text-gray-400">
+                                className="rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-6 text-center text-slate-500 dark:text-gray-400">
                                 No BOMs found.
                             </div>
                         )}
@@ -433,9 +433,9 @@ export const BOMsPage = () => {
                 </div>
 
                 {/* Desktop table */}
-                <div className="hidden md:block overflow-x-auto border border-white/10 rounded-xl bg-gray-900/60">
+                <div className="hidden md:block overflow-x-auto border border-slate-200 dark:border-white/10 rounded-xl bg-white/80 dark:bg-gray-900/60">
                     <table className="min-w-full divide-y divide-gray-800 text-sm">
-                        <thead className="bg-gray-900/80">
+                        <thead className="bg-slate-100/80 dark:bg-gray-900/80">
                         <tr>
                             <th className="px-4 py-3">
                                 <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll}
@@ -448,14 +448,14 @@ export const BOMsPage = () => {
                             {th("Status", "status")}
                             {th("# Components", "components", true)}
                             {th("Last Updated", "lastUpdated")}
-                            <th className="px-4 py-3 font-semibold text-gray-300 text-right">Actions</th>
+                            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-gray-300 text-right">Actions</th>
                         </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-800">
                         {paged.map((bom) => (
                             <tr
                                 key={bom.id}
-                                className="hover:bg-gray-800/40 transition cursor-pointer"
+                                className="hover:bg-slate-100/60 dark:hover:bg-gray-800/40 transition cursor-pointer"
                                 onClick={() => goToDetails(bom.id)}
                                 title="Open Details"
                             >
@@ -463,12 +463,12 @@ export const BOMsPage = () => {
                                     <input type="checkbox" checked={!!selected[bom.id]}
                                            onChange={() => toggleOne(bom.id)}/>
                                 </td>
-                                <td className="px-4 py-3 font-mono text-white">
+                                <td className="px-4 py-3 font-mono text-slate-900 dark:text-white">
                                     <span className="underline decoration-dotted">{bom.id}</span>
                                 </td>
-                                <td className="px-4 py-3 text-gray-200">{bom.product}</td>
-                                <td className="px-4 py-3 text-gray-400">{bom.productId}</td>
-                                <td className="px-4 py-3 text-gray-400">{bom.revision}</td>
+                                <td className="px-4 py-3 text-slate-900 dark:text-gray-200">{bom.product}</td>
+                                <td className="px-4 py-3 text-slate-500 dark:text-gray-400">{bom.productId}</td>
+                                <td className="px-4 py-3 text-slate-500 dark:text-gray-400">{bom.revision}</td>
                                 <td className="px-4 py-3">
                   <span
                       className={`px-2 py-1 text-xs rounded-full ${
@@ -478,18 +478,18 @@ export const BOMsPage = () => {
                                   ? "bg-blue-600/30 text-blue-300"
                                   : bom.status === "Hold"
                                       ? "bg-yellow-600/30 text-yellow-400"
-                                      : "bg-gray-600/30 text-gray-400"
+                                      : "bg-gray-600/30 text-slate-500 dark:text-gray-400"
                       }`}
                   >
                     {bom.status}
                   </span>
                                 </td>
-                                <td className="px-4 py-3 text-right text-gray-200">{bom.components}</td>
-                                <td className="px-4 py-3 text-gray-400">{bom.lastUpdated}</td>
+                                <td className="px-4 py-3 text-right text-slate-900 dark:text-gray-200">{bom.components}</td>
+                                <td className="px-4 py-3 text-slate-500 dark:text-gray-400">{bom.lastUpdated}</td>
                                 <td className="px-4 py-3 text-right" onClick={stopRowNav}>
                                     {/* Desktop actions trigger */}
                                     <button
-                                        className="inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-800/60 text-gray-300"
+                                        className="inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-slate-100/70 dark:hover:bg-gray-800/60 text-slate-700 dark:text-gray-300"
                                         aria-label="Actions"
                                         title="Actions"
                                         onClick={(e) => openDesktopMenu(e, bom.id)}
@@ -501,7 +501,7 @@ export const BOMsPage = () => {
                         ))}
                         {paged.length === 0 && (
                             <tr>
-                                <td className="px-4 py-6 text-center text-gray-400" colSpan={9}>
+                                <td className="px-4 py-6 text-center text-slate-500 dark:text-gray-400" colSpan={9}>
                                     No BOMs found.
                                 </td>
                             </tr>
@@ -512,7 +512,7 @@ export const BOMsPage = () => {
 
                 {/* Pagination */}
                 <div
-                    className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-gray-400">
+                    className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-slate-500 dark:text-gray-400">
                     <div className="flex items-center gap-2">
                         <span>Rows per page</span>
                         <select
@@ -521,7 +521,7 @@ export const BOMsPage = () => {
                                 setPageSize(Number(e.target.value));
                                 setPage(1);
                             }}
-                            className="rounded bg-gray-800 border border-white/10 px-2 py-1"
+                            className="rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-2 py-1"
                         >
                             {[8, 16, 24].map((n) => (
                                 <option key={n} value={n}>
@@ -531,16 +531,16 @@ export const BOMsPage = () => {
                         </select>
                         <span className="hidden sm:inline">•</span>
                         <span>
-              Showing <span className="text-gray-300">{filtered.length === 0 ? 0 : pageStart + 1}</span>–
-              <span className="text-gray-300">{Math.min(filtered.length, pageStart + pageSize)}</span> of
-              <span className="text-gray-300"> {filtered.length}</span>
+              Showing <span className="text-slate-700 dark:text-gray-300">{filtered.length === 0 ? 0 : pageStart + 1}</span>–
+              <span className="text-slate-700 dark:text-gray-300">{Math.min(filtered.length, pageStart + pageSize)}</span> of
+              <span className="text-slate-700 dark:text-gray-300"> {filtered.length}</span>
             </span>
                     </div>
                     <div className="flex items-center gap-2">
                         <button
                             disabled={page === 1}
                             onClick={() => setPage((p) => Math.max(1, p - 1))}
-                            className="px-3 py-1 rounded bg-gray-800 border border-white/10 disabled:opacity-40"
+                            className="px-3 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 disabled:opacity-40"
                         >
                             Prev
                         </button>
@@ -550,7 +550,7 @@ export const BOMsPage = () => {
                         <button
                             disabled={page === totalPages}
                             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                            className="px-3 py-1 rounded bg-gray-800 border border-white/10 disabled:opacity-40"
+                            className="px-3 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 disabled:opacity-40"
                         >
                             Next
                         </button>
@@ -562,7 +562,7 @@ export const BOMsPage = () => {
             {menu && (
                 <div
                     ref={menuRef}
-                    className="fixed z-50 min-w-[200px] rounded-xl border border-white/10 bg-gray-900 shadow-2xl"
+                    className="fixed z-50 min-w-[200px] rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 shadow-2xl"
                     style={{left: `${menu.x}px`, top: `${menu.y}px`}}
                     onClick={(e) => e.stopPropagation()}
                 >
@@ -575,16 +575,16 @@ export const BOMsPage = () => {
                 <div className="fixed inset-0 z-50">
                     <div className="absolute inset-0 bg-black/60" onClick={() => setSheetId(null)}/>
                     <div
-                        className="absolute inset-x-0 bottom-0 rounded-t-2xl border border-white/10 bg-gray-900 p-2 pt-3 shadow-2xl">
+                        className="absolute inset-x-0 bottom-0 rounded-t-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 p-2 pt-3 shadow-2xl">
                         <div className="mx-auto h-1 w-10 rounded-full bg-white/20 mb-1.5"/>
                         <div className="px-2 pb-2">
-                            <div className="text-xs text-gray-400 mb-2 px-1">Actions for <span
-                                className="font-mono text-gray-300">{sheetId}</span></div>
-                            <div className="rounded-xl overflow-hidden border border-white/10 divide-y divide-white/10">
+                            <div className="text-xs text-slate-500 dark:text-gray-400 mb-2 px-1">Actions for <span
+                                className="font-mono text-slate-700 dark:text-gray-300">{sheetId}</span></div>
+                            <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 divide-y divide-white/10">
                                 <MenuItems id={sheetId} onDone={() => setSheetId(null)}/>
                             </div>
                             <button
-                                className="mt-2 w-full px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                                className="mt-2 w-full px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                                 onClick={() => setSheetId(null)}
                             >
                                 Close
@@ -599,16 +599,16 @@ export const BOMsPage = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/60" onClick={() => setShowDeleteModal(false)}/>
                     <div
-                        className="relative z-10 w-[92%] sm:w-[80%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
-                        <h2 className="text-lg font-semibold text-white">Confirm deletion</h2>
-                        <p className="mt-2 text-sm text-gray-300">
-                            You are about to delete <span className="font-medium text-white">{selectedCount}</span>{" "}
+                        className="relative z-10 w-[92%] sm:w-[80%] max-w-md rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 p-5 shadow-xl">
+                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Confirm deletion</h2>
+                        <p className="mt-2 text-sm text-slate-700 dark:text-gray-300">
+                            You are about to delete <span className="font-medium text-slate-900 dark:text-white">{selectedCount}</span>{" "}
                             {selectedCount === 1 ? "BOM" : "BOMs"}. This action cannot be undone.
                         </p>
                         <div className="mt-4 flex flex-col sm:flex-row justify-end gap-2">
                             <button
                                 onClick={() => setShowDeleteModal(false)}
-                                className="px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                                className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                             >
                                 Cancel
                             </button>
@@ -628,16 +628,16 @@ export const BOMsPage = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/60" onClick={() => setDeleteOneId(null)}/>
                     <div
-                        className="relative z-10 w-[92%] sm:w-[80%] max-w-md rounded-2xl border border-white/10 bg-gray-900 p-5 shadow-xl">
-                        <h2 className="text-lg font-semibold text-white">Delete BOM</h2>
-                        <p className="mt-2 text-sm text-gray-300">
-                            You are about to delete <span className="font-mono text-white">{deleteOneId}</span>. This
+                        className="relative z-10 w-[92%] sm:w-[80%] max-w-md rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 p-5 shadow-xl">
+                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Delete BOM</h2>
+                        <p className="mt-2 text-sm text-slate-700 dark:text-gray-300">
+                            You are about to delete <span className="font-mono text-slate-900 dark:text-white">{deleteOneId}</span>. This
                             action cannot be undone.
                         </p>
                         <div className="mt-4 flex flex-col sm:flex-row justify-end gap-2">
                             <button
                                 onClick={() => setDeleteOneId(null)}
-                                className="px-4 py-2 rounded-lg bg-gray-800 border border-white/10 hover:bg-gray-700 text-sm"
+                                className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                             >
                                 Cancel
                             </button>

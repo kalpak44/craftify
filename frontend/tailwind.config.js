@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 const path = import.meta.env.VITE_APP_ROOT_PATH;
 export default {
+    darkMode: "class",
     content: [
         "./index.html",
         "./src/**/*.{js,ts,jsx,tsx}",

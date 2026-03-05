@@ -10,8 +10,8 @@ export const HomePage = () => {
     if (isLoading) {
         return (
             <div
-                className="min-h-[60vh] bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200 flex items-center justify-center">
-                <div className="animate-pulse text-gray-400">Loading…</div>
+                className="min-h-[60vh] bg-gradient-to-b from-slate-50 via-white to-slate-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 text-slate-900 dark:text-gray-200 flex items-center justify-center">
+                <div className="animate-pulse text-slate-500 dark:text-gray-400">Loading…</div>
             </div>
         );
     }
@@ -89,12 +89,13 @@ export const HomePage = () => {
     ];
 
     return (
-        <div className="bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-200">
+        <div
+            className="bg-gradient-to-b from-slate-50 via-white to-slate-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 text-slate-900 dark:text-gray-200">
             <header className="mx-auto max-w-6xl px-4 pt-14 pb-10 text-center">
-                <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white">
+                <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-900 dark:text-white">
                     Lightweight ERP for Inventory & Manufacturing
                 </h1>
-                <p className="mt-4 text-base md:text-lg text-gray-400 max-w-2xl mx-auto">
+                <p className="mt-4 text-base md:text-lg text-slate-500 dark:text-gray-400 max-w-2xl mx-auto">
                     Craftify keeps your stock, BOMs, and shop-floor operations in
                     sync—without the complexity. Forms in, logic runs, clean APIs out.
                 </p>
@@ -107,7 +108,7 @@ export const HomePage = () => {
                     </button>
                     <button
                         onClick={() => loginWithRedirect({screen_hint: "signup"})}
-                        className="rounded-2xl px-6 py-3 bg-gray-800 hover:bg-gray-700 border border-white/10 text-base"
+                        className="rounded-2xl px-6 py-3 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 text-base"
                     >
                         Create an account
                     </button>
@@ -119,15 +120,16 @@ export const HomePage = () => {
                     {features.map((f) => (
                         <div
                             key={f.title}
-                            className="rounded-2xl border border-white/10 bg-gray-900/60 h-full p-5 hover:border-white/20 transition"
+                            className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 h-full p-5 hover:border-slate-300 dark:hover:border-white/20 transition"
                         >
                             <div className="flex items-center gap-3 pb-2">
-                                <div className="p-2 rounded-xl bg-gray-800 text-white">
+                                <div
+                                    className="p-2 rounded-xl bg-slate-100 dark:bg-gray-800 text-blue-700 dark:text-blue-300">
                                     {f.icon}
                                 </div>
-                                <div className="text-white text-lg font-semibold">{f.title}</div>
+                                <div className="text-slate-900 dark:text-white text-lg font-semibold">{f.title}</div>
                             </div>
-                            <p className="text-sm text-gray-400">{f.description}</p>
+                            <p className="text-sm text-slate-500 dark:text-gray-400">{f.description}</p>
                         </div>
                     ))}
                 </div>
@@ -135,11 +137,11 @@ export const HomePage = () => {
 
             <section className="mx-auto max-w-6xl px-4 pb-20">
                 <div
-                    className="rounded-3xl border border-white/10 bg-gradient-to-r from-gray-900 to-gray-800 p-8 md:p-10 text-center">
-                    <h2 className="text-2xl md:text-3xl font-semibold text-white">
+                    className="rounded-3xl border border-slate-200 dark:border-white/10 bg-gradient-to-r from-blue-50 via-white to-slate-100 dark:from-gray-900 dark:to-gray-800 p-8 md:p-10 text-center">
+                    <h2 className="text-2xl md:text-3xl font-semibold text-slate-900 dark:text-white">
                         Ship your first work order in minutes
                     </h2>
-                    <p className="mt-2 text-gray-400 max-w-3xl mx-auto">
+                    <p className="mt-2 text-slate-500 dark:text-gray-400 max-w-3xl mx-auto">
                         Start with a CSV of items, add a BOM, and go from quote to shipment.
                     </p>
                     <div className="mt-6 flex items-center justify-center gap-3">
