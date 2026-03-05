@@ -36,8 +36,12 @@ public enum Status implements Serializable {
 
   @JsonCreator
   public static Status fromValue(String value) {
+    if (value == null) {
+      throw new IllegalArgumentException("Unexpected value 'null'");
+    }
+    String normalized = value.trim();
     for (Status b : Status.values()) {
-      if (b.value.equals(value)) {
+      if (b.value.equalsIgnoreCase(normalized) || b.name().equalsIgnoreCase(normalized)) {
         return b;
       }
     }

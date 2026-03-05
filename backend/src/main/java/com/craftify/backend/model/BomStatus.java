@@ -29,8 +29,12 @@ public enum BomStatus implements Serializable {
 
   @JsonCreator
   public static BomStatus fromValue(String value) {
+    if (value == null) {
+      throw new IllegalArgumentException("Unexpected value 'null'");
+    }
+    String normalized = value.trim();
     for (BomStatus b : BomStatus.values()) {
-      if (b.value.equals(value)) {
+      if (b.value.equalsIgnoreCase(normalized) || b.name().equalsIgnoreCase(normalized)) {
         return b;
       }
     }
