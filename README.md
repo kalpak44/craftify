@@ -44,7 +44,7 @@ Notes:
 This repository deploys the frontend to GitHub Pages.
 
 - Workflow: `.github/workflows/deploy-pages.yml`
-- Trigger: push to `main` or `master`, or manual dispatch
+- Trigger: push to `main` (frontend path changes), or manual dispatch
 - Build directory: `frontend/`
 - Output: `frontend/dist` uploaded to Pages
 - GitHub Pages: `frontend/dist` and `public/404.html` uploaded to Pages
