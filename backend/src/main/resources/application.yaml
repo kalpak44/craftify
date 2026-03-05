@@ -24,6 +24,7 @@ spring:
     show-sql: false
   flyway:
     enabled: true
+    locations: classpath:db/migration
 
 server:
   max-http-request-header-size: 100MB

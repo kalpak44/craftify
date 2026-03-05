@@ -45,7 +45,11 @@ public class SecurityConfig {
     Assert.hasText(issuerUri, "spring.security.oauth2.resourceserver.jwt.issuer-uri must be set");
     Assert.hasText(audience, "auth0.audience must be set");
 
-    NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withIssuerLocation(issuerUri).build();
+    String normalizedIssuer = issuerUri.endsWith("/") ? issuerUri.substring(0, issuerUri.length() - 1) : issuerUri;
+    String jwkSetUri = normalizedIssuer + "/.well-known/jwks.json";
+
+    // Avoid startup hard-failure on OIDC discovery outages/timeouts.
+    NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
     OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuerUri);
     OAuth2TokenValidator<Jwt> withAudience = new AudienceValidator(audience);
     jwtDecoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(withIssuer, withAudience));
