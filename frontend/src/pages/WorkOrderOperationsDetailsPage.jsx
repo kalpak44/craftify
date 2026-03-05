@@ -64,7 +64,6 @@ export default function WorkOrderOperationsDetailsPage() {
 
     useEffect(() => {
         requestSave();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [opId, title, status, priority, assignee, estimate, notes]);
 
     // ---------- Unsaved changes guard ----------

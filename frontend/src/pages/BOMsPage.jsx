@@ -182,7 +182,6 @@ export const BOMsPage = () => {
                     await deleteBom(authFetch, id, detail.version ?? 0);
                 } catch (e) {
                     // swallow per-row errors to try others; could surface a toast in real app
-                    // eslint-disable-next-line no-console
                     console.warn("Failed to delete BOM", id, e);
                 }
             }
@@ -201,7 +200,6 @@ export const BOMsPage = () => {
             await deleteBom(authFetch, deleteOneId, detail.version ?? 0);
             setReloadTick((n) => n + 1);
         } catch (e) {
-            // eslint-disable-next-line no-console
             console.warn("Failed to delete BOM", deleteOneId, e);
         } finally {
             setSelected((s) => {

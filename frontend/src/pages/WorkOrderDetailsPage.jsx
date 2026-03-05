@@ -401,10 +401,8 @@ export default function WorkOrderDetailsPage() {
     });
     useEffect(() => {
         if (initialSnapshotRef.current == null) initialSnapshotRef.current = makeSnapshot();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
     const hasChanges = useMemo(() => initialSnapshotRef.current !== makeSnapshot(),
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         [woId, bomFgId, qty, priority, dueDate, assignee, notes]
     );
 

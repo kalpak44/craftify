@@ -254,12 +254,10 @@ export default function BOMDetailsPage() {
         if (initialSnapshotRef.current == null) {
             initialSnapshotRef.current = makeSnapshot();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
     const hasChanges = useMemo(() => {
         const cur = makeSnapshot();
         return initialSnapshotRef.current !== cur;
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [bomId, parentItemId, revision, status, description, rows]);
 
     // ---- beforeunload guard ----
@@ -328,7 +326,6 @@ export default function BOMDetailsPage() {
             }
         })();
         return () => { ignore = true; };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isEdit, routeId, authFetch]);
 
     // ---- Row ops ----
