@@ -1,4 +1,4 @@
-const API_HOST = import.meta.env.VITE_API_HOST || "http://localhost:8080";
+const API_HOST = import.meta.env.VITE_API_HOST || "https://api.pavel-usanli.online/craftify/v1";
 const ITEMS_API_URL = `${API_HOST}/items`;
 
 /**

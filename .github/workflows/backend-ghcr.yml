@@ -58,34 +58,31 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push SHA and latest tags
+      - name: Push image tags
         if: github.event_name == 'push'
         id: push
         run: |
           docker push "${{ steps.vars.outputs.image_sha }}" | tee /tmp/sha-push.log
           docker tag "${{ steps.vars.outputs.image_sha }}" "${{ steps.vars.outputs.image_latest }}"
           docker push "${{ steps.vars.outputs.image_latest }}"
-          DIGEST="$(awk '/digest:/ {print $2}' /tmp/sha-push.log | tail -n1)"
+          DIGEST="$(grep -Eo 'sha256:[a-f0-9]{64}' /tmp/sha-push.log | tail -n1)"
+          if [ -z "$DIGEST" ]; then
+            DIGEST_REF="$(docker image inspect --format='{{index .RepoDigests 0}}' "${{ steps.vars.outputs.image_sha }}" 2>/dev/null || true)"
+            DIGEST="${DIGEST_REF#*@}"
+          fi
           echo "digest=${DIGEST}" >> "$GITHUB_OUTPUT"
 
       - name: Generate build report
         run: |
-          echo "### Backend Docker Image Build Report" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Backend Image Build" >> "$GITHUB_STEP_SUMMARY"
           if [ "${{ github.event_name }}" = "push" ]; then
-            echo "Successfully built and pushed the backend image to GHCR." >> "$GITHUB_STEP_SUMMARY"
+            echo "- Status: built and pushed to GHCR" >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "Successfully built the backend image (PR validation, no push)." >> "$GITHUB_STEP_SUMMARY"
+            echo "- Status: built (PR validation, no push)" >> "$GITHUB_STEP_SUMMARY"
           fi
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "**Platform:** \`linux/amd64\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Tag |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| :--- |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| \`${{ steps.vars.outputs.image_sha }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Platform: \`linux/amd64\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- SHA tag: \`${{ steps.vars.outputs.image_sha }}\`" >> "$GITHUB_STEP_SUMMARY"
           if [ "${{ github.event_name }}" = "push" ]; then
-            echo "| \`${{ steps.vars.outputs.image_latest }}\` |" >> "$GITHUB_STEP_SUMMARY"
-          fi
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          if [ "${{ github.event_name }}" = "push" ]; then
-            echo "**Digest:** \`${{ steps.push.outputs.digest }}\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Latest tag: \`${{ steps.vars.outputs.image_latest }}\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Digest: \`${{ steps.push.outputs.digest }}\`" >> "$GITHUB_STEP_SUMMARY"
           fi
