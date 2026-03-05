@@ -3,14 +3,25 @@ spring:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
-
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${AUTH0_ISSUER:https://dev-f5ge1-8v.us.auth0.com/}
-          audiences:
-            - ${AUTH0_AUDIENCE:https://app.craftify.com/}
+          issuer-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:}
+  datasource:
+    url: ${DB_CONNECTION_STRING:jdbc:postgresql://localhost:5432/craftify}
+    username: ${DB_USERNAME:craftify}
+    password: ${DB_PASSWORD:craftify}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
 
 server:
   max-http-request-header-size: 100MB
@@ -29,16 +40,11 @@ springdoc:
     operationsSorter: alpha
     tagsSorter: alpha
 
-app:
-  security:
-    disabled: false
-  cors:
-    allowed-origins:
-      - http://localhost:5173
-      - https://kalpak44.github.io/craftify
-
 logging:
   level:
     root: INFO
     org.springframework: INFO
     com.fasterxml.jackson.databind: INFO
+
+auth0:
+  audience: ${AUTH0_AUDIENCE:}

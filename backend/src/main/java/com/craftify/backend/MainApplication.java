@@ -8,10 +8,8 @@ import io.swagger.v3.oas.annotations.servers.Server;
 import java.util.TimeZone;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 @SpringBootApplication
-@ConfigurationPropertiesScan("com.craftify.backend.config")
 @OpenAPIDefinition(
     info = @Info(title = "Craftify API", version = "v1"),
     servers = {@Server(url = "http://localhost:8080")})
