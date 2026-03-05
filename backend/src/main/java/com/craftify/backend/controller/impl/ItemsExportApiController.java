@@ -1,16 +1,15 @@
 package com.craftify.backend.controller.impl;
 
 import com.craftify.backend.controller.ItemsExportApi;
+import com.craftify.backend.model.ItemDetail;
 import com.craftify.backend.model.Status;
+import com.craftify.backend.service.ItemService;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ByteArrayResource;
@@ -18,16 +17,20 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * Dummy implementation of ItemsExportApi. Generates CSV from in-memory sample items with random
- * UUIDs each time.
- */
 @RestController
 public class ItemsExportApiController implements ItemsExportApi {
 
   private static final Logger log = LoggerFactory.getLogger(ItemsExportApiController.class);
+
+  private final ItemService itemService;
+
+  public ItemsExportApiController(ItemService itemService) {
+    this.itemService = itemService;
+  }
 
   @Override
   public ResponseEntity<org.springframework.core.io.Resource> itemsExportGet(
@@ -36,61 +39,32 @@ public class ItemsExportApiController implements ItemsExportApi {
       @Nullable UUID categoryId,
       @Nullable String uom,
       @Nullable String ids) {
-    log.info("GET /items:export (dummy) q={} status={} uom={} ids={}", q, status, uom, ids);
+    String categoryName = null;
+    ServletRequestAttributes attrs =
+        (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+    if (attrs != null && attrs.getRequest() != null) {
+      categoryName = attrs.getRequest().getParameter("categoryName");
+    }
 
-    // Build random in-memory data on each request
-    List<DemoItem> rows =
-        new ArrayList<>(
-            List.of(
-                new DemoItem(
-                    UUID.randomUUID(),
-                    "ITM-001",
-                    "Warm Yellow LED",
-                    Status.ACTIVE,
-                    "Component",
-                    "pcs"),
-                new DemoItem(
-                    UUID.randomUUID(), "ITM-002", "Large Widget", Status.ACTIVE, "Assembly", "pcs"),
-                new DemoItem(
-                    UUID.randomUUID(),
-                    "ITM-008",
-                    "Blue Paint (RAL5010)",
-                    Status.HOLD,
-                    "Consumable",
-                    "L"),
-                new DemoItem(
-                    UUID.randomUUID(),
-                    "ITM-010",
-                    "Assembly Kit 10",
-                    Status.DISCONTINUED,
-                    "Kit",
-                    "kit")));
+    List<String> codes =
+        (ids == null || ids.isBlank())
+            ? List.of()
+            : Arrays.stream(ids.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isBlank())
+                .map(s -> s.toUpperCase(Locale.ROOT))
+                .toList();
 
-    // Apply basic filters
-    if (ids != null && !ids.isBlank()) {
-      Set<UUID> wanted =
-          Arrays.stream(ids.split(","))
-              .map(String::trim)
-              .filter(s -> !s.isEmpty())
-              .map(UUID::fromString)
-              .collect(Collectors.toSet());
-      rows = rows.stream().filter(d -> wanted.contains(d.id())).collect(Collectors.toList());
-    }
-    if (q != null && !q.isBlank()) {
-      String qq = q.toLowerCase(Locale.ROOT);
-      rows =
-          rows.stream()
-              .filter(
-                  d -> d.code().toLowerCase().contains(qq) || d.name().toLowerCase().contains(qq))
-              .collect(Collectors.toList());
-    }
-    if (status != null) {
-      rows = rows.stream().filter(d -> d.status() == status).collect(Collectors.toList());
-    }
-    if (uom != null && !uom.isBlank()) {
-      String uu = uom.toLowerCase(Locale.ROOT);
-      rows = rows.stream().filter(d -> d.uom().equalsIgnoreCase(uu)).collect(Collectors.toList());
-    }
+    log.info(
+        "GET /items:export q={} status={} categoryId={} categoryName={} uom={} codes={}",
+        q,
+        status,
+        categoryId,
+        categoryName,
+        uom,
+        codes.size());
+
+    List<ItemDetail> rows = itemService.listForExport(q, status, categoryName, uom, codes);
 
     String csv = toCsv(rows);
     byte[] bom = new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
@@ -105,21 +79,21 @@ public class ItemsExportApiController implements ItemsExportApi {
         .body(new ByteArrayResource(payload));
   }
 
-  private static String toCsv(List<DemoItem> rows) {
+  private static String toCsv(List<ItemDetail> rows) {
     StringBuilder sb = new StringBuilder();
-    sb.append("ID,Code,Product name,Status,Category,UoM\n");
-    for (DemoItem d : rows) {
-      sb.append(csv(d.id().toString()))
+    sb.append("Code,Name,Status,Category,UoM,Description\n");
+    for (ItemDetail d : rows) {
+      sb.append(csv(d.getCode()))
           .append(',')
-          .append(csv(d.code()))
+          .append(csv(d.getName()))
           .append(',')
-          .append(csv(d.name()))
+          .append(csv(d.getStatus() == null ? "" : d.getStatus().getValue()))
           .append(',')
-          .append(csv(d.status().name()))
+          .append(csv(d.getCategoryName()))
           .append(',')
-          .append(csv(d.category()))
+          .append(csv(d.getUomBase()))
           .append(',')
-          .append(csv(d.uom()))
+          .append(csv(d.getDescription()))
           .append('\n');
     }
     return sb.toString();
@@ -139,7 +113,4 @@ public class ItemsExportApiController implements ItemsExportApi {
     System.arraycopy(b, 0, out, a.length, b.length);
     return out;
   }
-
-  private record DemoItem(
-      UUID id, String code, String name, Status status, String category, String uom) {}
 }

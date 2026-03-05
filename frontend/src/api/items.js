@@ -23,6 +23,7 @@ export async function listItems(authFetch, params = {}) {
     q,
     status,
     categoryId,
+    categoryName,
     uom,
     includeDeleted,
   } = params;
@@ -33,6 +34,7 @@ export async function listItems(authFetch, params = {}) {
   if (q) url.searchParams.set("q", q);
   if (status) url.searchParams.set("status", status);
   if (categoryId) url.searchParams.set("categoryId", categoryId);
+  if (categoryName) url.searchParams.set("categoryName", categoryName);
   if (uom) url.searchParams.set("uom", uom);
   if (includeDeleted != null) url.searchParams.set("includeDeleted", includeDeleted);
 
@@ -121,4 +123,45 @@ export async function deleteItem(authFetch, id, version) {
     if (res && res.status === 412) throw new Error("Item was updated by someone else. Refresh and try again.");
     throw new Error(txt || "Failed to delete item");
   }
+}
+
+/**
+ * Export items CSV using current filters.
+ * Returns a downloadable blob and suggested filename.
+ */
+export async function exportItemsCsv(authFetch, params = {}) {
+  const url = new URL(`${API_HOST}/items:export`);
+  const { q, status, uom, categoryName, ids } = params;
+  if (q) url.searchParams.set("q", q);
+  if (status) url.searchParams.set("status", status);
+  if (uom) url.searchParams.set("uom", uom);
+  if (categoryName) url.searchParams.set("categoryName", categoryName);
+  if (ids?.length) url.searchParams.set("ids", ids.join(","));
+
+  const res = await authFetch(url, { method: "GET" });
+  if (!res?.ok) {
+    const txt = res ? await res.text() : "auth failed";
+    throw new Error(txt || "Failed to export CSV");
+  }
+  const blob = await res.blob();
+  const contentDisposition = res.headers.get("content-disposition") || "";
+  const match = contentDisposition.match(/filename="?([^";]+)"?/i);
+  const filename = match?.[1] || `items_${new Date().toISOString().slice(0, 10)}.csv`;
+  return { blob, filename };
+}
+
+/**
+ * Import items from CSV.
+ */
+export async function importItemsCsv(authFetch, file, mode = "upsert") {
+  const url = new URL(`${API_HOST}/items:import`);
+  url.searchParams.set("mode", mode);
+  const form = new FormData();
+  form.append("file", file);
+  const res = await authFetch(url, { method: "POST", body: form });
+  if (!res?.ok) {
+    const txt = res ? await res.text() : "auth failed";
+    throw new Error(txt || "Failed to import CSV");
+  }
+  return res.json();
 }

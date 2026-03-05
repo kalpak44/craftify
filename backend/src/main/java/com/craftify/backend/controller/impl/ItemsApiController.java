@@ -3,23 +3,18 @@ package com.craftify.backend.controller.impl;
 import com.craftify.backend.controller.ItemsApi;
 import com.craftify.backend.model.CreateItemRequest;
 import com.craftify.backend.model.ItemDetail;
-import com.craftify.backend.model.ItemList;
 import com.craftify.backend.model.ItemPage;
 import com.craftify.backend.model.Status;
 import com.craftify.backend.model.UpdateItemRequest;
+import com.craftify.backend.service.ItemService;
 import java.net.URI;
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -27,37 +22,10 @@ public class ItemsApiController implements ItemsApi {
 
   private static final Logger log = LoggerFactory.getLogger(ItemsApiController.class);
 
-  /** In-memory dummy store keyed by item code (used as id in paths) */
-  private static final Map<String, ItemDetail> STORE = new ConcurrentHashMap<>();
+  private final ItemService itemService;
 
-  static {
-    // Seed a couple of demo items for FE integration
-    seed("ITM-001", "Widget A", Status.DRAFT, categoryNameOf(UUID.randomUUID()), "pcs");
-    seed("ITM-002", "Gadget B", Status.ACTIVE, categoryNameOf(UUID.randomUUID()), "pcs");
-    seed("ITM-003", "Assembly C", Status.HOLD, categoryNameOf(UUID.randomUUID()), "set");
-  }
-
-  private static void seed(
-      String code, String name, Status status, String categoryName, String uomBase) {
-    ItemDetail d =
-        new ItemDetail()
-            .id(code)
-            .code(code)
-            .name(name)
-            .status(status)
-            .categoryName(categoryName)
-            .uomBase(uomBase)
-            .version(0)
-            .createdAt(OffsetDateTime.now().minusDays(2))
-            .updatedAt(OffsetDateTime.now());
-    STORE.put(code, d);
-  }
-
-  private static @Nullable String categoryNameOf(@Nullable UUID id) {
-    if (id == null) return null;
-    String s = id.toString();
-    String prefix = s.length() >= 8 ? s.substring(0, 8) : s;
-    return "Category " + prefix.toUpperCase(Locale.ROOT);
+  public ItemsApiController(ItemService itemService) {
+    this.itemService = itemService;
   }
 
   @Override
@@ -70,146 +38,93 @@ public class ItemsApiController implements ItemsApi {
       @Nullable UUID categoryId,
       @Nullable String uom,
       Boolean includeDeleted) {
+    String categoryName = null;
+    ServletRequestAttributes attrs =
+        (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+    if (attrs != null && attrs.getRequest() != null) {
+      categoryName = attrs.getRequest().getParameter("categoryName");
+    }
+
     log.info(
-        "GET /items page={} size={} sort={} q={} status={} categoryId={} uom={} includeDeleted={}",
+        "GET /items page={} size={} sort={} q={} status={} categoryId={} categoryName={} uom={} includeDeleted={}",
         page,
         size,
         sort,
         q,
         status,
         categoryId,
+        categoryName,
         uom,
         includeDeleted);
 
-    // filter
-    List<ItemDetail> list = new ArrayList<>(STORE.values());
-    if (q != null && !q.isBlank()) {
-      String qq = q.toLowerCase(Locale.ROOT);
-      list =
-          list.stream()
-              .filter(
-                  it ->
-                      (it.getCode() != null && it.getCode().toLowerCase(Locale.ROOT).contains(qq))
-                          || (it.getName() != null
-                              && it.getName().toLowerCase(Locale.ROOT).contains(qq)))
-              .toList();
-    }
-    if (status != null) {
-      Status st = status; // enum
-      list = list.stream().filter(it -> st.equals(it.getStatus())).toList();
-    }
-    // categoryId filter removed: ItemDetail now uses categoryName only
-    if (uom != null && !uom.isBlank()) {
-      String u = uom.toLowerCase(Locale.ROOT);
-      list =
-          list.stream()
-              .filter(
-                  it ->
-                      (it.getUomBase() != null
-                          && it.getUomBase().toLowerCase(Locale.ROOT).equals(u)))
-              .toList();
-    }
-
-    // sort (supports name or code; default name,asc)
-    String sortKey = "name";
-    boolean asc = true;
-    if (sort != null && !sort.isBlank()) {
-      String[] parts = sort.split(",", 2);
-      sortKey = parts[0].trim();
-      if (parts.length > 1) asc = !"desc".equalsIgnoreCase(parts[1].trim());
-    }
-    Comparator<ItemDetail> cmp;
-    if ("code".equalsIgnoreCase(sortKey)) {
-      cmp =
-          Comparator.comparing(
-              ItemDetail::getCode, Comparator.nullsLast(String::compareToIgnoreCase));
-    } else {
-      cmp =
-          Comparator.comparing(
-              ItemDetail::getName, Comparator.nullsLast(String::compareToIgnoreCase));
-    }
-    if (!asc) cmp = cmp.reversed();
-    list = list.stream().sorted(cmp).toList();
-
-    // page
-    int total = list.size();
-    int from = Math.max(0, Math.min(page * size, total));
-    int to = Math.max(from, Math.min(from + size, total));
-    List<ItemDetail> slice = list.subList(from, to);
-
-    List<ItemList> content =
-        slice.stream()
-            .map(
-                it ->
-                    new ItemList()
-                        .id(it.getId())
-                        .code(it.getCode())
-                        .name(it.getName())
-                        .status(it.getStatus())
-                        .categoryId(null)
-                        .categoryName(it.getCategoryName())
-                        .uomBase(it.getUomBase())
-                        .updatedAt(it.getUpdatedAt()))
-            .toList();
-
     ItemPage body =
-        new ItemPage()
-            .content(content)
-            .page(page)
-            .size(size)
-            .totalElements(total)
-            .totalPages(Math.max(1, (int) Math.ceil((double) total / (double) size)))
-            .sort(List.of(sort != null ? sort : (sortKey + "," + (asc ? "asc" : "desc"))));
+        itemService.list(
+            new ItemService.ItemQuery(
+                page == null ? 0 : page,
+                size == null ? 8 : size,
+                sort,
+                q,
+                status,
+                categoryName,
+                uom,
+                includeDeleted != null && includeDeleted));
 
     return ResponseEntity.ok(body);
   }
 
   @Override
   public ResponseEntity<Void> itemsIdDelete(String id, String ifMatch) {
-    ItemDetail existing = STORE.get(id);
-    if (existing == null) return ResponseEntity.notFound().build();
-    // Very simple ETag/version check: expect W/"<version>"
-    String expected = "W\"" + existing.getVersion() + "\"";
-    if (ifMatch == null || !ifMatch.equals(expected)) {
+    Integer expectedVersion = ItemService.parseIfMatchVersion(ifMatch);
+    if (expectedVersion == null) {
       return ResponseEntity.status(412).build();
     }
-    STORE.remove(id);
-    return ResponseEntity.noContent().build();
+    try {
+      boolean deleted = itemService.softDeleteByCode(id, expectedVersion);
+      return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    } catch (IllegalStateException ex) {
+      return ResponseEntity.status(412).build();
+    }
   }
 
   @Override
   public ResponseEntity<ItemDetail> itemsIdGet(String id) {
-    ItemDetail existing = STORE.get(id);
-    if (existing == null) return ResponseEntity.notFound().build();
-    return ResponseEntity.ok(existing);
+    ItemDetail existing = itemService.getByCode(id);
+    if (existing == null) {
+      return ResponseEntity.notFound().build();
+    }
+    return ResponseEntity.ok().eTag(ItemService.toWeakEtag(existing.getVersion())).body(existing);
   }
 
   @Override
   public ResponseEntity<ItemDetail> itemsIdPut(String id, String ifMatch, UpdateItemRequest req) {
-    ItemDetail existing = STORE.get(id);
-    if (existing == null) return ResponseEntity.notFound().build();
+    if (req == null
+        || req.getName() == null
+        || req.getName().isBlank()
+        || req.getStatus() == null
+        || req.getCategoryName() == null
+        || req.getCategoryName().isBlank()
+        || req.getUomBase() == null
+        || req.getUomBase().isBlank()) {
+      return ResponseEntity.badRequest().build();
+    }
 
-    String expected = "W\"" + existing.getVersion() + "\"";
-    if (ifMatch == null || !ifMatch.equals(expected)) {
+    Integer expectedVersion = ItemService.parseIfMatchVersion(ifMatch);
+    if (expectedVersion == null) {
       return ResponseEntity.status(412).build();
     }
 
-    // minimal validation
-    if (req == null || req.getName() == null || req.getName().isBlank()) {
-      return ResponseEntity.badRequest().build();
+    try {
+      ItemDetail updated = itemService.updateByCode(id, req, expectedVersion);
+      if (updated == null) {
+        return ResponseEntity.notFound().build();
+      }
+      return ResponseEntity.ok().eTag(ItemService.toWeakEtag(updated.getVersion())).body(updated);
+    } catch (IllegalStateException ex) {
+      if ("code_conflict".equals(ex.getMessage())) {
+        return ResponseEntity.status(409).build();
+      }
+      return ResponseEntity.status(412).build();
     }
-    // Keep code consistency with path id for dummy
-    existing.setCode(req.getCode());
-    existing.setName(req.getName());
-    existing.setStatus(req.getStatus());
-    existing.setCategoryName(req.getCategoryName());
-    existing.setUomBase(req.getUomBase());
-    existing.setDescription(req.getDescription());
-    existing.setUoms(req.getUoms());
-    existing.setUpdatedAt(OffsetDateTime.now());
-    existing.setVersion(existing.getVersion() + 1);
-    STORE.put(id, existing);
-    return ResponseEntity.ok(existing);
   }
 
   @Override
@@ -224,28 +139,14 @@ public class ItemsApiController implements ItemsApi {
         || req.getUomBase().isBlank()) {
       return ResponseEntity.badRequest().build();
     }
-    String code = req.getCode();
-    if (code == null || code.isBlank()) {
-      // generate simple code
-      code = "ITM-" + String.format("%03d", STORE.size() + 1);
-    }
-    if (STORE.containsKey(code)) {
+
+    ItemDetail created = itemService.create(req);
+    if (created == null) {
       return ResponseEntity.status(409).build();
     }
-    ItemDetail created =
-        new ItemDetail()
-            .id(code)
-            .code(code)
-            .name(req.getName().trim())
-            .status(req.getStatus())
-            .categoryName(req.getCategoryName())
-            .uomBase(req.getUomBase())
-            .description(req.getDescription())
-            .uoms(req.getUoms())
-            .createdAt(OffsetDateTime.now())
-            .updatedAt(OffsetDateTime.now())
-            .version(0);
-    STORE.put(code, created);
-    return ResponseEntity.created(URI.create("/items/" + code)).body(created);
+
+    return ResponseEntity.created(URI.create("/items/" + created.getCode()))
+        .eTag(ItemService.toWeakEtag(created.getVersion()))
+        .body(created);
   }
 }

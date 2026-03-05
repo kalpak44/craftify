@@ -1,7 +1,8 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {useAuthFetch} from "../hooks/useAuthFetch";
-import {listItems, getItem, deleteItem} from "../api/items";
+import {listItems, getItem, deleteItem, exportItemsCsv, importItemsCsv} from "../api/items";
+import {listCategories} from "../api/categories";
 
 /**
  * ItemsPage
@@ -41,6 +42,14 @@ export const ItemsPage = () => {
     const [serverTotalElements, setServerTotalElements] = useState(0);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [summary, setSummary] = useState({
+        total: 0,
+        draft: 0,
+        active: 0,
+        hold: 0,
+        discontinued: 0,
+    });
+    const [categoryOptions, setCategoryOptions] = useState(["all"]);
 
     // Bulk deletion modal
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -57,12 +66,13 @@ export const ItemsPage = () => {
 
     // Mobile action sheet: id or null
     const [sheetId, setSheetId] = useState(null);
+    const importInputRef = useRef(null);
 
     const navigate = useNavigate();
     const authFetch = useAuthFetch();
 
     // Options (category uses categoryName, uom uses uomBase)
-    const categories = useMemo(() => ["all", ...new Set(rows.map((d) => d.categoryName).filter(Boolean))], [rows]);
+    const categories = categoryOptions;
     const uoms = useMemo(() => ["all", ...new Set(rows.map((d) => d.uomBase).filter(Boolean))], [rows]);
 
     // Debounce search input for server queries
@@ -70,6 +80,25 @@ export const ItemsPage = () => {
         const t = setTimeout(() => setQueryDebounced(query.trim()), 250);
         return () => clearTimeout(t);
     }, [query]);
+
+    useEffect(() => {
+        let ignore = false;
+        (async () => {
+            try {
+                const res = await listCategories(authFetch, {page: 0, size: 200, sort: "name,asc"});
+                if (ignore) return;
+                const names = (res?.content || []).map((c) => c?.name).filter(Boolean);
+                setCategoryOptions(["all", ...names]);
+            } catch (_) {
+                if (!ignore) {
+                    setCategoryOptions(["all"]);
+                }
+            }
+        })();
+        return () => {
+            ignore = true;
+        };
+    }, [authFetch, reloadTick]);
 
     // Fetch from backend when filters/page/sort/query change (debounced)
     useEffect(() => {
@@ -85,7 +114,7 @@ export const ItemsPage = () => {
                     sort: `${serverSortKey},${sort.dir}`,
                     q: queryDebounced || undefined,
                     status: status !== "all" ? status : undefined,
-                    // category filter (by id) not wired from UI names in this sample
+                    categoryName: category !== "all" ? category : undefined,
                     uom: uom !== "all" ? uom : undefined,
                 });
                 if (ignore) return;
@@ -101,19 +130,75 @@ export const ItemsPage = () => {
         return () => {
             ignore = true;
         };
-    }, [authFetch, page, pageSize, sort, queryDebounced, status, uom, reloadTick]);
+    }, [authFetch, page, pageSize, sort, queryDebounced, status, category, uom, reloadTick]);
 
-    // Filtering + sorting (client-side adjustments on current page)
+    useEffect(() => {
+        let ignore = false;
+        (async () => {
+            try {
+                const [tot, draft, active, hold, discontinued] = await Promise.all([
+                    listItems(authFetch, {
+                        page: 0,
+                        size: 1,
+                        q: queryDebounced || undefined,
+                        categoryName: category !== "all" ? category : undefined,
+                        uom: uom !== "all" ? uom : undefined,
+                    }),
+                    listItems(authFetch, {
+                        page: 0,
+                        size: 1,
+                        q: queryDebounced || undefined,
+                        status: "Draft",
+                        categoryName: category !== "all" ? category : undefined,
+                        uom: uom !== "all" ? uom : undefined,
+                    }),
+                    listItems(authFetch, {
+                        page: 0,
+                        size: 1,
+                        q: queryDebounced || undefined,
+                        status: "Active",
+                        categoryName: category !== "all" ? category : undefined,
+                        uom: uom !== "all" ? uom : undefined,
+                    }),
+                    listItems(authFetch, {
+                        page: 0,
+                        size: 1,
+                        q: queryDebounced || undefined,
+                        status: "Hold",
+                        categoryName: category !== "all" ? category : undefined,
+                        uom: uom !== "all" ? uom : undefined,
+                    }),
+                    listItems(authFetch, {
+                        page: 0,
+                        size: 1,
+                        q: queryDebounced || undefined,
+                        status: "Discontinued",
+                        categoryName: category !== "all" ? category : undefined,
+                        uom: uom !== "all" ? uom : undefined,
+                    }),
+                ]);
+                if (ignore) return;
+                setSummary({
+                    total: tot?.totalElements || 0,
+                    draft: draft?.totalElements || 0,
+                    active: active?.totalElements || 0,
+                    hold: hold?.totalElements || 0,
+                    discontinued: discontinued?.totalElements || 0,
+                });
+            } catch (_) {
+                if (!ignore) {
+                    setSummary({total: serverTotalElements, draft: 0, active: 0, hold: 0, discontinued: 0});
+                }
+            }
+        })();
+        return () => {
+            ignore = true;
+        };
+    }, [authFetch, queryDebounced, category, uom, reloadTick, serverTotalElements]);
+
+    // Sort current page rows for column toggles.
     const filtered = useMemo(() => {
         let data = rows;
-        if (queryDebounced) {
-            const q = queryDebounced.toLowerCase();
-            data = data.filter((r) => r.name?.toLowerCase().includes(q) || r.id?.toLowerCase().includes(q));
-        }
-        if (status !== "all") data = data.filter((r) => r.status === status);
-        if (category !== "all") data = data.filter((r) => r.categoryName === category);
-        if (uom !== "all") data = data.filter((r) => r.uomBase === uom);
-
         const {key, dir} = sort;
         data = [...data].sort((a, b) => {
             const av = a[key];
@@ -125,7 +210,7 @@ export const ItemsPage = () => {
             return dir === "asc" ? cmp : -cmp;
         });
         return data;
-    }, [rows, queryDebounced, status, category, uom, sort]);
+    }, [rows, sort]);
 
     // Paging (server-driven total pages; client shows current page slice which already reflects server page)
     const totalPages = serverTotalPages;
@@ -175,11 +260,49 @@ export const ItemsPage = () => {
         URL.revokeObjectURL(url);
     };
 
-    const handleExportCSV = () => {
-        const csv = toCSV(rowsForExport());
-        downloadBlob(new Blob(["\ufeff" + csv], {type: "text/csv;charset=utf-8;"}), `items_${new Date()
-            .toISOString()
-            .slice(0, 10)}.csv`);
+    const handleExportCSV = async () => {
+        if (selectedCount) {
+            const csv = toCSV(rowsForExport());
+            downloadBlob(new Blob(["\ufeff" + csv], {type: "text/csv;charset=utf-8;"}), `items_${new Date()
+                .toISOString()
+                .slice(0, 10)}.csv`);
+            return;
+        }
+        try {
+            const {blob, filename} = await exportItemsCsv(authFetch, {
+                q: queryDebounced || undefined,
+                status: status !== "all" ? status : undefined,
+                categoryName: category !== "all" ? category : undefined,
+                uom: uom !== "all" ? uom : undefined,
+            });
+            downloadBlob(blob, filename);
+        } catch (e) {
+            alert(e?.message || "Failed to export CSV");
+        }
+    };
+
+    const handleImportPick = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+            setLoading(true);
+            const result = await importItemsCsv(authFetch, file, "upsert");
+            const errorCount = result?.errors?.length || 0;
+            const headErrors = (result?.errors || [])
+                .slice(0, 5)
+                .map((x) => `row ${x.row}: ${x.field} - ${x.message}`)
+                .join("\n");
+            alert(
+                `Import completed.\nCreated: ${result?.created || 0}\nUpdated: ${result?.updated || 0}\nErrors: ${errorCount}` +
+                (headErrors ? `\n\n${headErrors}` : "")
+            );
+            setReloadTick((t) => t + 1);
+        } catch (err) {
+            alert(err?.message || "Failed to import CSV");
+        } finally {
+            e.target.value = "";
+            setLoading(false);
+        }
     };
 
     const handlePrint = () => {
@@ -392,9 +515,40 @@ export const ItemsPage = () => {
                             + New Item
                         </button>
                         <button
-                            className="flex-1 sm:flex-none px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm">
+                            className="flex-1 sm:flex-none px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 rounded-lg text-sm"
+                            onClick={() => importInputRef.current?.click()}
+                        >
                             Import CSV
                         </button>
+                        <input
+                            ref={importInputRef}
+                            type="file"
+                            accept=".csv,text/csv"
+                            onChange={handleImportPick}
+                            className="hidden"
+                        />
+                    </div>
+                </div>
+                <div className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-2">
+                    <div className="rounded-xl border border-white/10 bg-gray-900/60 p-3">
+                        <div className="text-xs text-gray-400">Total Items</div>
+                        <div className="text-lg font-semibold text-white">{summary.total}</div>
+                    </div>
+                    <div className="rounded-xl border border-white/10 bg-gray-900/60 p-3">
+                        <div className="text-xs text-gray-400">Draft</div>
+                        <div className="text-lg font-semibold text-blue-300">{summary.draft}</div>
+                    </div>
+                    <div className="rounded-xl border border-white/10 bg-gray-900/60 p-3">
+                        <div className="text-xs text-gray-400">Active</div>
+                        <div className="text-lg font-semibold text-green-400">{summary.active}</div>
+                    </div>
+                    <div className="rounded-xl border border-white/10 bg-gray-900/60 p-3">
+                        <div className="text-xs text-gray-400">Hold</div>
+                        <div className="text-lg font-semibold text-yellow-400">{summary.hold}</div>
+                    </div>
+                    <div className="rounded-xl border border-white/10 bg-gray-900/60 p-3">
+                        <div className="text-xs text-gray-400">Discontinued</div>
+                        <div className="text-lg font-semibold text-gray-300">{summary.discontinued}</div>
                     </div>
                 </div>
             </header>
@@ -428,6 +582,7 @@ export const ItemsPage = () => {
                                 className="rounded-lg bg-gray-800 border border-white/10 px-3 py-2 text-sm"
                             >
                                 <option value="all">All Statuses</option>
+                                <option value="Draft">Draft</option>
                                 <option value="Active">Active</option>
                                 <option value="Hold">Hold</option>
                                 <option value="Discontinued">Discontinued</option>
@@ -489,6 +644,8 @@ export const ItemsPage = () => {
                         </div>
                     </div>
                 </div>
+                {loading && <div className="mt-2 text-xs text-blue-300">Loading…</div>}
+                {error && <div className="mt-2 text-xs text-red-400">{error}</div>}
             </div>
 
             {/* List/Table */}
