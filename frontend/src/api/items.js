@@ -1,6 +1,22 @@
 const API_HOST = import.meta.env.VITE_API_HOST || "https://api.pavel-usanli.online/craftify/v1";
 const ITEMS_API_URL = `${API_HOST}/items`;
 
+const STATUS_QUERY_MAP = {
+  draft: "DRAFT",
+  active: "ACTIVE",
+  hold: "HOLD",
+  discontinued: "DISCONTINUED",
+};
+
+function normalizeStatusForQuery(status) {
+  if (status == null) return undefined;
+  const raw = String(status).trim();
+  if (!raw) return undefined;
+  const mapped = STATUS_QUERY_MAP[raw.toLowerCase()];
+  if (mapped) return mapped;
+  return raw.replace(/\s+/g, "_").toUpperCase();
+}
+
 /**
  * List items (paginated, filterable, sortable)
  * @param {Function} authFetch
@@ -9,7 +25,7 @@ const ITEMS_API_URL = `${API_HOST}/items`;
  *  - size (number)
  *  - sort (string) e.g. "name,asc" or "code,desc"
  *  - q (string) search by code or name
- *  - status (string) one of Draft|Active|Hold|Discontinued (backend enum TitleCase)
+ *  - status (string) e.g. Draft|Active|Hold|Discontinued (normalized to enum constant in query)
  *  - categoryId (string, UUID)
  *  - uom (string)
  *  - includeDeleted (boolean)
@@ -32,7 +48,8 @@ export async function listItems(authFetch, params = {}) {
   url.searchParams.set("size", size);
   if (sort) url.searchParams.set("sort", sort);
   if (q) url.searchParams.set("q", q);
-  if (status) url.searchParams.set("status", status);
+  const normalizedStatus = normalizeStatusForQuery(status);
+  if (normalizedStatus) url.searchParams.set("status", normalizedStatus);
   if (categoryId) url.searchParams.set("categoryId", categoryId);
   if (categoryName) url.searchParams.set("categoryName", categoryName);
   if (uom) url.searchParams.set("uom", uom);
@@ -161,7 +178,8 @@ export async function exportItemsCsv(authFetch, params = {}) {
   const url = new URL(`${API_HOST}/items:export`);
   const { q, status, uom, categoryName, ids } = params;
   if (q) url.searchParams.set("q", q);
-  if (status) url.searchParams.set("status", status);
+  const normalizedStatus = normalizeStatusForQuery(status);
+  if (normalizedStatus) url.searchParams.set("status", normalizedStatus);
   if (uom) url.searchParams.set("uom", uom);
   if (categoryName) url.searchParams.set("categoryName", categoryName);
   if (ids?.length) url.searchParams.set("ids", ids.join(","));
