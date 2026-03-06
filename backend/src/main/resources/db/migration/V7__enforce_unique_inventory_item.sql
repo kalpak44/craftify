@@ -27,7 +27,18 @@ FROM merged m
 WHERE i.id = m.keep_id;
 
 DELETE FROM inventory i
-USING ranked r
+USING (
+  SELECT id, rn
+  FROM (
+    SELECT
+      id,
+      ROW_NUMBER() OVER (
+        PARTITION BY UPPER(item_id)
+        ORDER BY updated_at DESC, id DESC
+      ) AS rn
+    FROM inventory
+  ) ranked
+) r
 WHERE i.id = r.id
   AND r.rn > 1;
 
