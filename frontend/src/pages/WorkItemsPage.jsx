@@ -17,6 +17,10 @@ export const WorkItemsPage = () => {
     const [allocationsLoading, setAllocationsLoading] = useState(false);
     const [allocationsError, setAllocationsError] = useState("");
     const [allocationRows, setAllocationRows] = useState([]);
+    const [reportModal, setReportModal] = useState({open: false, item: null});
+    const [reportLoading, setReportLoading] = useState(false);
+    const [reportError, setReportError] = useState("");
+    const [reportRows, setReportRows] = useState([]);
 
     const [menu, setMenu] = useState(null);
     const [sheetId, setSheetId] = useState(null);
@@ -200,7 +204,37 @@ export const WorkItemsPage = () => {
     };
 
     const openReport = (id) => {
-        alert(`Report for ${id}`);
+        const item = rows.find((r) => r.id === id) || null;
+        setReportModal({open: true, item});
+        setReportRows([]);
+        setReportError("");
+        if (!item?.bomId) {
+            setReportError("BOM reference is missing for this work item.");
+            return;
+        }
+        setReportLoading(true);
+        (async () => {
+            try {
+                const bom = await getBom(authFetch, item.bomId);
+                const requestedQty = Number(item.requestedQty || 0);
+                const rowsCalc = (bom?.components || []).map((c, idx) => {
+                    const perUnit = Number(c?.quantity || 0);
+                    const usedQty = perUnit * requestedQty;
+                    return {
+                        key: `${c?.itemId || "row"}-${idx}`,
+                        itemId: c?.itemId || "",
+                        uom: c?.uom || "",
+                        perUnitQty: perUnit,
+                        usedQty,
+                    };
+                });
+                setReportRows(rowsCalc);
+            } catch (e) {
+                setReportError(e?.message || "Failed to load completion report.");
+            } finally {
+                setReportLoading(false);
+            }
+        })();
     };
 
     const MenuItems = ({id, onDone}) => {
@@ -221,16 +255,18 @@ export const WorkItemsPage = () => {
                 >
                     Allocations
                 </button>
-                <button
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-gray-800"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        openReport(id);
-                        onDone?.();
-                    }}
-                >
-                    Report
-                </button>
+                {isCompleted && (
+                    <button
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-gray-800"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            openReport(id);
+                            onDone?.();
+                        }}
+                    >
+                        Report
+                    </button>
+                )}
                 <div className="my-1 border-t border-slate-200 dark:border-white/10"/>
                 <button
                     className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -564,6 +600,78 @@ export const WorkItemsPage = () => {
                         <div className="mt-5 flex justify-end">
                             <button
                                 onClick={() => setAllocationsModal({open: false, item: null})}
+                                className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {reportModal.open && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => setReportModal({open: false, item: null})}/>
+                    <div
+                        className="relative z-10 w-[96%] max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 p-5 shadow-xl">
+                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Completion Report</h2>
+                        <p className="mt-1 text-sm text-slate-600 dark:text-gray-400">
+                            Work Item: <span className="font-mono text-slate-900 dark:text-gray-200">{reportModal.item?.id || "-"}</span>
+                            {" "}• Result Item: <span className="text-slate-900 dark:text-gray-200">{reportModal.item?.parentBomItem || "-"}</span>
+                        </p>
+
+                        <div className="mt-3 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-gray-800 p-3">
+                            <div className="text-xs text-slate-500 dark:text-gray-400">Created Result Quantity</div>
+                            <div className="mt-1 text-lg font-semibold text-slate-900 dark:text-gray-200 font-mono">
+                                {Number(reportModal.item?.requestedQty || 0).toFixed(3)}
+                            </div>
+                        </div>
+
+                        {reportLoading && (
+                            <div className="mt-4 rounded-lg border border-blue-500/40 bg-blue-500/10 px-3 py-2 text-sm text-blue-300">
+                                Loading report...
+                            </div>
+                        )}
+
+                        {reportError && (
+                            <div className="mt-4 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                                {reportError}
+                            </div>
+                        )}
+
+                        {!reportLoading && !reportError && (
+                            <div className="mt-4 overflow-x-auto border border-slate-200 dark:border-white/10 rounded-xl">
+                                <table className="min-w-full divide-y divide-gray-800 text-sm">
+                                    <thead className="bg-slate-100/80 dark:bg-gray-900/80">
+                                    <tr>
+                                        <th className="px-3 py-2 text-left">Used Resource</th>
+                                        <th className="px-3 py-2 text-right">Qty / BOM</th>
+                                        <th className="px-3 py-2 text-right">Used Qty</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-800">
+                                    {reportRows.map((r) => (
+                                        <tr key={r.key}>
+                                            <td className="px-3 py-2 font-mono text-slate-900 dark:text-gray-200">{r.itemId}</td>
+                                            <td className="px-3 py-2 text-right text-slate-700 dark:text-gray-300">{r.perUnitQty.toFixed(3)} {r.uom}</td>
+                                            <td className="px-3 py-2 text-right text-slate-900 dark:text-gray-200 font-mono">{r.usedQty.toFixed(3)} {r.uom}</td>
+                                        </tr>
+                                    ))}
+                                    {reportRows.length === 0 && (
+                                        <tr>
+                                            <td colSpan={3} className="px-3 py-6 text-center text-slate-500 dark:text-gray-400">
+                                                No used resources found.
+                                            </td>
+                                        </tr>
+                                    )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+
+                        <div className="mt-5 flex justify-end">
+                            <button
+                                onClick={() => setReportModal({open: false, item: null})}
                                 className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                             >
                                 Close
