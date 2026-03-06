@@ -32,7 +32,7 @@ export const ItemsPage = () => {
     const [status, setStatus] = useState("all");
     const [category, setCategory] = useState("all");
     const [uom, setUom] = useState("all");
-    const [sort, setSort] = useState({key: "name", dir: "asc"});
+    const [sort, setSort] = useState({key: "updatedAt", dir: "desc"});
     const [selected, setSelected] = useState({});
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(8);
@@ -107,7 +107,14 @@ export const ItemsPage = () => {
             try {
                 setLoading(true);
                 setError("");
-                const serverSortKey = sort.key === "id" ? "code" : (sort.key === "name" ? "name" : "name");
+                const serverSortKey =
+                    sort.key === "id"
+                        ? "code"
+                        : sort.key === "name"
+                            ? "name"
+                            : sort.key === "updatedAt"
+                                ? "updatedAt"
+                                : "name";
                 const allRows = await listAllItems(authFetch, {
                     sort: `${serverSortKey},${sort.dir}`,
                     q: queryDebounced || undefined,

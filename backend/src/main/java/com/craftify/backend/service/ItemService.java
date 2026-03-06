@@ -84,7 +84,7 @@ public class ItemService {
         .size(result.getSize())
         .totalElements((int) result.getTotalElements())
         .totalPages(Math.max(1, result.getTotalPages()))
-        .sort(List.of(query.sort() == null || query.sort().isBlank() ? "name,asc" : query.sort()));
+        .sort(List.of(query.sort() == null || query.sort().isBlank() ? "updatedAt,desc" : query.sort()));
   }
 
   @Transactional(readOnly = true)
@@ -292,7 +292,7 @@ public class ItemService {
   }
 
   private Sort parseSort(String sort) {
-    String value = (sort == null || sort.isBlank()) ? "name,asc" : sort;
+    String value = (sort == null || sort.isBlank()) ? "updatedAt,desc" : sort;
     String[] parts = value.split(",", 2);
     String key = parts[0].trim();
     Sort.Direction direction =
