@@ -409,8 +409,8 @@ export const BOMsPage = () => {
 
     const requestSliderMax = useMemo(() => {
         const raw = requestCheck.maxBuildQty;
-        if (!Number.isFinite(raw) || raw <= 0) return 10;
-        return Math.max(10, Math.ceil(raw));
+        if (!Number.isFinite(raw) || raw <= 0) return 1;
+        return Math.max(1, Math.floor(raw));
     }, [requestCheck.maxBuildQty]);
 
     const submitWorkItemRequest = async () => {

@@ -1,10 +1,9 @@
 // HomePage.jsx
 import React from "react";
 import {useAuth0 as useAuth0Home} from "@auth0/auth0-react";
-import ReportsPage from "./ReportsPage";
 
 export const HomePage = () => {
-    const {loginWithRedirect, isAuthenticated, isLoading} = useAuth0Home();
+    const {loginWithRedirect, isAuthenticated, isLoading, user} = useAuth0Home();
 
     // While Auth0 loads, keep a neutral spinner
     if (isLoading) {
@@ -16,9 +15,20 @@ export const HomePage = () => {
         );
     }
 
-    // If signed in, show Reports as the home dashboard
+    // If signed in, show a simple greeting page
     if (isAuthenticated) {
-        return <ReportsPage/>;
+        return (
+            <div className="min-h-[70vh] bg-gradient-to-b from-slate-50 via-white to-slate-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 text-slate-900 dark:text-gray-200 flex items-center justify-center">
+                <section className="mx-auto max-w-4xl px-4 py-8 text-center">
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
+                        Welcome back{user?.name ? `, ${user.name}` : ""}.
+                    </h1>
+                    <p className="mt-3 text-base md:text-lg text-slate-500 dark:text-gray-400">
+                        Have a productive day in Craftify.
+                    </p>
+                </section>
+            </div>
+        );
     }
 
     // Otherwise, show the current marketing home
