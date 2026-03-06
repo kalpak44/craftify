@@ -99,3 +99,23 @@ export async function deleteInventory(authFetch, code) {
     throw new Error(txt || "Failed to delete inventory item");
   }
 }
+
+export async function createInventoryFromItem(authFetch, itemId, available, mode) {
+  const url = new URL(`${API_HOST}/inventory:create-from-item`);
+  const res = await authFetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ itemId, available, mode }),
+  });
+  if (!res?.ok) {
+    const txt = res ? await res.text() : "auth failed";
+    if (res && res.status === 409) {
+      throw new Error("Item must be Active and not already linked to inventory.");
+    }
+    if (res && res.status === 404) {
+      throw new Error("Item not found.");
+    }
+    throw new Error(txt || "Failed to create inventory item");
+  }
+  return res.json();
+}

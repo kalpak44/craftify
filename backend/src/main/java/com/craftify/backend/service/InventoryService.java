@@ -4,7 +4,10 @@ import com.craftify.backend.model.InventoryDetail;
 import com.craftify.backend.model.InventoryList;
 import com.craftify.backend.model.InventoryPage;
 import com.craftify.backend.model.InventoryUpsertRequest;
+import com.craftify.backend.model.Status;
+import com.craftify.backend.persistence.entity.ItemEntity;
 import com.craftify.backend.persistence.entity.InventoryEntity;
+import com.craftify.backend.persistence.repository.ItemRepository;
 import com.craftify.backend.persistence.repository.InventoryRepository;
 import jakarta.persistence.criteria.Predicate;
 import java.math.BigDecimal;
@@ -24,11 +27,14 @@ public class InventoryService {
 
   public record InventoryQuery(
       int page, int size, String sort, String q, String categoryName, String uom) {}
+  public record CreateFromItemResult(InventoryDetail detail, boolean created) {}
 
   private final InventoryRepository inventoryRepository;
+  private final ItemRepository itemRepository;
 
-  public InventoryService(InventoryRepository inventoryRepository) {
+  public InventoryService(InventoryRepository inventoryRepository, ItemRepository itemRepository) {
     this.inventoryRepository = inventoryRepository;
+    this.itemRepository = itemRepository;
   }
 
   @Transactional(readOnly = true)
@@ -118,6 +124,52 @@ public class InventoryService {
   @Transactional(readOnly = true)
   public String nextCode() {
     return generateNextCode();
+  }
+
+  @Transactional
+  public CreateFromItemResult createFromItem(String itemCode, BigDecimal available, String mode) {
+    if (itemCode == null || itemCode.isBlank()) {
+      throw new IllegalStateException("item_not_found");
+    }
+
+    ItemEntity item = itemRepository.findByCodeIgnoreCase(itemCode.trim()).orElse(null);
+    if (item == null || item.isDeleted()) {
+      throw new IllegalStateException("item_not_found");
+    }
+    if (item.getStatus() != Status.ACTIVE) {
+      throw new IllegalStateException("item_not_active");
+    }
+
+    InventoryEntity existing = inventoryRepository.findByItemIdIgnoreCase(item.getCode()).orElse(null);
+    if (existing != null) {
+      String normalizedMode = mode == null ? "" : mode.trim().toLowerCase(Locale.ROOT);
+      if ("add".equals(normalizedMode)) {
+        BigDecimal delta = available == null ? BigDecimal.ZERO : available;
+        existing.setAvailable((existing.getAvailable() == null ? BigDecimal.ZERO : existing.getAvailable()).add(delta));
+      } else if ("override".equals(normalizedMode)) {
+        existing.setAvailable(available == null ? BigDecimal.ZERO : available);
+      } else {
+        throw new IllegalStateException("inventory_exists_for_item");
+      }
+      existing.setItemName(item.getName());
+      existing.setItemCategoryName(item.getCategoryName());
+      existing.setCategoryName(existing.isCategoryDetached() ? existing.getCategoryName() : item.getCategoryName());
+      existing.setUom(item.getUomBase());
+      return new CreateFromItemResult(toDetailModel(inventoryRepository.save(existing)), false);
+    }
+
+    InventoryEntity entity = new InventoryEntity();
+    entity.setCode(generateNextCode());
+    entity.setItemId(item.getCode());
+    entity.setItemName(item.getName());
+    entity.setItemCategoryName(item.getCategoryName());
+    entity.setCategoryDetached(false);
+    entity.setDetachedCategoryName(null);
+    entity.setCategoryName(item.getCategoryName());
+    entity.setUom(item.getUomBase());
+    entity.setAvailable(available == null ? BigDecimal.ZERO : available);
+
+    return new CreateFromItemResult(toDetailModel(inventoryRepository.save(entity)), true);
   }
 
   private void apply(InventoryEntity entity, InventoryUpsertRequest req) {

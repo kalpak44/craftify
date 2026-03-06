@@ -3,6 +3,7 @@ import {useNavigate} from "react-router-dom";
 import {useAuthFetch} from "../hooks/useAuthFetch";
 import {listItems, listAllItems, getItem, deleteItem, exportItemsCsv, importItemsCsv} from "../api/items";
 import {listCategories} from "../api/categories";
+import {createInventoryFromItem} from "../api/inventory";
 
 /**
  * ItemsPage
@@ -11,7 +12,7 @@ import {listCategories} from "../api/categories";
  *
  * Update in this version:
  * - Per-row desktop/menu actions use an ellipsis "…" trigger with dropdown (desktop) and bottom sheet (mobile).
- * - Actions include: "Open details", "Search in Inventory", "Search in PO", and "Delete".
+ * - Actions include: "Open details", "Search in Inventory", "Create Inventory" (Active only), and "Delete".
  * - Removed the "Edit" option from the per-row actions menu (row/card click still opens Edit).
  *
  * Core features:
@@ -55,6 +56,10 @@ export const ItemsPage = () => {
 
     // Single-row deletion modal
     const [deleteOneId, setDeleteOneId] = useState(null);
+    const [createInvForItem, setCreateInvForItem] = useState(null);
+    const [createInvAvailable, setCreateInvAvailable] = useState("0");
+    const [createInvMode, setCreateInvMode] = useState("add");
+    const [creatingInventory, setCreatingInventory] = useState(false);
 
     // Reload tick to refetch after mutations
     const [reloadTick, setReloadTick] = useState(0);
@@ -229,6 +234,7 @@ export const ItemsPage = () => {
     // Selection
     const selectedIds = Object.keys(selected).filter((k) => selected[k]);
     const selectedCount = selectedIds.length;
+    const rowById = useMemo(() => new Map(rows.map((r) => [itemCode(r), r])), [rows]);
 
     const allOnPageSelected = paged.length > 0 && paged.every((r) => selected[itemCode(r)]);
     const toggleAll = () => {
@@ -494,6 +500,21 @@ export const ItemsPage = () => {
             >
                 Search in Inventory
             </button>
+            {rowById.get(id)?.status === "Active" && (
+                <button
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-gray-800"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        const row = rowById.get(id);
+                        setCreateInvForItem({id, name: row?.name || ""});
+                        setCreateInvAvailable("0");
+                        setCreateInvMode("add");
+                        onDone?.();
+                    }}
+                >
+                    Create Inventory
+                </button>
+            )}
             <div className="my-1 border-t border-slate-200 dark:border-white/10" />
             <button
                 className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-950/40 hover:text-red-300"
@@ -876,6 +897,73 @@ export const ItemsPage = () => {
                                 onClick={() => setSheetId(null)}
                             >
                                 Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Create Inventory Modal */}
+            {createInvForItem && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => setCreateInvForItem(null)} />
+                    <div className="relative z-10 w-[92%] sm:w-[80%] max-w-md rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 p-5 shadow-xl">
+                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Create inventory item</h2>
+                        <p className="mt-2 text-sm text-slate-700 dark:text-gray-300">
+                            Item: <span className="font-mono text-slate-900 dark:text-white">{createInvForItem.id}</span>
+                            {createInvForItem.name ? <span> - {createInvForItem.name}</span> : null}
+                        </p>
+                        <div className="mt-4">
+                            <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Availability</label>
+                            <input
+                                inputMode="decimal"
+                                value={createInvAvailable}
+                                onChange={(e) => setCreateInvAvailable(e.target.value)}
+                                className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm text-right font-mono tabular-nums"
+                                placeholder="0"
+                            />
+                        </div>
+                        <div className="mt-3">
+                            <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">If inventory already exists</label>
+                            <select
+                                value={createInvMode}
+                                onChange={(e) => setCreateInvMode(e.target.value)}
+                                className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
+                            >
+                                <option value="add">Add to existing availability</option>
+                                <option value="override">Override availability</option>
+                            </select>
+                        </div>
+                        <div className="mt-4 flex flex-col sm:flex-row justify-end gap-2">
+                            <button
+                                onClick={() => setCreateInvForItem(null)}
+                                className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
+                                disabled={creatingInventory}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    const n = Number(String(createInvAvailable).trim());
+                                    if (!Number.isFinite(n)) {
+                                        alert("Please enter a valid availability.");
+                                        return;
+                                    }
+                                    try {
+                                        setCreatingInventory(true);
+                                        const created = await createInventoryFromItem(authFetch, createInvForItem.id, n, createInvMode);
+                                        setCreateInvForItem(null);
+                                        navigate(`/inventory/${encodeURIComponent(created.code)}/edit`);
+                                    } catch (e) {
+                                        alert(e?.message || "Failed to create inventory item");
+                                    } finally {
+                                        setCreatingInventory(false);
+                                    }
+                                }}
+                                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm disabled:opacity-50"
+                                disabled={creatingInventory}
+                            >
+                                {creatingInventory ? "Creating..." : "Create"}
                             </button>
                         </div>
                     </div>

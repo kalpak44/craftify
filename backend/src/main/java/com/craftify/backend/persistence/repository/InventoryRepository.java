@@ -11,5 +11,9 @@ public interface InventoryRepository
 
   Optional<InventoryEntity> findByCodeIgnoreCase(String code);
 
+  Optional<InventoryEntity> findByItemIdIgnoreCase(String itemId);
+
   boolean existsByCodeIgnoreCase(String code);
+
+  boolean existsByItemIdIgnoreCase(String itemId);
 }

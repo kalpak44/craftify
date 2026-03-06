@@ -1,5 +1,6 @@
 package com.craftify.backend.controller.impl;
 
+import com.craftify.backend.model.CreateInventoryFromItemRequest;
 import com.craftify.backend.model.InventoryDetail;
 import com.craftify.backend.model.InventoryNextCodeResponse;
 import com.craftify.backend.model.InventoryPage;
@@ -108,6 +109,34 @@ public class InventoryApiController {
   @GetMapping(value = "/inventory:next-code", produces = {"application/json"})
   public ResponseEntity<InventoryNextCodeResponse> inventoryNextCodeGet() {
     return ResponseEntity.ok(new InventoryNextCodeResponse(inventoryService.nextCode()));
+  }
+
+  @PostMapping(
+      value = "/inventory:create-from-item",
+      produces = {"application/json"},
+      consumes = {"application/json"})
+  public ResponseEntity<InventoryDetail> inventoryCreateFromItemPost(
+      @RequestBody CreateInventoryFromItemRequest req) {
+    if (req == null || req.getItemId() == null || req.getItemId().isBlank() || req.getAvailable() == null) {
+      return ResponseEntity.badRequest().build();
+    }
+    try {
+      InventoryService.CreateFromItemResult result =
+          inventoryService.createFromItem(req.getItemId(), req.getAvailable(), req.getMode());
+      if (result.created()) {
+        return ResponseEntity.created(URI.create("/inventory/" + result.detail().getCode()))
+            .body(result.detail());
+      }
+      return ResponseEntity.ok(result.detail());
+    } catch (IllegalStateException ex) {
+      if ("item_not_found".equals(ex.getMessage())) {
+        return ResponseEntity.notFound().build();
+      }
+      if ("item_not_active".equals(ex.getMessage()) || "inventory_exists_for_item".equals(ex.getMessage())) {
+        return ResponseEntity.status(409).build();
+      }
+      return ResponseEntity.badRequest().build();
+    }
   }
 
   private static boolean isValidRequest(InventoryUpsertRequest req) {
