@@ -6,7 +6,8 @@ import java.io.Serializable;
 
 public enum WorkItemStatus implements Serializable {
   QUEUED("Queued"),
-  COMPLETED("Completed");
+  COMPLETED("Completed"),
+  CANCELED("Canceled");
 
   private final String value;
 

@@ -6,9 +6,11 @@ import com.craftify.backend.model.WorkItemPage;
 import com.craftify.backend.model.WorkItemStatus;
 import com.craftify.backend.persistence.entity.BomComponentEmbeddable;
 import com.craftify.backend.persistence.entity.BomEntity;
+import com.craftify.backend.persistence.entity.ItemEntity;
 import com.craftify.backend.persistence.entity.InventoryEntity;
 import com.craftify.backend.persistence.entity.WorkItemEntity;
 import com.craftify.backend.persistence.repository.BomRepository;
+import com.craftify.backend.persistence.repository.ItemRepository;
 import com.craftify.backend.persistence.repository.InventoryRepository;
 import com.craftify.backend.persistence.repository.WorkItemRepository;
 import jakarta.persistence.criteria.Predicate;
@@ -34,14 +36,17 @@ public class WorkItemService {
 
   private final WorkItemRepository workItemRepository;
   private final BomRepository bomRepository;
+  private final ItemRepository itemRepository;
   private final InventoryRepository inventoryRepository;
 
   public WorkItemService(
       WorkItemRepository workItemRepository,
       BomRepository bomRepository,
+      ItemRepository itemRepository,
       InventoryRepository inventoryRepository) {
     this.workItemRepository = workItemRepository;
     this.bomRepository = bomRepository;
+    this.itemRepository = itemRepository;
     this.inventoryRepository = inventoryRepository;
   }
 
@@ -148,6 +153,116 @@ public class WorkItemService {
     return toDetailModel(created);
   }
 
+  @Transactional
+  public WorkItemDetail cancel(String id) {
+    if (id == null || id.isBlank()) {
+      throw new IllegalStateException("work_item_not_found");
+    }
+    WorkItemEntity existing = workItemRepository.findByCodeIgnoreCase(id.trim()).orElse(null);
+    if (existing == null) {
+      throw new IllegalStateException("work_item_not_found");
+    }
+    if (existing.getStatus() == WorkItemStatus.CANCELED || existing.getStatus() == WorkItemStatus.COMPLETED) {
+      throw new IllegalStateException("work_item_not_cancelable");
+    }
+
+    BomEntity bom = bomRepository.findByCodeIgnoreCase(existing.getBomId()).orElse(null);
+    if (bom == null) {
+      throw new IllegalStateException("bom_not_found");
+    }
+    List<BomComponentEmbeddable> components = bom.getComponents() == null ? List.of() : bom.getComponents();
+    if (components.isEmpty()) {
+      throw new IllegalStateException("invalid_bom_components");
+    }
+
+    Map<String, BigDecimal> allocatedByItemCode = new HashMap<>();
+    for (BomComponentEmbeddable c : components) {
+      String itemCode = c.getItemId() == null ? "" : c.getItemId().trim().toUpperCase(Locale.ROOT);
+      BigDecimal perUnit =
+          c.getQuantity() == null
+              ? BigDecimal.ZERO
+              : c.getQuantity().setScale(6, RoundingMode.HALF_UP);
+      if (itemCode.isBlank() || perUnit.compareTo(BigDecimal.ZERO) <= 0) {
+        throw new IllegalStateException("invalid_bom_components");
+      }
+      BigDecimal allocated =
+          perUnit.multiply(existing.getRequestedQty()).setScale(6, RoundingMode.HALF_UP);
+      allocatedByItemCode.merge(itemCode, allocated, BigDecimal::add);
+    }
+
+    for (Map.Entry<String, BigDecimal> e : allocatedByItemCode.entrySet()) {
+      InventoryEntity inv = inventoryRepository.findByItemIdIgnoreCase(e.getKey()).orElse(null);
+      if (inv == null) {
+        throw new IllegalStateException("inventory_not_found_for_component");
+      }
+      BigDecimal currentAvailable = inv.getAvailable() == null ? BigDecimal.ZERO : inv.getAvailable();
+      inv.setAvailable(currentAvailable.add(e.getValue()).setScale(6, RoundingMode.HALF_UP));
+      inventoryRepository.save(inv);
+    }
+
+    existing.setStatus(WorkItemStatus.CANCELED);
+    return toDetailModel(workItemRepository.save(existing));
+  }
+
+  @Transactional
+  public WorkItemDetail complete(String id) {
+    if (id == null || id.isBlank()) {
+      throw new IllegalStateException("work_item_not_found");
+    }
+    WorkItemEntity existing = workItemRepository.findByCodeIgnoreCase(id.trim()).orElse(null);
+    if (existing == null) {
+      throw new IllegalStateException("work_item_not_found");
+    }
+    if (existing.getStatus() == WorkItemStatus.CANCELED || existing.getStatus() == WorkItemStatus.COMPLETED) {
+      throw new IllegalStateException("work_item_not_completable");
+    }
+
+    BomEntity bom = bomRepository.findByCodeIgnoreCase(existing.getBomId()).orElse(null);
+    if (bom == null) {
+      throw new IllegalStateException("bom_not_found");
+    }
+
+    String productCode = bom.getProductId() == null ? "" : bom.getProductId().trim().toUpperCase(Locale.ROOT);
+    if (productCode.isBlank()) {
+      throw new IllegalStateException("invalid_product_item");
+    }
+
+    InventoryEntity productInventory = inventoryRepository.findByItemIdIgnoreCase(productCode).orElse(null);
+    if (productInventory == null) {
+      ItemEntity productItem = itemRepository.findByCodeIgnoreCase(productCode).orElse(null);
+      InventoryEntity created = new InventoryEntity();
+      created.setCode(generateNextInventoryCode());
+      created.setItemId(productCode);
+      created.setItemName(
+          productItem != null && productItem.getName() != null && !productItem.getName().isBlank()
+              ? productItem.getName()
+              : (bom.getProductName() == null || bom.getProductName().isBlank()
+                  ? productCode
+                  : bom.getProductName()));
+      String categoryName =
+          productItem != null && productItem.getCategoryName() != null && !productItem.getCategoryName().isBlank()
+              ? productItem.getCategoryName()
+              : "Manufactured";
+      created.setItemCategoryName(categoryName);
+      created.setCategoryDetached(false);
+      created.setDetachedCategoryName(null);
+      created.setCategoryName(categoryName);
+      created.setUom(
+          productItem != null && productItem.getUomBase() != null && !productItem.getUomBase().isBlank()
+              ? productItem.getUomBase()
+              : "pcs");
+      created.setAvailable(existing.getRequestedQty().setScale(6, RoundingMode.HALF_UP));
+      inventoryRepository.save(created);
+    } else {
+      BigDecimal current = productInventory.getAvailable() == null ? BigDecimal.ZERO : productInventory.getAvailable();
+      productInventory.setAvailable(current.add(existing.getRequestedQty()).setScale(6, RoundingMode.HALF_UP));
+      inventoryRepository.save(productInventory);
+    }
+
+    existing.setStatus(WorkItemStatus.COMPLETED);
+    return toDetailModel(workItemRepository.save(existing));
+  }
+
   private String generateNextCode() {
     int max =
         workItemRepository.findAll().stream()
@@ -157,6 +272,17 @@ public class WorkItemService {
             .max(Integer::compareTo)
             .orElse(0);
     return "WI-" + String.format("%03d", max + 1);
+  }
+
+  private String generateNextInventoryCode() {
+    int max =
+        inventoryRepository.findAll().stream()
+            .map(InventoryEntity::getCode)
+            .map(WorkItemService::extractNumericSuffix)
+            .filter(n -> n >= 0)
+            .max(Integer::compareTo)
+            .orElse(0);
+    return "INV-" + String.format("%03d", max + 1);
   }
 
   private static int extractNumericSuffix(String code) {
@@ -201,6 +327,7 @@ public class WorkItemService {
     model.setParentBomItem(e.getParentBomItem());
     model.setBomVersion(e.getBomVersion());
     model.setComponentsCount(e.getComponentsCount());
+    model.setRequestedQty(e.getRequestedQty());
     model.setStatus(e.getStatus());
     model.setRequestedAt(e.getRequestedAt());
     return model;

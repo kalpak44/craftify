@@ -1,6 +1,7 @@
 package com.craftify.backend.model;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import org.springframework.lang.Nullable;
 
@@ -13,6 +14,7 @@ public class WorkItemList implements Serializable {
   private @Nullable String parentBomItem;
   private @Nullable String bomVersion;
   private @Nullable Integer componentsCount;
+  private @Nullable BigDecimal requestedQty;
   private @Nullable WorkItemStatus status;
   private @Nullable OffsetDateTime requestedAt;
 
@@ -54,6 +56,14 @@ public class WorkItemList implements Serializable {
 
   public void setComponentsCount(@Nullable Integer componentsCount) {
     this.componentsCount = componentsCount;
+  }
+
+  public @Nullable BigDecimal getRequestedQty() {
+    return requestedQty;
+  }
+
+  public void setRequestedQty(@Nullable BigDecimal requestedQty) {
+    this.requestedQty = requestedQty;
   }
 
   public @Nullable WorkItemStatus getStatus() {

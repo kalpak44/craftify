@@ -1,6 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useAuthFetch} from "../hooks/useAuthFetch";
-import {listAllWorkItems} from "../api/workItems";
+import {cancelWorkItem, completeWorkItem, listAllWorkItems} from "../api/workItems";
+import {getBom} from "../api/boms";
 
 export const WorkItemsPage = () => {
     const [rows, setRows] = useState([]);
@@ -11,6 +12,11 @@ export const WorkItemsPage = () => {
     const [pageSize, setPageSize] = useState(8);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [reloadTick, setReloadTick] = useState(0);
+    const [allocationsModal, setAllocationsModal] = useState({open: false, item: null});
+    const [allocationsLoading, setAllocationsLoading] = useState(false);
+    const [allocationsError, setAllocationsError] = useState("");
+    const [allocationRows, setAllocationRows] = useState([]);
 
     const [menu, setMenu] = useState(null);
     const [sheetId, setSheetId] = useState(null);
@@ -43,6 +49,7 @@ export const WorkItemsPage = () => {
                     parentBomItem: r.parentBomItem || "",
                     bomVersion: r.bomVersion || "",
                     componentsCount: typeof r.componentsCount === "number" ? r.componentsCount : 0,
+                    requestedQty: Number(r.requestedQty || 0),
                     requestedAt: r.requestedAt || "",
                     status: r.status || "",
                 }));
@@ -56,7 +63,7 @@ export const WorkItemsPage = () => {
         return () => {
             ignore = true;
         };
-    }, [authFetch, query, sort, status]);
+    }, [authFetch, query, sort, status, reloadTick]);
 
     const filtered = useMemo(() => {
         let data = rows;
@@ -139,17 +146,57 @@ export const WorkItemsPage = () => {
         setMenu({id, x, y});
     };
 
-    const completeRequest = (id) => {
-        const nowIso = new Date().toISOString();
-        setRows((prev) => prev.map((r) => (r.id === id ? {...r, status: "Completed", requestedAt: nowIso} : r)));
+    const completeRequest = async (id) => {
+        try {
+            await completeWorkItem(authFetch, id);
+            setReloadTick((n) => n + 1);
+        } catch (e) {
+            alert(e?.message || "Failed to complete work item");
+        }
     };
 
-    const cancelRequest = (id) => {
-        setRows((prev) => prev.filter((r) => r.id !== id));
+    const cancelRequest = async (id) => {
+        try {
+            await cancelWorkItem(authFetch, id);
+            setReloadTick((n) => n + 1);
+        } catch (e) {
+            alert(e?.message || "Failed to cancel work item");
+        }
     };
 
     const openAllocations = (id) => {
-        alert(`Allocations for ${id}`);
+        const item = rows.find((r) => r.id === id) || null;
+        setAllocationsModal({open: true, item});
+        setAllocationRows([]);
+        setAllocationsError("");
+        if (!item?.bomId) {
+            setAllocationsError("BOM reference is missing for this work item.");
+            return;
+        }
+        setAllocationsLoading(true);
+        (async () => {
+            try {
+                const bom = await getBom(authFetch, item.bomId);
+                const requestedQty = Number(item.requestedQty || 0);
+                const rowsCalc = (bom?.components || []).map((c, idx) => {
+                    const perUnit = Number(c?.quantity || 0);
+                    const allocatedQty = perUnit * requestedQty;
+                    return {
+                        key: `${c?.itemId || "row"}-${idx}`,
+                        itemId: c?.itemId || "",
+                        uom: c?.uom || "",
+                        perUnitQty: perUnit,
+                        requestedQty,
+                        allocatedQty,
+                    };
+                });
+                setAllocationRows(rowsCalc);
+            } catch (e) {
+                setAllocationsError(e?.message || "Failed to load component allocations.");
+            } finally {
+                setAllocationsLoading(false);
+            }
+        })();
     };
 
     const openReport = (id) => {
@@ -159,6 +206,8 @@ export const WorkItemsPage = () => {
     const MenuItems = ({id, onDone}) => {
         const row = rows.find((r) => r.id === id);
         const isCompleted = row?.status === "Completed";
+        const isCanceled = row?.status === "Canceled";
+        const isFinal = isCompleted || isCanceled;
 
         return (
             <div className="py-1">
@@ -185,23 +234,24 @@ export const WorkItemsPage = () => {
                 <div className="my-1 border-t border-slate-200 dark:border-white/10"/>
                 <button
                     className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={(e) => {
+                    onClick={async (e) => {
                         e.stopPropagation();
-                        completeRequest(id);
+                        await completeRequest(id);
                         onDone?.();
                     }}
-                    disabled={isCompleted}
+                    disabled={isFinal}
                 >
                     Complete Request
                 </button>
                 <div className="my-1 border-t border-slate-200 dark:border-white/10"/>
                 <button
-                    className="w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-red-950/30 hover:text-red-400"
-                    onClick={(e) => {
+                    className="w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-red-950/30 hover:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={async (e) => {
                         e.stopPropagation();
-                        cancelRequest(id);
+                        await cancelRequest(id);
                         onDone?.();
                     }}
+                    disabled={isFinal}
                 >
                     Cancel Request
                 </button>
@@ -236,6 +286,7 @@ export const WorkItemsPage = () => {
                             <option value="all">All Statuses</option>
                             <option value="Completed">Completed</option>
                             <option value="Queued">Queued</option>
+                            <option value="Canceled">Canceled</option>
                         </select>
 
                         <div className="relative flex-1">
@@ -278,7 +329,9 @@ export const WorkItemsPage = () => {
                                         className={`px-2 py-0.5 text-[10px] rounded-full whitespace-nowrap ${
                                             item.status === "Completed"
                                                 ? "bg-green-600/30 text-green-400"
-                                                : "bg-yellow-600/30 text-yellow-400"
+                                                : item.status === "Canceled"
+                                                    ? "bg-red-600/30 text-red-300"
+                                                    : "bg-yellow-600/30 text-yellow-400"
                                         }`}
                                     >
                                         {item.status}
@@ -341,7 +394,9 @@ export const WorkItemsPage = () => {
                       className={`px-2 py-1 text-xs rounded-full ${
                           item.status === "Completed"
                               ? "bg-green-600/30 text-green-400"
-                              : "bg-yellow-600/30 text-yellow-400"
+                              : item.status === "Canceled"
+                                  ? "bg-red-600/30 text-red-300"
+                                  : "bg-yellow-600/30 text-yellow-400"
                       }`}
                   >
                     {item.status}
@@ -442,6 +497,74 @@ export const WorkItemsPage = () => {
                             <button
                                 className="mt-2 w-full px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                                 onClick={() => setSheetId(null)}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {allocationsModal.open && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/60" onClick={() => setAllocationsModal({open: false, item: null})}/>
+                    <div
+                        className="relative z-10 w-[96%] max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 p-5 shadow-xl">
+                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Allocated Components</h2>
+                        <p className="mt-1 text-sm text-slate-600 dark:text-gray-400">
+                            Work Item: <span className="font-mono text-slate-900 dark:text-gray-200">{allocationsModal.item?.id || "-"}</span>
+                            {" "}• BOM: <span className="font-mono text-slate-900 dark:text-gray-200">{allocationsModal.item?.bomId || "-"}</span>
+                            {" "}• Requested Qty: <span className="font-mono text-slate-900 dark:text-gray-200">{Number(allocationsModal.item?.requestedQty || 0).toFixed(3)}</span>
+                        </p>
+
+                        {allocationsLoading && (
+                            <div className="mt-4 rounded-lg border border-blue-500/40 bg-blue-500/10 px-3 py-2 text-sm text-blue-300">
+                                Loading allocations...
+                            </div>
+                        )}
+
+                        {allocationsError && (
+                            <div className="mt-4 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                                {allocationsError}
+                            </div>
+                        )}
+
+                        {!allocationsLoading && !allocationsError && (
+                            <div className="mt-4 overflow-x-auto border border-slate-200 dark:border-white/10 rounded-xl">
+                                <table className="min-w-full divide-y divide-gray-800 text-sm">
+                                    <thead className="bg-slate-100/80 dark:bg-gray-900/80">
+                                    <tr>
+                                        <th className="px-3 py-2 text-left">Component</th>
+                                        <th className="px-3 py-2 text-right">Qty / BOM</th>
+                                        <th className="px-3 py-2 text-right">Requested Qty</th>
+                                        <th className="px-3 py-2 text-right">Allocated Qty</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-800">
+                                    {allocationRows.map((r) => (
+                                        <tr key={r.key}>
+                                            <td className="px-3 py-2 font-mono text-slate-900 dark:text-gray-200">{r.itemId}</td>
+                                            <td className="px-3 py-2 text-right text-slate-700 dark:text-gray-300">{r.perUnitQty.toFixed(3)} {r.uom}</td>
+                                            <td className="px-3 py-2 text-right text-slate-700 dark:text-gray-300">{r.requestedQty.toFixed(3)}</td>
+                                            <td className="px-3 py-2 text-right text-slate-900 dark:text-gray-200 font-mono">{r.allocatedQty.toFixed(3)} {r.uom}</td>
+                                        </tr>
+                                    ))}
+                                    {allocationRows.length === 0 && (
+                                        <tr>
+                                            <td colSpan={4} className="px-3 py-6 text-center text-slate-500 dark:text-gray-400">
+                                                No allocated components found.
+                                            </td>
+                                        </tr>
+                                    )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+
+                        <div className="mt-5 flex justify-end">
+                            <button
+                                onClick={() => setAllocationsModal({open: false, item: null})}
+                                className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                             >
                                 Close
                             </button>

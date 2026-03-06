@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -58,6 +59,39 @@ public class WorkItemsApiController {
         return ResponseEntity.notFound().build();
       }
       if ("insufficient_inventory".equals(ex.getMessage())) {
+        return ResponseEntity.status(409).build();
+      }
+      return ResponseEntity.badRequest().build();
+    }
+  }
+
+  @PostMapping(value = "/work-items/{id}:cancel", produces = {"application/json"})
+  public ResponseEntity<WorkItemDetail> workItemsIdCancelPost(@PathVariable("id") String id) {
+    try {
+      WorkItemDetail updated = workItemService.cancel(id);
+      return ResponseEntity.ok(updated);
+    } catch (IllegalStateException ex) {
+      if ("work_item_not_found".equals(ex.getMessage())) {
+        return ResponseEntity.notFound().build();
+      }
+      if ("work_item_not_cancelable".equals(ex.getMessage())
+          || "inventory_not_found_for_component".equals(ex.getMessage())) {
+        return ResponseEntity.status(409).build();
+      }
+      return ResponseEntity.badRequest().build();
+    }
+  }
+
+  @PostMapping(value = "/work-items/{id}:complete", produces = {"application/json"})
+  public ResponseEntity<WorkItemDetail> workItemsIdCompletePost(@PathVariable("id") String id) {
+    try {
+      WorkItemDetail updated = workItemService.complete(id);
+      return ResponseEntity.ok(updated);
+    } catch (IllegalStateException ex) {
+      if ("work_item_not_found".equals(ex.getMessage())) {
+        return ResponseEntity.notFound().build();
+      }
+      if ("work_item_not_completable".equals(ex.getMessage())) {
         return ResponseEntity.status(409).build();
       }
       return ResponseEntity.badRequest().build();

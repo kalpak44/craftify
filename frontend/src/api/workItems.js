@@ -54,3 +54,27 @@ export async function requestWorkItem(authFetch, payload) {
   }
   return res.json();
 }
+
+export async function cancelWorkItem(authFetch, id) {
+  const url = new URL(`${API_HOST}/work-items/${encodeURIComponent(id)}:cancel`);
+  const res = await authFetch(url, { method: "POST" });
+  if (!res?.ok) {
+    const txt = res ? await res.text() : "auth failed";
+    if (res && res.status === 404) throw new Error("Work item not found.");
+    if (res && res.status === 409) throw new Error("Work item cannot be canceled.");
+    throw new Error(txt || "Failed to cancel work item");
+  }
+  return res.json();
+}
+
+export async function completeWorkItem(authFetch, id) {
+  const url = new URL(`${API_HOST}/work-items/${encodeURIComponent(id)}:complete`);
+  const res = await authFetch(url, { method: "POST" });
+  if (!res?.ok) {
+    const txt = res ? await res.text() : "auth failed";
+    if (res && res.status === 404) throw new Error("Work item not found.");
+    if (res && res.status === 409) throw new Error("Work item cannot be completed.");
+    throw new Error(txt || "Failed to complete work item");
+  }
+  return res.json();
+}

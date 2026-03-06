@@ -422,7 +422,11 @@ export const BOMsPage = () => {
                 requestedQty: requestQty,
             });
             closeRequestWorkItemModal();
-            alert(`Work item ${created?.id || ""} has been requested.`);
+            if (created?.id) {
+                navigate("/work-items");
+            } else {
+                navigate("/boms");
+            }
         } catch (e) {
             alert(e?.message || "Failed to create work item request.");
         } finally {
