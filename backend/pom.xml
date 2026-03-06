@@ -7,12 +7,11 @@
 
     <groupId>com.craftify.bff</groupId>
     <artifactId>craftify-bff</artifactId>
-    <version>${project.revision}</version>
+    <version>0.0.1</version>
     <name>craftify-backend</name>
     <description>Craftify Backend For Frontend API</description>
 
     <properties>
-        <project.revision>0.0.1</project.revision>
         <spring-boot.version>4.1.0-M2</spring-boot.version>
         <java.version>21</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
