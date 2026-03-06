@@ -1,96 +1,65 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
-
-const MOCK_WORK_ITEMS = [
-    {
-        id: "WI-001",
-        parentBomItem: "Margherita Pizza",
-        bomVersion: "BOM-011 v3",
-        componentsCount: 7,
-        requestedAt: "2026-03-05T14:25:00Z",
-        status: "Completed",
-    },
-    {
-        id: "WI-002",
-        parentBomItem: "Chicken Parmesan Pasta",
-        bomVersion: "BOM-012 v5",
-        componentsCount: 11,
-        requestedAt: "2026-03-06T08:40:00Z",
-        status: "Queued",
-    },
-    {
-        id: "WI-003",
-        parentBomItem: "Pepperoni Pizza",
-        bomVersion: "BOM-013 v2",
-        componentsCount: 8,
-        requestedAt: "2026-03-06T09:15:00Z",
-        status: "Queued",
-    },
-    {
-        id: "WI-004",
-        parentBomItem: "Veggie Pizza",
-        bomVersion: "BOM-014 v4",
-        componentsCount: 10,
-        requestedAt: "2026-03-04T16:10:00Z",
-        status: "Completed",
-    },
-    {
-        id: "WI-005",
-        parentBomItem: "Four Cheese Pizza",
-        bomVersion: "BOM-015 v1",
-        componentsCount: 9,
-        requestedAt: "2026-03-06T10:05:00Z",
-        status: "Queued",
-    },
-    {
-        id: "WI-006",
-        parentBomItem: "BBQ Chicken Pizza",
-        bomVersion: "BOM-016 v2",
-        componentsCount: 12,
-        requestedAt: "2026-03-03T11:50:00Z",
-        status: "Completed",
-    },
-    {
-        id: "WI-007",
-        parentBomItem: "Hawaiian Pizza",
-        bomVersion: "BOM-017 v1",
-        componentsCount: 8,
-        requestedAt: "2026-03-06T11:35:00Z",
-        status: "Queued",
-    },
-    {
-        id: "WI-008",
-        parentBomItem: "Truffle Mushroom Pizza",
-        bomVersion: "BOM-018 v2",
-        componentsCount: 10,
-        requestedAt: "2026-03-02T15:20:00Z",
-        status: "Completed",
-    },
-];
+import {useAuthFetch} from "../hooks/useAuthFetch";
+import {listAllWorkItems} from "../api/workItems";
 
 export const WorkItemsPage = () => {
-    const [rows, setRows] = useState(MOCK_WORK_ITEMS);
+    const [rows, setRows] = useState([]);
     const [query, setQuery] = useState("");
     const [status, setStatus] = useState("all");
     const [sort, setSort] = useState({key: "requestedAt", dir: "desc"});
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(8);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
     const [menu, setMenu] = useState(null);
     const [sheetId, setSheetId] = useState(null);
     const menuRef = useRef(null);
+    const authFetch = useAuthFetch();
+
+    useEffect(() => {
+        let ignore = false;
+        (async () => {
+            try {
+                setLoading(true);
+                setError("");
+                const serverSortKey =
+                    sort.key === "id"
+                        ? "id"
+                        : sort.key === "componentsCount"
+                            ? "componentsCount"
+                            : sort.key === "status"
+                                ? "status"
+                                : "requestedAt";
+                const data = await listAllWorkItems(authFetch, {
+                    sort: `${serverSortKey},${sort.dir}`,
+                    q: query.trim() || undefined,
+                    status: status !== "all" ? status : undefined,
+                });
+                if (ignore) return;
+                const mapped = (data || []).map((r) => ({
+                    id: r.id || "",
+                    bomId: r.bomId || "",
+                    parentBomItem: r.parentBomItem || "",
+                    bomVersion: r.bomVersion || "",
+                    componentsCount: typeof r.componentsCount === "number" ? r.componentsCount : 0,
+                    requestedAt: r.requestedAt || "",
+                    status: r.status || "",
+                }));
+                setRows(mapped);
+            } catch (e) {
+                if (!ignore) setError(e?.message || "Failed to load work items");
+            } finally {
+                if (!ignore) setLoading(false);
+            }
+        })();
+        return () => {
+            ignore = true;
+        };
+    }, [authFetch, query, sort, status]);
 
     const filtered = useMemo(() => {
-        const q = query.trim().toLowerCase();
-        let data = rows.filter((r) => {
-            if (status !== "all" && r.status !== status) return false;
-            if (!q) return true;
-            return (
-                r.id.toLowerCase().includes(q)
-                || r.parentBomItem.toLowerCase().includes(q)
-                || r.bomVersion.toLowerCase().includes(q)
-            );
-        });
-
+        let data = rows;
         const {key, dir} = sort;
         data = [...data].sort((a, b) => {
             const av = a[key];
@@ -286,6 +255,16 @@ export const WorkItemsPage = () => {
             </div>
 
             <section className="mx-auto px-4 pb-12">
+                {error && (
+                    <div className="mb-3 rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                        {error}
+                    </div>
+                )}
+                {loading && (
+                    <div className="mb-3 rounded-xl border border-blue-500/40 bg-blue-500/10 px-3 py-2 text-sm text-blue-300">
+                        Loading work items...
+                    </div>
+                )}
                 <div className="md:hidden space-y-2">
                     {paged.map((item) => (
                         <div

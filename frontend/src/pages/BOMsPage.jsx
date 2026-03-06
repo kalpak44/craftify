@@ -2,6 +2,8 @@ import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {useAuthFetch} from "../hooks/useAuthFetch";
 import {listBoms, getBom, deleteBom, exportBomsCsv, importBomsCsv} from "../api/boms";
+import {listAllInventory} from "../api/inventory";
+import {requestWorkItem} from "../api/workItems";
 
 /**
  * BOMsPage
@@ -48,6 +50,14 @@ export const BOMsPage = () => {
 
     // Single-row deletion modal
     const [deleteOneId, setDeleteOneId] = useState(null);
+    const [requestModalOpen, setRequestModalOpen] = useState(false);
+    const [requestTargetBomId, setRequestTargetBomId] = useState("");
+    const [requestDetail, setRequestDetail] = useState(null);
+    const [requestLoading, setRequestLoading] = useState(false);
+    const [requestError, setRequestError] = useState("");
+    const [requestQtyInput, setRequestQtyInput] = useState("1");
+    const [inventoryByItemId, setInventoryByItemId] = useState({});
+    const [requestSubmitting, setRequestSubmitting] = useState(false);
 
     // Desktop dropdown menu anchor/state: { id, x, y } or null
     const [menu, setMenu] = useState(null);
@@ -220,6 +230,39 @@ export const BOMsPage = () => {
         }
     };
 
+    const openRequestWorkItemModal = async (bomId) => {
+        setRequestModalOpen(true);
+        setRequestTargetBomId(bomId);
+        setRequestDetail(null);
+        setRequestError("");
+        setRequestQtyInput("1");
+        setInventoryByItemId({});
+        setRequestLoading(true);
+        try {
+            const [bom, inventoryRows] = await Promise.all([
+                getBom(authFetch, bomId),
+                listAllInventory(authFetch, {sort: "itemId,asc"}),
+            ]);
+            const byItemId = {};
+            (inventoryRows || []).forEach((inv) => {
+                const key = String(inv?.itemId || "").trim().toUpperCase();
+                if (!key) return;
+                byItemId[key] = Number(inv?.available || 0);
+            });
+            setRequestDetail(bom || null);
+            setInventoryByItemId(byItemId);
+        } catch (e) {
+            setRequestError(e?.message || "Failed to load BOM requirements.");
+        } finally {
+            setRequestLoading(false);
+        }
+    };
+
+    const closeRequestWorkItemModal = () => {
+        setRequestModalOpen(false);
+        setRequestSubmitting(false);
+    };
+
     const downloadBlob = (blob, filename) => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -305,7 +348,89 @@ export const BOMsPage = () => {
         };
     }, [menu]);
 
-    // --- Shared menu items (only Open details & Delete) ---
+    const requestQty = useMemo(() => {
+        const n = Number(String(requestQtyInput).trim());
+        return Number.isFinite(n) ? n : 0;
+    }, [requestQtyInput]);
+
+    const requestCheck = useMemo(() => {
+        const components = Array.isArray(requestDetail?.components) ? requestDetail.components : [];
+        const rowsWithCalc = components.map((c, idx) => {
+            const itemId = String(c?.itemId || "").trim();
+            const perUnit = Number(c?.quantity);
+            const hasItem = !!itemId;
+            const hasQty = Number.isFinite(perUnit) && perUnit > 0;
+            const available = hasItem ? Number(inventoryByItemId[itemId.toUpperCase()] || 0) : 0;
+            const requiredTotal = hasQty && requestQty > 0 ? perUnit * requestQty : 0;
+            const missing = Math.max(0, requiredTotal - available);
+            const maxPossible = hasQty ? available / perUnit : 0;
+            return {
+                key: `${itemId || "row"}-${idx}`,
+                itemId,
+                uom: c?.uom || "",
+                perUnit,
+                available,
+                requiredTotal,
+                missing,
+                hasItem,
+                hasQty,
+                maxPossible,
+            };
+        });
+
+        const invalidRows = rowsWithCalc.filter((r) => !r.hasItem || !r.hasQty);
+        const validRows = rowsWithCalc.filter((r) => r.hasItem && r.hasQty);
+        const hasComponents = rowsWithCalc.length > 0;
+        const allAvailable = hasComponents && invalidRows.length === 0 && validRows.every((r) => r.missing <= 1e-9);
+        const bottleneck =
+            validRows.length > 0
+                ? validRows.reduce((acc, cur) => (acc == null || cur.maxPossible < acc.maxPossible ? cur : acc), null)
+                : null;
+        const maxBuildQty = bottleneck ? Math.max(0, bottleneck.maxPossible) : 0;
+
+        let blockReason = "";
+        if (!hasComponents) blockReason = "BOM has no component lines.";
+        else if (invalidRows.length > 0) blockReason = "BOM has components with missing item or required quantity.";
+        else if (!(requestQty > 0)) blockReason = "Requested quantity must be greater than 0.";
+        else if (!allAvailable) blockReason = "Not enough inventory for one or more components.";
+
+        return {
+            rows: rowsWithCalc,
+            invalidRows,
+            validRows,
+            hasComponents,
+            allAvailable,
+            bottleneck,
+            maxBuildQty,
+            canRequest: !blockReason,
+            blockReason,
+        };
+    }, [inventoryByItemId, requestDetail, requestQty]);
+
+    const requestSliderMax = useMemo(() => {
+        const raw = requestCheck.maxBuildQty;
+        if (!Number.isFinite(raw) || raw <= 0) return 10;
+        return Math.max(10, Math.ceil(raw));
+    }, [requestCheck.maxBuildQty]);
+
+    const submitWorkItemRequest = async () => {
+        if (!requestCheck.canRequest || !requestDetail) return;
+        setRequestSubmitting(true);
+        try {
+            const created = await requestWorkItem(authFetch, {
+                bomId: requestDetail.id,
+                requestedQty: requestQty,
+            });
+            closeRequestWorkItemModal();
+            alert(`Work item ${created?.id || ""} has been requested.`);
+        } catch (e) {
+            alert(e?.message || "Failed to create work item request.");
+        } finally {
+            setRequestSubmitting(false);
+        }
+    };
+
+    // --- Shared menu items ---
     const MenuItems = ({id, onDone}) => (
         <div className="py-1">
             <button
@@ -317,6 +442,16 @@ export const BOMsPage = () => {
                 }}
             >
                 Open details
+            </button>
+            <button
+                className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-gray-800"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    openRequestWorkItemModal(id);
+                    onDone?.();
+                }}
+            >
+                Request Work Item
             </button>
             <div className="my-1 border-t border-slate-200 dark:border-white/10"/>
             <button
@@ -656,6 +791,172 @@ export const BOMsPage = () => {
                                 onClick={() => setSheetId(null)}
                             >
                                 Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Request Work Item Modal */}
+            {requestModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/60" onClick={closeRequestWorkItemModal}/>
+                    <div
+                        className="relative z-10 w-[96%] max-w-5xl max-h-[92vh] overflow-y-auto rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 p-5 shadow-xl">
+                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                            Request Work Item
+                        </h2>
+                        <p className="mt-1 text-sm text-slate-600 dark:text-gray-400">
+                            BOM: <span className="font-mono text-slate-900 dark:text-gray-200">{requestTargetBomId}</span>
+                        </p>
+
+                        {requestLoading && (
+                            <div className="mt-4 rounded-lg border border-blue-500/40 bg-blue-500/10 px-3 py-2 text-sm text-blue-300">
+                                Loading BOM components and inventory...
+                            </div>
+                        )}
+
+                        {requestError && (
+                            <div className="mt-4 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                                {requestError}
+                            </div>
+                        )}
+
+                        {!requestLoading && !requestError && requestDetail && (
+                            <>
+                                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                                    <div className="rounded-lg border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-gray-800 p-3">
+                                        <div className="text-xs text-slate-500 dark:text-gray-400">Parent BOM Item</div>
+                                        <div className="mt-1 text-slate-900 dark:text-gray-200">{requestDetail.productName || requestDetail.productId}</div>
+                                    </div>
+                                    <div className="rounded-lg border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-gray-800 p-3">
+                                        <div className="text-xs text-slate-500 dark:text-gray-400">BOM Version</div>
+                                        <div className="mt-1 text-slate-900 dark:text-gray-200">
+                                            {requestDetail.id} {requestDetail.revision || ""}
+                                        </div>
+                                    </div>
+                                    <div className="rounded-lg border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-gray-800 p-3">
+                                        <div className="text-xs text-slate-500 dark:text-gray-400">Bottleneck</div>
+                                        <div className="mt-1 text-slate-900 dark:text-gray-200">
+                                            {requestCheck.bottleneck
+                                                ? `${requestCheck.bottleneck.itemId} (${requestCheck.maxBuildQty.toFixed(2)} max)`
+                                                : "N/A"}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="mt-4 rounded-xl border border-slate-200 dark:border-white/10 p-4">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <label className="text-sm font-medium text-slate-900 dark:text-gray-200">Requested Quantity</label>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                type="button"
+                                                className="px-2.5 py-1.5 rounded-md bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-xs"
+                                                onClick={() => setRequestQtyInput(String((requestCheck.maxBuildQty || 0).toFixed(2)))}
+                                                disabled={!Number.isFinite(requestCheck.maxBuildQty) || requestCheck.maxBuildQty <= 0}
+                                            >
+                                                Use Max
+                                            </button>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                value={requestQtyInput}
+                                                onChange={(e) => setRequestQtyInput(e.target.value)}
+                                                className="w-32 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm text-right font-mono tabular-nums"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="mt-2 text-xs text-slate-500 dark:text-gray-400">
+                                        Max possible request:{" "}
+                                        <span className="font-mono text-slate-700 dark:text-gray-300">
+                                            {Number.isFinite(requestCheck.maxBuildQty) ? requestCheck.maxBuildQty.toFixed(2) : "0.00"}
+                                        </span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="1"
+                                        max={requestSliderMax}
+                                        step="1"
+                                        value={Math.max(1, Math.min(requestSliderMax, Number.isFinite(requestQty) ? requestQty : 1))}
+                                        onChange={(e) => setRequestQtyInput(e.target.value)}
+                                        className="mt-3 w-full"
+                                    />
+                                </div>
+
+                                <div className="mt-4 overflow-x-auto border border-slate-200 dark:border-white/10 rounded-xl">
+                                    <table className="min-w-full divide-y divide-gray-800 text-sm">
+                                        <thead className="bg-slate-100/80 dark:bg-gray-900/80">
+                                        <tr>
+                                            <th className="px-3 py-2 text-left">Component</th>
+                                            <th className="px-3 py-2 text-right">Req / BOM</th>
+                                            <th className="px-3 py-2 text-right">Available</th>
+                                            <th className="px-3 py-2 text-right">Req Total</th>
+                                            <th className="px-3 py-2 text-right">Missing</th>
+                                            <th className="px-3 py-2 text-left">State</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-800">
+                                        {requestCheck.rows.map((r) => (
+                                            <tr
+                                                key={r.key}
+                                                className={requestCheck.bottleneck?.itemId === r.itemId ? "bg-yellow-500/5" : ""}
+                                            >
+                                                <td className="px-3 py-2 font-mono text-slate-900 dark:text-gray-200">{r.itemId || "—"}</td>
+                                                <td className="px-3 py-2 text-right text-slate-700 dark:text-gray-300">
+                                                    {r.hasQty ? `${r.perUnit.toFixed(3)} ${r.uom || ""}` : "—"}
+                                                </td>
+                                                <td className="px-3 py-2 text-right text-slate-700 dark:text-gray-300">{r.available.toFixed(3)}</td>
+                                                <td className="px-3 py-2 text-right text-slate-700 dark:text-gray-300">{r.requiredTotal.toFixed(3)}</td>
+                                                <td className="px-3 py-2 text-right">
+                                                    <span className={r.missing > 0 ? "text-red-400" : "text-green-400"}>
+                                                        {r.missing.toFixed(3)}
+                                                    </span>
+                                                </td>
+                                                <td className="px-3 py-2">
+                                                    {!r.hasItem || !r.hasQty ? (
+                                                        <span className="px-2 py-1 text-xs rounded-full bg-red-500/20 text-red-300">Invalid BOM row</span>
+                                                    ) : r.missing > 0 ? (
+                                                        <span className="px-2 py-1 text-xs rounded-full bg-red-500/20 text-red-300">Missing</span>
+                                                    ) : (
+                                                        <span className="px-2 py-1 text-xs rounded-full bg-green-500/20 text-green-300">OK</span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {requestCheck.rows.length === 0 && (
+                                            <tr>
+                                                <td colSpan={6} className="px-3 py-6 text-center text-slate-500 dark:text-gray-400">
+                                                    No BOM components found.
+                                                </td>
+                                            </tr>
+                                        )}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                {!requestCheck.canRequest && (
+                                    <div className="mt-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+                                        {requestCheck.blockReason}
+                                    </div>
+                                )}
+                            </>
+                        )}
+
+                        <div className="mt-5 flex flex-col sm:flex-row justify-end gap-2">
+                            <button
+                                onClick={closeRequestWorkItemModal}
+                                className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
+                                disabled={requestSubmitting}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={submitWorkItemRequest}
+                                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm disabled:opacity-50"
+                                disabled={requestLoading || !!requestError || !requestCheck.canRequest || requestSubmitting}
+                            >
+                                {requestSubmitting ? "Requesting..." : "Request Work Item"}
                             </button>
                         </div>
                     </div>

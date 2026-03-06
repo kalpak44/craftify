@@ -93,8 +93,8 @@ export const FullWidthLayout = ({children}) => {
     const AUTH_ITEMS = [
         {to: "/", label: "Home"},
         {to: "/items", label: "Items"},
-        {to: "/boms", label: "BOMs"},
         {to: "/inventory", label: "Inventory"},
+        {to: "/boms", label: "BOMs"},
         {to: "/work-items", label: "Work Items"}
     ];
 
