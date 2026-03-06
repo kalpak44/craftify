@@ -10,12 +10,11 @@ import {listCategories, createCategory as apiCreateCategory, renameCategory as a
  * Purpose:
  * - Aligned with BOM Details UX:
  *   - Fixed, responsive background gradient (covers very tall pages).
- *   - Full-screen-on-mobile modals (Category Picker, Confirm Leave).
+ *   - Full-screen-on-mobile modals (Category Picker).
  *   - Mobile-friendly layout with sticky bottom actions.
  *   - UoM editor: cards on mobile, table on md+.
  *   - Pill-styled Status in summary.
  * - Save: placeholder function showing `alert()` then navigates to "/items" (no validation gate).
- * - Cancel: confirmation modal when there are unsaved changes.
  * - Self-contained; no external libs.
  */
 
@@ -769,8 +768,6 @@ export default function ItemDetailsPage() {
     );
 
     // ---------- Actions ----------
-    const [openConfirmLeave, setOpenConfirmLeave] = useState(false);
-
     const buildPayload = () => {
         const base = {
             name: name.trim(),
@@ -815,14 +812,6 @@ export default function ItemDetailsPage() {
         } finally {
             setSaving(false);
         }
-    };
-
-    const handleCancel = () => {
-        if (dirty) {
-            setOpenConfirmLeave(true);
-            return;
-        }
-        navigate("/items");
     };
 
     // Category create: via backend, then add & select
@@ -873,13 +862,6 @@ export default function ItemDetailsPage() {
                             title="Save"
                         >
                             {saving ? "Saving…" : "Save"}
-                        </button>
-                        <button
-                            onClick={handleCancel}
-                            className="w-28 px-4 py-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm flex-1 sm:flex-none"
-                            title="Cancel and go back"
-                        >
-                            Cancel
                         </button>
                     </div>
                 </div>
@@ -1292,12 +1274,6 @@ export default function ItemDetailsPage() {
             >
                 <div className="px-4 py-3 flex items-center gap-2">
                     <button
-                        onClick={handleCancel}
-                        className="flex-1 px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
-                    >
-                        Cancel
-                    </button>
-                    <button
                         onClick={handleSave}
                         disabled={saving || loading}
                         className="flex-1 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm"
@@ -1306,31 +1282,6 @@ export default function ItemDetailsPage() {
                     </button>
                 </div>
             </div>
-
-            {/* Confirm Leave Modal */}
-            <Modal
-                open={openConfirmLeave}
-                onClose={() => setOpenConfirmLeave(false)}
-                title="Discard unsaved changes?"
-                footer={
-                    <>
-                        <button
-                            onClick={() => setOpenConfirmLeave(false)}
-                            className="w-full md:w-28 px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
-                        >
-                            Stay
-                        </button>
-                        <button
-                            onClick={() => navigate("/items")}
-                            className="w-full md:w-28 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm"
-                        >
-                            Discard
-                        </button>
-                    </>
-                }
-            >
-                <div className="text-slate-700 dark:text-gray-300">If you leave, your latest unsaved edits will be lost.</div>
-            </Modal>
 
             {/* Category Picker Modal */}
             <CategoryPickerModal

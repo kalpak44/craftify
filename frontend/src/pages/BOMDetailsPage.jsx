@@ -8,7 +8,7 @@ import {listItems} from "../api/items";
  * BOMDetailsPage — React + Tailwind (Mobile-friendly UX + Responsive, Fixed Background Gradient)
  *
  * Purpose:
- * - Create/edit a simplified BOM with Save/Cancel actions.
+ * - Create/edit a simplified BOM with Save actions.
  * - Mobile UX upgrades: sticky bottom action bar, mobile card editor, full-screen modals, stacked header actions.
  * - Responsive background gradient that never “runs out” on tall pages:
  *   - Implemented as a fixed, full-viewport background layer behind content.
@@ -18,16 +18,16 @@ import {listItems} from "../api/items";
 
 // ---- Mocked item master ----
 const MOCK_ITEMS = [
-    {id: "ITM-001", name: "Warm Yellow LED", uom: "pcs", status: "Active"},
-    {id: "ITM-002", name: "Large Widget", uom: "pcs", status: "Active"},
-    {id: "ITM-003", name: "Plastic Case", uom: "pcs", status: "Active"},
-    {id: "ITM-004", name: "Lion Bracket", uom: "pcs", status: "Active"},
-    {id: "ITM-005", name: "Chain Bracket", uom: "pcs", status: "Active"},
-    {id: "ITM-006", name: "Front Assembly", uom: "ea", status: "Active"},
-    {id: "ITM-007", name: "Steel Frame", uom: "pcs", status: "Active"},
-    {id: "ITM-008", name: "Blue Paint (RAL5010)", uom: "L", status: "Hold"},
-    {id: "ITM-009", name: "Screws M3×8", uom: "ea", status: "Active"},
-    {id: "ITM-010", name: "Assembly Kit 10", uom: "kit", status: "Discontinued"},
+    {id: "ITM-001", name: "Tomato Sauce", uom: "kg", status: "Active"},
+    {id: "ITM-002", name: "Mozzarella", uom: "kg", status: "Active"},
+    {id: "ITM-003", name: "Fresh Basil", uom: "g", status: "Active"},
+    {id: "ITM-004", name: "Pizza Dough Ball", uom: "pcs", status: "Active"},
+    {id: "ITM-005", name: "Extra Virgin Olive Oil", uom: "L", status: "Active"},
+    {id: "ITM-006", name: "Chicken Breast", uom: "kg", status: "Active"},
+    {id: "ITM-008", name: "Parmesan Cheese", uom: "kg", status: "Active"},
+    {id: "ITM-010", name: "Dry Pasta", uom: "kg", status: "Active"},
+    {id: "ITM-011", name: "Margherita Pizza", uom: "pcs", status: "Active"},
+    {id: "ITM-012", name: "Chicken Parmesan Pasta", uom: "pcs", status: "Active"},
 ];
 
 const nextId = (() => {
@@ -197,7 +197,6 @@ export default function BOMDetailsPage() {
     const [version, setVersion] = useState(null);
 
     // ---- Modals ----
-    const [openConfirmLeave, setOpenConfirmLeave] = useState(false);
     const [openParentPicker, setOpenParentPicker] = useState(false);
     const [openComponentPicker, setOpenComponentPicker] = useState({open: false, rowKey: null});
 
@@ -381,11 +380,6 @@ export default function BOMDetailsPage() {
             setSaving(false);
         }
     };
-    const handleCancel = () => {
-        if (hasChanges) setOpenConfirmLeave(true);
-        else navigate("/boms");
-    };
-
     return (
         <div className="relative text-slate-900 dark:text-gray-200 min-h-screen">
             {/* Fixed, full-viewport responsive gradient layer (prevents partial coverage on tall pages) */}
@@ -416,15 +410,6 @@ export default function BOMDetailsPage() {
                             )}
                         >
                             Save
-                        </button>
-                        <button
-                            onClick={handleCancel}
-                            className={classNames(
-                                BTN_W,
-                                "px-4 py-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm flex-1 sm:flex-none"
-                            )}
-                        >
-                            Cancel
                         </button>
                     </div>
                 </div>
@@ -880,12 +865,6 @@ export default function BOMDetailsPage() {
             >
                 <div className="px-4 py-3 flex items-center gap-2">
                     <button
-                        onClick={handleCancel}
-                        className="flex-1 px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
-                    >
-                        Cancel
-                    </button>
-                    <button
                         onClick={handleSave}
                         className="flex-1 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm"
                     >
@@ -893,31 +872,6 @@ export default function BOMDetailsPage() {
                     </button>
                 </div>
             </div>
-
-            {/* Confirm leave */}
-            <Modal
-                open={openConfirmLeave}
-                onClose={() => setOpenConfirmLeave(false)}
-                title="Discard unsaved changes?"
-                footer={
-                    <>
-                        <button
-                            onClick={() => setOpenConfirmLeave(false)}
-                            className="w-full md:w-28 px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
-                        >
-                            Stay
-                        </button>
-                        <button
-                            onClick={() => navigate("/boms")}
-                            className="w-full md:w-28 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm"
-                        >
-                            Discard
-                        </button>
-                    </>
-                }
-            >
-                <div className="text-slate-700 dark:text-gray-300">If you leave, your latest unsaved edits will be lost.</div>
-            </Modal>
 
             {/* Inline load/save states and errors */}
             {loading && (

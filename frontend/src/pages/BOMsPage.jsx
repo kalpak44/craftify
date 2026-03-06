@@ -32,7 +32,7 @@ export const BOMsPage = () => {
     const [query, setQuery] = useState("");
     const [queryDebounced, setQueryDebounced] = useState("");
     const [status, setStatus] = useState("all");
-    const [sort, setSort] = useState({key: "product", dir: "asc"});
+    const [sort, setSort] = useState({key: "lastUpdated", dir: "desc"});
     const [selected, setSelected] = useState({});
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(8);
@@ -72,7 +72,13 @@ export const BOMsPage = () => {
                 setLoading(true);
                 setError("");
                 const serverSortKey =
-                    sort.key === "id" ? "id" : (sort.key === "productId" ? "productId" : "productName");
+                    sort.key === "id"
+                        ? "id"
+                        : sort.key === "productId"
+                            ? "productId"
+                            : sort.key === "lastUpdated"
+                                ? "updatedAt"
+                                : "productName";
                 const res = await listBoms(authFetch, {
                     page: Math.max(0, (page || 1) - 1),
                     size: pageSize,
