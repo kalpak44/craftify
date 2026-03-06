@@ -517,7 +517,6 @@ export const BOMsPage = () => {
                             {th("Revision", "revision")}
                             {th("Status", "status")}
                             {th("# Components", "components", true)}
-                            {th("Last Updated", "lastUpdated")}
                             <th className="px-4 py-3 font-semibold text-slate-700 dark:text-gray-300 text-right">Actions</th>
                         </tr>
                         </thead>
@@ -555,7 +554,6 @@ export const BOMsPage = () => {
                   </span>
                                 </td>
                                 <td className="px-4 py-3 text-right text-slate-900 dark:text-gray-200">{bom.components}</td>
-                                <td className="px-4 py-3 text-slate-500 dark:text-gray-400">{bom.lastUpdated}</td>
                                 <td className="px-4 py-3 text-right" onClick={stopRowNav}>
                                     {/* Desktop actions trigger */}
                                     <button
@@ -571,7 +569,7 @@ export const BOMsPage = () => {
                         ))}
                         {paged.length === 0 && (
                             <tr>
-                                <td className="px-4 py-6 text-center text-slate-500 dark:text-gray-400" colSpan={9}>
+                                <td className="px-4 py-6 text-center text-slate-500 dark:text-gray-400" colSpan={8}>
                                     No BOMs found.
                                 </td>
                             </tr>

@@ -863,6 +863,12 @@ export default function ItemDetailsPage() {
                         >
                             {saving ? "Saving…" : "Save"}
                         </button>
+                        <button
+                            onClick={() => navigate("/items")}
+                            className="w-28 px-4 py-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm flex-1 sm:flex-none"
+                        >
+                            Cancel
+                        </button>
                     </div>
                 </div>
 
@@ -1268,6 +1274,12 @@ export default function ItemDetailsPage() {
                         className="flex-1 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm"
                     >
                         {saving ? "Saving…" : "Save"}
+                    </button>
+                    <button
+                        onClick={() => navigate("/items")}
+                        className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm"
+                    >
+                        Cancel
                     </button>
                 </div>
             </div>

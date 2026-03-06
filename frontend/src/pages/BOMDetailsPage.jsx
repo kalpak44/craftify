@@ -411,6 +411,15 @@ export default function BOMDetailsPage() {
                         >
                             Save
                         </button>
+                        <button
+                            onClick={() => navigate("/boms")}
+                            className={classNames(
+                                BTN_W,
+                                "px-4 py-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm flex-1 sm:flex-none"
+                            )}
+                        >
+                            Cancel
+                        </button>
                     </div>
                 </div>
 
@@ -857,6 +866,12 @@ export default function BOMDetailsPage() {
                         className="flex-1 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm"
                     >
                         Save
+                    </button>
+                    <button
+                        onClick={() => navigate("/boms")}
+                        className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm"
+                    >
+                        Cancel
                     </button>
                 </div>
             </div>
