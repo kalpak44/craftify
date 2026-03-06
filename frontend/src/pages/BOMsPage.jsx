@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {useAuthFetch} from "../hooks/useAuthFetch";
-import {listBoms, getBom, deleteBom} from "../api/boms";
+import {listBoms, getBom, deleteBom, exportBomsCsv, importBomsCsv} from "../api/boms";
 
 /**
  * BOMsPage
@@ -43,6 +43,8 @@ export const BOMsPage = () => {
     const [serverTotalElements, setServerTotalElements] = useState(0);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [importingCsv, setImportingCsv] = useState(false);
+    const [exportingCsv, setExportingCsv] = useState(false);
 
     // Single-row deletion modal
     const [deleteOneId, setDeleteOneId] = useState(null);
@@ -50,6 +52,7 @@ export const BOMsPage = () => {
     // Desktop dropdown menu anchor/state: { id, x, y } or null
     const [menu, setMenu] = useState(null);
     const menuRef = useRef(null);
+    const importInputRef = useRef(null);
 
     // Mobile action sheet: id or null
     const [sheetId, setSheetId] = useState(null);
@@ -217,6 +220,57 @@ export const BOMsPage = () => {
         }
     };
 
+    const downloadBlob = (blob, filename) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    };
+
+    const handleExportCSV = async () => {
+        try {
+            setExportingCsv(true);
+            const {blob, filename} = await exportBomsCsv(authFetch, {
+                q: queryDebounced || undefined,
+                status: status !== "all" ? status : undefined,
+                ids: selectedCount ? selectedIds : undefined,
+            });
+            downloadBlob(blob, filename);
+        } catch (e) {
+            alert(e?.message || "Failed to export BOM CSV");
+        } finally {
+            setExportingCsv(false);
+        }
+    };
+
+    const handleImportPick = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+            setImportingCsv(true);
+            const result = await importBomsCsv(authFetch, file, "upsert");
+            const errorCount = result?.errors?.length || 0;
+            const headErrors = (result?.errors || [])
+                .slice(0, 5)
+                .map((x) => `row ${x.row}: ${x.field} - ${x.message}`)
+                .join("\n");
+            alert(
+                `Import completed.\nCreated: ${result?.created || 0}\nUpdated: ${result?.updated || 0}\nErrors: ${errorCount}` +
+                (headErrors ? `\n\n${headErrors}` : "")
+            );
+            setReloadTick((n) => n + 1);
+        } catch (e2) {
+            alert(e2?.message || "Failed to import BOM CSV");
+        } finally {
+            e.target.value = "";
+            setImportingCsv(false);
+        }
+    };
+
     // --- Desktop menu helpers ---
     const openDesktopMenu = (e, id) => {
         e.stopPropagation();
@@ -296,12 +350,24 @@ export const BOMsPage = () => {
                             + New BOM
                         </button>
                         <button
-                            className="flex-1 sm:flex-none px-4 py-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm">
-                            Import CSV
+                            disabled={importingCsv || exportingCsv}
+                            onClick={() => importInputRef.current?.click()}
+                            className="flex-1 sm:flex-none px-4 py-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm disabled:opacity-50">
+                            {importingCsv ? "Importing..." : "Import CSV"}
                         </button>
+                        <input ref={importInputRef} type="file" accept=".csv,text/csv" className="hidden" onChange={handleImportPick}/>
                     </div>
                 </div>
             </header>
+
+            {(importingCsv || exportingCsv) && (
+                <div className="mx-auto px-4 pb-2">
+                    <div className="rounded-xl border border-blue-500/40 bg-blue-500/10 px-3 py-2 text-sm text-blue-200 flex items-center gap-2">
+                        <span className="inline-block h-3.5 w-3.5 border-2 border-blue-300/40 border-t-blue-300 rounded-full animate-spin"/>
+                        <span>{importingCsv ? "Importing BOM CSV..." : "Exporting BOM CSV..."}</span>
+                    </div>
+                </div>
+            )}
 
             {/* Toolbar */}
             <div className="mx-auto px-4 pb-4">
@@ -319,7 +385,7 @@ export const BOMsPage = () => {
                             <option value="Active">Active</option>
                             <option value="Draft">Draft</option>
                             <option value="Hold">Hold</option>
-                            <option value="Obsolete">Obsolete</option>
+                            <option value="Obsolite">Obsolite</option>
                         </select>
 
                         <div className="relative flex-1">
@@ -337,12 +403,10 @@ export const BOMsPage = () => {
 
                         <div className="flex items-center gap-2 md:ml-auto">
                             <button
-                                className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm hover:bg-slate-200 dark:hover:bg-gray-700">
-                                Export CSV
-                            </button>
-                            <button
-                                className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm hover:bg-slate-200 dark:hover:bg-gray-700">
-                                Print / PDF
+                                disabled={importingCsv || exportingCsv}
+                                onClick={handleExportCSV}
+                                className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm hover:bg-slate-200 dark:hover:bg-gray-700 disabled:opacity-50">
+                                {exportingCsv ? "Exporting..." : "Export CSV"}
                             </button>
                             <button
                                 onClick={openDeleteModal}

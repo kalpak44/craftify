@@ -131,6 +131,74 @@ public class BomService {
     return true;
   }
 
+  @Transactional(readOnly = true)
+  public List<BomDetail> listForExport(String q, BomStatus status, List<String> codes) {
+    Specification<BomEntity> spec =
+        (root, cq, cb) -> {
+          List<Predicate> predicates = new ArrayList<>();
+          if (q != null && !q.isBlank()) {
+            String pattern = "%" + q.toLowerCase(Locale.ROOT) + "%";
+            predicates.add(
+                cb.or(
+                    cb.like(cb.lower(root.get("code")), pattern),
+                    cb.like(cb.lower(root.get("productId")), pattern),
+                    cb.like(cb.lower(root.get("productName")), pattern)));
+          }
+          if (status != null) {
+            predicates.add(cb.equal(root.get("status"), status));
+          }
+          if (codes != null && !codes.isEmpty()) {
+            predicates.add(root.get("code").in(codes));
+          }
+          return cb.and(predicates.toArray(Predicate[]::new));
+        };
+
+    return bomRepository.findAll(spec, Sort.by(Sort.Direction.ASC, "code")).stream()
+        .map(this::toDetailModel)
+        .toList();
+  }
+
+  @Transactional
+  public BomDetail upsertFromImport(
+      String code,
+      String productId,
+      String productName,
+      String revision,
+      BomStatus status,
+      String description,
+      String note,
+      List<BomComponent> components,
+      boolean createOnly) {
+    String normalizedCode =
+        (code == null || code.isBlank()) ? generateNextCode() : code.trim().toUpperCase(Locale.ROOT);
+
+    BomEntity existing = bomRepository.findByCodeIgnoreCase(normalizedCode).orElse(null);
+    if (existing != null) {
+      if (createOnly) {
+        throw new IllegalStateException("create_only_conflict");
+      }
+      existing.setProductId(productId.trim().toUpperCase(Locale.ROOT));
+      existing.setProductName(productName == null ? null : productName.trim());
+      existing.setRevision(revision.trim());
+      existing.setStatus(status);
+      existing.setDescription(description == null ? null : description.trim());
+      existing.setNote(note == null ? null : note.trim());
+      existing.setComponents(toEmbeddables(components));
+      return toDetailModel(bomRepository.save(existing));
+    }
+
+    BomEntity entity = new BomEntity();
+    entity.setCode(normalizedCode);
+    entity.setProductId(productId.trim().toUpperCase(Locale.ROOT));
+    entity.setProductName(productName == null ? null : productName.trim());
+    entity.setRevision(revision.trim());
+    entity.setStatus(status);
+    entity.setDescription(description == null ? null : description.trim());
+    entity.setNote(note == null ? null : note.trim());
+    entity.setComponents(toEmbeddables(components));
+    return toDetailModel(bomRepository.save(entity));
+  }
+
   private String generateNextCode() {
     int max =
         bomRepository.findAll().stream()

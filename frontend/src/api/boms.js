@@ -58,3 +58,35 @@ export async function deleteBom(authFetch, id, version) {
     throw new Error(txt || "Failed to delete BOM");
   }
 }
+
+export async function exportBomsCsv(authFetch, params = {}) {
+  const url = new URL(`${API_HOST}/boms:export`);
+  const { q, status, ids } = params;
+  if (q) url.searchParams.set("q", q);
+  if (status) url.searchParams.set("status", status);
+  if (ids?.length) url.searchParams.set("ids", ids.join(","));
+
+  const res = await authFetch(url, { method: "GET" });
+  if (!res?.ok) {
+    const txt = res ? await res.text() : "auth failed";
+    throw new Error(txt || "Failed to export BOM CSV");
+  }
+  const blob = await res.blob();
+  const contentDisposition = res.headers.get("content-disposition") || "";
+  const match = contentDisposition.match(/filename="?([^";]+)"?/i);
+  const filename = match?.[1] || `boms_${new Date().toISOString().slice(0, 10)}.csv`;
+  return { blob, filename };
+}
+
+export async function importBomsCsv(authFetch, file, mode = "upsert") {
+  const url = new URL(`${API_HOST}/boms:import`);
+  url.searchParams.set("mode", mode);
+  const form = new FormData();
+  form.append("file", file);
+  const res = await authFetch(url, { method: "POST", body: form });
+  if (!res?.ok) {
+    const txt = res ? await res.text() : "auth failed";
+    throw new Error(txt || "Failed to import BOM CSV");
+  }
+  return res.json();
+}
