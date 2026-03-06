@@ -12,12 +12,8 @@ import {AuthenticationGuard} from "./components/authentication-guard/Authenticat
 import {ItemsPage} from "./pages/ItemsPage.jsx";
 import {BOMsPage} from "./pages/BOMsPage.jsx";
 import {BOMDetailsPage} from "./pages/BOMDetailsPage.jsx";
-import {WorkOrdersPage} from "./pages/WorkOrdersPage.jsx";
-import {WorkOrderDetailsPage} from "./pages/WorkOrderDetailsPage.jsx";
 import InventoryPage from "./pages/InventoryPage.jsx";
 import ItemDetailsPage from "./pages/ItemDetailsPage.jsx";
-import WorkOrderOperationsPage from "./pages/WorkOrderOperationsPage.jsx";
-import {WorkOrderOperationsDetailsPage} from "./pages/WorkOrderOperationsDetailsPage.jsx";
 import CalendarPage from "./pages/CalendarPage.jsx";
 import InventoryDetailsPage from "./pages/InventoryDetailsPage.jsx";
 
@@ -75,37 +71,6 @@ export default function App() {
                     <FullWidthLayout><BOMDetailsPage/></FullWidthLayout>
                 </AuthenticationGuard>
             }/>
-            <Route path="/work-orders" element={
-                <AuthenticationGuard>
-                    <FullWidthLayout><WorkOrdersPage/></FullWidthLayout>
-                </AuthenticationGuard>
-            }/>
-            <Route path="/work-orders/new" element={
-                <AuthenticationGuard>
-                    <FullWidthLayout><WorkOrderDetailsPage/></FullWidthLayout>
-                </AuthenticationGuard>
-            }/>
-            <Route path="/work-orders/:id/edit" element={
-                <AuthenticationGuard>
-                    <FullWidthLayout><WorkOrderDetailsPage/></FullWidthLayout>
-                </AuthenticationGuard>
-            }/>
-            <Route path="/work-orders/:id/operations" element={
-                <AuthenticationGuard>
-                    <FullWidthLayout><WorkOrderOperationsPage/></FullWidthLayout>
-                </AuthenticationGuard>
-            }/>
-            <Route path="/work-orders/:id/operations/new" element={
-                <AuthenticationGuard>
-                    <FullWidthLayout><WorkOrderOperationsDetailsPage/></FullWidthLayout>
-                </AuthenticationGuard>
-            }/>
-            <Route path="/work-orders/:id/operations/:oid/edit" element={
-                <AuthenticationGuard>
-                    <FullWidthLayout><WorkOrderOperationsDetailsPage/></FullWidthLayout>
-                </AuthenticationGuard>
-            }/>
-
             <Route path="/inventory" element={
                 <AuthenticationGuard>
                     <FullWidthLayout><InventoryPage/></FullWidthLayout>

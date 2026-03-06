@@ -2,32 +2,30 @@ import React, {useEffect, useMemo, useRef, useState} from "react";
 
 /* ---------------- Mock data (12 months) ---------------- */
 const RAW = [
-    {m: "2024-03", throughput: 820, otif: 91, turns: 4.2, woAgingDays: 7.2, scrapCost: 920},
-    {m: "2024-04", throughput: 905, otif: 92, turns: 4.4, woAgingDays: 7.0, scrapCost: 880},
-    {m: "2024-05", throughput: 980, otif: 89, turns: 4.6, woAgingDays: 7.6, scrapCost: 1020},
-    {m: "2024-06", throughput: 1040, otif: 90, turns: 4.8, woAgingDays: 7.4, scrapCost: 970},
-    {m: "2024-07", throughput: 1085, otif: 93, turns: 5.0, woAgingDays: 6.9, scrapCost: 860},
-    {m: "2024-08", throughput: 1120, otif: 92, turns: 5.1, woAgingDays: 6.8, scrapCost: 840},
-    {m: "2024-09", throughput: 1060, otif: 88, turns: 4.7, woAgingDays: 7.8, scrapCost: 1100},
-    {m: "2024-10", throughput: 1140, otif: 90, turns: 5.2, woAgingDays: 7.1, scrapCost: 930},
-    {m: "2024-11", throughput: 1180, otif: 94, turns: 5.4, woAgingDays: 6.5, scrapCost: 780},
-    {m: "2024-12", throughput: 1210, otif: 95, turns: 5.6, woAgingDays: 6.1, scrapCost: 720},
-    {m: "2025-01", throughput: 1160, otif: 92, turns: 5.3, woAgingDays: 6.7, scrapCost: 860},
-    {m: "2025-02", throughput: 1240, otif: 96, turns: 5.8, woAgingDays: 5.9, scrapCost: 690},
+    {m: "2024-03", throughput: 820, otif: 91, turns: 4.2, scrapCost: 920},
+    {m: "2024-04", throughput: 905, otif: 92, turns: 4.4, scrapCost: 880},
+    {m: "2024-05", throughput: 980, otif: 89, turns: 4.6, scrapCost: 1020},
+    {m: "2024-06", throughput: 1040, otif: 90, turns: 4.8, scrapCost: 970},
+    {m: "2024-07", throughput: 1085, otif: 93, turns: 5.0, scrapCost: 860},
+    {m: "2024-08", throughput: 1120, otif: 92, turns: 5.1, scrapCost: 840},
+    {m: "2024-09", throughput: 1060, otif: 88, turns: 4.7, scrapCost: 1100},
+    {m: "2024-10", throughput: 1140, otif: 90, turns: 5.2, scrapCost: 930},
+    {m: "2024-11", throughput: 1180, otif: 94, turns: 5.4, scrapCost: 780},
+    {m: "2024-12", throughput: 1210, otif: 95, turns: 5.6, scrapCost: 720},
+    {m: "2025-01", throughput: 1160, otif: 92, turns: 5.3, scrapCost: 860},
+    {m: "2025-02", throughput: 1240, otif: 96, turns: 5.8, scrapCost: 690},
 ];
 
 const METRICS = [
     {key: "throughput", label: "Throughput (units)", unit: "", chart: "bar"},
     {key: "otif", label: "OTIF %", unit: "%", chart: "line"},
     {key: "turns", label: "Inventory Turns", unit: "", chart: "line"},
-    {key: "woAgingDays", label: "WO Aging (days)", unit: " d", chart: "line", lowerIsBetter: true},
     {key: "scrapCost", label: "Scrap Cost (€)", unit: "€", chart: "bar", lowerIsBetter: true},
 ];
 
 const TARGETS = {
     otif: 95,           // want >= 95%
     turns: 5,           // want >= 5
-    woAgingDays: 6,     // want <= 6
     scrapCost: 700,     // want <= 700
     // throughput: (no global target in mock)
 };
@@ -59,7 +57,6 @@ export default function DashboardPage() {
         kpi("throughput", v => fmtNum(v)),
         kpi("otif", v => `${v}%`),
         kpi("turns", v => v),
-        kpi("woAgingDays", v => `${v} d`, true),
         kpi("scrapCost", v => `€${fmtNum(v)}`, true),
     ];
 
@@ -385,7 +382,6 @@ function BreakdownTicker({rows, metric, hoverIndex, setHoverIndex, visibleCount 
                     <th className="px-3 py-2 text-right">Throughput</th>
                     <th className="px-3 py-2 text-right">OTIF %</th>
                     <th className="px-3 py-2 text-right">Turns</th>
-                    <th className="px-3 py-2 text-right">WO Aging</th>
                     <th className="px-3 py-2 text-right">Scrap €</th>
                     <th className="px-3 py-2 text-right">Δ {METRICS.find(m => m.key === metric).label.split(" ")[0]}</th>
                 </tr>
@@ -415,7 +411,6 @@ function BreakdownTicker({rows, metric, hoverIndex, setHoverIndex, visibleCount 
                                 <td className="px-3 py-2 text-right">{fmtNum(r.throughput)}</td>
                                 <td className="px-3 py-2 text-right">{r.otif}%</td>
                                 <td className="px-3 py-2 text-right">{r.turns}</td>
-                                <td className="px-3 py-2 text-right">{r.woAgingDays}</td>
                                 <td className="px-3 py-2 text-right">€{fmtNum(r.scrapCost)}</td>
                                 <td className={`px-3 py-2 text-right ${good ? "text-emerald-400" : bad ? "text-red-400" : "text-slate-500 dark:text-slate-400"}`}>
                                     {i === 0 ? "—" : (d > 0 ? "+" : "") + round1(d) + (cfg.unit || "")}
@@ -498,7 +493,6 @@ function pickNumeric(label, row) {
     if (label.startsWith("Throughput")) return row.throughput;
     if (label.startsWith("OTIF")) return row.otif;
     if (label.startsWith("Turns")) return row.turns;
-    if (label.startsWith("WO")) return row.woAgingDays;
     if (label.startsWith("Scrap")) return row.scrapCost;
     return 0;
 }

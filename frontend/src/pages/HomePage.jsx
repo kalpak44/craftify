@@ -37,9 +37,9 @@ export const HomePage = () => {
             ),
         },
         {
-            title: "BOM & Work Orders",
+            title: "BOM Management",
             description:
-                "Define BOMs, explode components, and issue work orders in a click.",
+                "Define product structures and component requirements in one place.",
             icon: (
                 <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden>
                     <path fill="currentColor" d="M7 3h10a2 2 0 012 2v14l-7-3-7 3V5a2 2 0 012-2z"/>
@@ -139,7 +139,7 @@ export const HomePage = () => {
                 <div
                     className="rounded-3xl border border-slate-200 dark:border-white/10 bg-gradient-to-r from-blue-50 via-white to-slate-100 dark:from-gray-900 dark:to-gray-800 p-8 md:p-10 text-center">
                     <h2 className="text-2xl md:text-3xl font-semibold text-slate-900 dark:text-white">
-                        Ship your first work order in minutes
+                        Launch your first production flow in minutes
                     </h2>
                     <p className="mt-2 text-slate-500 dark:text-gray-400 max-w-3xl mx-auto">
                         Start with a CSV of items, add a BOM, and go from quote to shipment.
