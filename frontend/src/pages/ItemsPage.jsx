@@ -440,6 +440,19 @@ export const ItemsPage = () => {
     // Navigate
     const goToEdit = (id) => navigate(`/items/${encodeURIComponent(id)}/edit`);
 
+    // Resolve a stable item code before inventory creation.
+    // Some API deployments may return/use different identifiers in list endpoints.
+    const resolveItemCodeForInventory = async (itemIdentifier) => {
+        const fallback = String(itemIdentifier || "").trim();
+        if (!fallback) return "";
+        try {
+            const detail = await getItem(authFetch, fallback);
+            return String(detail?.code || detail?.id || fallback).trim();
+        } catch (_) {
+            return fallback;
+        }
+    };
+
     // Utility to stop row navigation when interacting with controls
     const stopRowNav = (e) => e.stopPropagation();
 
@@ -951,7 +964,18 @@ export const ItemsPage = () => {
                                     }
                                     try {
                                         setCreatingInventory(true);
-                                        const created = await createInventoryFromItem(authFetch, createInvForItem.id, n, createInvMode);
+                                        const requestedId = String(createInvForItem.id || "").trim();
+                                        const canonicalCode = await resolveItemCodeForInventory(requestedId);
+                                        let created;
+                                        try {
+                                            created = await createInventoryFromItem(authFetch, canonicalCode, n, createInvMode);
+                                        } catch (e) {
+                                            if (e?.message === "Item not found." && canonicalCode !== requestedId) {
+                                                created = await createInventoryFromItem(authFetch, requestedId, n, createInvMode);
+                                            } else {
+                                                throw e;
+                                            }
+                                        }
                                         setCreateInvForItem(null);
                                         navigate(`/inventory/${encodeURIComponent(created.code)}/edit`);
                                     } catch (e) {
