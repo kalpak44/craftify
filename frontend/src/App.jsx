@@ -16,6 +16,7 @@ import InventoryPage from "./pages/InventoryPage.jsx";
 import ItemDetailsPage from "./pages/ItemDetailsPage.jsx";
 import CalendarPage from "./pages/CalendarPage.jsx";
 import InventoryDetailsPage from "./pages/InventoryDetailsPage.jsx";
+import {WorkItemsPage} from "./pages/WorkItemsPage.jsx";
 
 export default function App() {
     const {isLoading} = useAuth0();
@@ -74,6 +75,11 @@ export default function App() {
             <Route path="/inventory" element={
                 <AuthenticationGuard>
                     <FullWidthLayout><InventoryPage/></FullWidthLayout>
+                </AuthenticationGuard>
+            }/>
+            <Route path="/work-items" element={
+                <AuthenticationGuard>
+                    <FullWidthLayout><WorkItemsPage/></FullWidthLayout>
                 </AuthenticationGuard>
             }/>
             <Route path="/inventory/new" element={
