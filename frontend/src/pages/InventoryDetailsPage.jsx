@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 import {useAuthFetch} from "../hooks/useAuthFetch";
-import {listAllItems} from "../api/items";
+import {getItem, listAllItems} from "../api/items";
 import {
     listCategories,
     createCategory as apiCreateCategory,
@@ -375,20 +375,28 @@ export default function InventoryDetailsPage() {
                 setLoading(true);
                 setError("");
                 const [itemsData, categoryPage] = await Promise.all([
-                    listAllItems(authFetch, {sort: "name,asc"}),
+                    listAllItems(authFetch, {sort: "name,asc", status: "Active"}),
                     listCategories(authFetch, {page: 0, size: 200, sort: "name,asc"}),
                 ]);
                 if (ignore) return;
 
-                const safeItems = Array.isArray(itemsData) ? itemsData : [];
+                let safeItems = Array.isArray(itemsData) ? itemsData : [];
                 const safeCatObjs = Array.isArray(categoryPage?.content) ? categoryPage.content : [];
                 const safeCategories = safeCatObjs.map((c) => c?.name).filter(Boolean);
-                setItems(safeItems);
                 setCatObjs(safeCatObjs);
                 setCategories(Array.from(new Set(safeCategories)).sort((a, b) => a.localeCompare(b)));
 
                 if (isEdit) {
                     const current = await getInventory(authFetch, routeItemId);
+                    if (!safeItems.some((it) => (it?.code || it?.id) === current.itemId)) {
+                        try {
+                            const item = await getItem(authFetch, current.itemId);
+                            if (item) safeItems = [...safeItems, item];
+                        } catch (_) {
+                            // Keep active-only list if the referenced item cannot be loaded.
+                        }
+                    }
+                    setItems(safeItems);
                     setCode(current.code);
                     setItemId(current.itemId);
                     setCategoryDetached(Boolean(current.categoryDetached));
@@ -402,6 +410,7 @@ export default function InventoryDetailsPage() {
                         available: String(current.available ?? 0),
                     };
                 } else {
+                    setItems(safeItems);
                     const nextCode = await getNextInventoryCode(authFetch);
                     setCode(nextCode);
                     initialSnapshotRef.current = {
