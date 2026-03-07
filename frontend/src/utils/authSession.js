@@ -2,9 +2,12 @@ const LOGOUT_IN_PROGRESS_KEY = "auth:logout_in_progress_at";
 const LOGOUT_TTL_MS = 45_000;
 
 function appReturnTo() {
-    const raw = import.meta.env.VITE_APP_ROOT_PATH;
-    const basePath = raw && raw !== "/" ? (raw.startsWith("/") ? raw : `/${raw}`) : "";
-    return `${window.location.origin}${basePath}`;
+    const explicit = import.meta.env.VITE_AUTH0_LOGOUT_RETURN_TO;
+    if (explicit && String(explicit).trim()) {
+        return String(explicit).trim();
+    }
+    // Most Auth0 tenants whitelist origin by default; path-specific returnTo can fail with "Oops".
+    return window.location.origin;
 }
 
 export function markLogoutInProgress() {

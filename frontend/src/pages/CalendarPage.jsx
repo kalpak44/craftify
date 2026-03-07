@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useState} from "react";
 import {useAuthFetch} from "../hooks/useAuthFetch";
-import {createCalendarEvent, listCalendarEvents} from "../api/calendarEvents";
+import {createCalendarEvent, deleteCalendarEvent, listCalendarEvents} from "../api/calendarEvents";
 
 /**
  * CalendarPage — ERP-aligned (Tailwind-only, raw JS)
@@ -47,6 +47,8 @@ export default function CalendarPage() {
     const [anchor, setAnchor] = useState(new Date());
     const [events, setEvents] = useState([]);
     const [eventsLoading, setEventsLoading] = useState(false);
+    const [selectedEventId, setSelectedEventId] = useState(null);
+    const [deletingEvent, setDeletingEvent] = useState(false);
 
     // Add Event modal
     const [showAdd, setShowAdd] = useState(false);
@@ -180,6 +182,16 @@ export default function CalendarPage() {
         const de = endOfDay(day);
         return eventsInRange(ds, de).sort((a, b) => new Date(a.start) - new Date(b.start));
     };
+    const selectedEvent = useMemo(
+        () => events.find((e) => e.id === selectedEventId) || null,
+        [events, selectedEventId]
+    );
+
+    useEffect(() => {
+        if (selectedEventId && !events.some((e) => e.id === selectedEventId)) {
+            setSelectedEventId(null);
+        }
+    }, [events, selectedEventId]);
 
     // Upcoming (right side of toolbar)
     const upcoming = useMemo(() => {
@@ -215,6 +227,22 @@ export default function CalendarPage() {
             end: toLocalInput(e)
         });
         setShowAdd(true);
+    };
+
+    const handleDeleteSelected = async () => {
+        if (!selectedEvent) return;
+        const ok = window.confirm(`Delete event "${selectedEvent.title}"?`);
+        if (!ok) return;
+        try {
+            setDeletingEvent(true);
+            await deleteCalendarEvent(authFetch, selectedEvent.id);
+            setEvents((evs) => evs.filter((e) => e.id !== selectedEvent.id));
+            setSelectedEventId(null);
+        } catch (e) {
+            setMsg({title: "Delete failed", message: e?.message || "Failed to delete event."});
+        } finally {
+            setDeletingEvent(false);
+        }
     };
 
     // ---------- Views ----------
@@ -264,11 +292,17 @@ export default function CalendarPage() {
                             return (
                                 <div
                                     key={ev.id}
-                                    className="absolute left-2 right-2 rounded-lg shadow-sm text-xs text-white p-2"
+                                    className="absolute left-2 right-2 rounded-lg shadow-sm text-xs text-white p-2 cursor-pointer"
                                     style={{top: `${top}%`, height: `${height}%`}}
+                                    onClick={(evt) => {
+                                        evt.stopPropagation();
+                                        setSelectedEventId(ev.id);
+                                    }}
                                 >
                                     <div
-                                        className={`w-full h-full rounded-md ${COLORS[ev.color] || COLORS.slate} opacity-90 p-2`}>
+                                        className={`w-full h-full rounded-md ${COLORS[ev.color] || COLORS.slate} opacity-90 p-2 ${
+                                            selectedEventId === ev.id ? "ring-2 ring-blue-300" : ""
+                                        }`}>
                                         <div className="font-semibold truncate">{ev.title}</div>
                                         <div className="opacity-90 truncate">
                                             {formatTime(s)}–{formatTime(e)} • {ev.calendar}
@@ -352,11 +386,17 @@ export default function CalendarPage() {
                                     return (
                                         <div
                                             key={ev.id}
-                                            className="absolute left-1 right-1 rounded-md shadow-sm text-[11px] text-white p-1.5"
+                                            className="absolute left-1 right-1 rounded-md shadow-sm text-[11px] text-white p-1.5 cursor-pointer"
                                             style={{top: `${top}%`, height: `${height}%`}}
+                                            onClick={(evt) => {
+                                                evt.stopPropagation();
+                                                setSelectedEventId(ev.id);
+                                            }}
                                         >
                                             <div
-                                                className={`w-full h-full rounded ${COLORS[ev.color] || COLORS.slate} opacity-90 p-1.5`}>
+                                                className={`w-full h-full rounded ${COLORS[ev.color] || COLORS.slate} opacity-90 p-1.5 ${
+                                                    selectedEventId === ev.id ? "ring-2 ring-blue-300" : ""
+                                                }`}>
                                                 <div className="font-semibold truncate">{ev.title}</div>
                                                 <div className="opacity-90 truncate">
                                                     {formatTime(s)}–{formatTime(e)}
@@ -413,11 +453,18 @@ export default function CalendarPage() {
                                 </div>
                                 <div className="mt-1 space-y-1">
                                     {evs.slice(0, 3).map((ev) => (
-                                        <div key={ev.id} className="flex items-center gap-1">
+                                        <button
+                                            key={ev.id}
+                                            type="button"
+                                            className={`w-full text-left flex items-center gap-1 rounded px-1 py-0.5 ${
+                                                selectedEventId === ev.id ? "bg-blue-100 dark:bg-blue-900/30" : ""
+                                            }`}
+                                            onClick={() => setSelectedEventId(ev.id)}
+                                        >
                                             <span
                                                 className={`inline-block w-2 h-2 rounded ${COLORS[ev.color] || COLORS.slate}`}/>
                                             <span className="truncate text-xs text-slate-900 dark:text-gray-200">{ev.title}</span>
-                                        </div>
+                                        </button>
                                     ))}
                                     {evs.length > 3 &&
                                         <div className="text-[11px] text-slate-500 dark:text-gray-400">+{evs.length - 3} more</div>}
@@ -574,7 +621,12 @@ export default function CalendarPage() {
                                         upcoming.map((e) => {
                                             const ds = new Date(e.start);
                                             return (
-                                                <li key={e.id} className="flex items-center gap-2"
+                                                <li
+                                                    key={e.id}
+                                                    className={`flex items-center gap-2 cursor-pointer rounded px-1.5 py-1 ${
+                                                        selectedEventId === e.id ? "bg-blue-100 dark:bg-blue-900/30" : ""
+                                                    }`}
+                                                    onClick={() => setSelectedEventId(e.id)}
                                                     title={`${e.title} · ${formatDateTime(ds)}`}>
                                                     <span
                                                         className={`inline-block w-2.5 h-2.5 rounded-full ${COLORS[e.color] || COLORS.slate}`}/>
@@ -596,6 +648,39 @@ export default function CalendarPage() {
 
             {/* Main content */}
             <main className="mx-auto max-w-6xl px-4 pb-12 space-y-4">
+                {selectedEvent && (
+                    <section className="rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="min-w-0">
+                                <div className="text-sm font-semibold text-slate-900 dark:text-white truncate">{selectedEvent.title}</div>
+                                <div className="text-xs text-slate-500 dark:text-gray-400">
+                                    {formatDateTime(new Date(selectedEvent.start))} - {formatDateTime(new Date(selectedEvent.end))}
+                                </div>
+                                <div className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
+                                    {selectedEvent.calendar}
+                                    {selectedEvent.location ? ` • ${selectedEvent.location}` : ""}
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedEventId(null)}
+                                    className="px-3 py-1.5 text-sm rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700"
+                                >
+                                    Clear
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleDeleteSelected}
+                                    disabled={deletingEvent}
+                                    className="px-3 py-1.5 text-sm rounded-lg bg-red-600 hover:bg-red-700 text-white disabled:opacity-60"
+                                >
+                                    {deletingEvent ? "Deleting..." : "Delete"}
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+                )}
                 {eventsLoading && (
                     <div className="text-sm text-slate-500 dark:text-gray-400">Loading events...</div>
                 )}
