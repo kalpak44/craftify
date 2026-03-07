@@ -72,6 +72,8 @@ export const ItemsPage = () => {
     const [sheetId, setSheetId] = useState(null);
     const importInputRef = useRef(null);
     const [importResultModal, setImportResultModal] = useState(null);
+    const [feedbackModal, setFeedbackModal] = useState(null);
+    const [importingCsv, setImportingCsv] = useState(false);
 
     const navigate = useNavigate();
     const authFetch = useAuthFetch();
@@ -274,7 +276,10 @@ export const ItemsPage = () => {
             });
             downloadBlob(blob, filename);
         } catch (e) {
-            alert(e?.message || "Failed to export CSV");
+            setFeedbackModal({
+                title: "Items export failed",
+                lines: [e?.message || "Failed to export CSV"],
+            });
         }
     };
 
@@ -282,6 +287,7 @@ export const ItemsPage = () => {
         const file = e.target.files?.[0];
         if (!file) return;
         try {
+            setImportingCsv(true);
             setLoading(true);
             const result = await importItemsCsv(authFetch, file, "upsert");
             const errorCount = result?.errors?.length || 0;
@@ -307,6 +313,7 @@ export const ItemsPage = () => {
         } finally {
             e.target.value = "";
             setLoading(false);
+            setImportingCsv(false);
         }
     };
 
@@ -397,16 +404,22 @@ export const ItemsPage = () => {
                     .slice(0, 5)
                     .map((f) => f?.reason?.message)
                     .filter(Boolean);
-                alert(
-                    `Failed to delete ${failures.length} of ${selectedCount} items.` +
-                    (reasons.length ? `\n\n${reasons.join("\n")}` : "")
-                );
+                setFeedbackModal({
+                    title: "Items deletion incomplete",
+                    lines: [
+                        `Failed to delete ${failures.length} of ${selectedCount} items.`,
+                        ...reasons,
+                    ],
+                });
             }
             setSelected({});
             setShowDeleteModal(false);
             setReloadTick((t) => t + 1);
         } catch (e) {
-            alert(e?.message || 'Failed to delete items');
+            setFeedbackModal({
+                title: "Items deletion failed",
+                lines: [e?.message || "Failed to delete items"],
+            });
         } finally {
             setLoading(false);
         }
@@ -427,7 +440,10 @@ export const ItemsPage = () => {
             setDeleteOneId(null);
             setReloadTick((t) => t + 1);
         } catch (e) {
-            alert(e?.message || 'Failed to delete item');
+            setFeedbackModal({
+                title: "Item deletion failed",
+                lines: [e?.message || "Failed to delete item"],
+            });
         } finally {
             setLoading(false);
         }
@@ -554,19 +570,6 @@ export const ItemsPage = () => {
                         >
                             + New Item
                         </button>
-                        <button
-                            className="flex-1 sm:flex-none px-4 py-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm"
-                            onClick={() => importInputRef.current?.click()}
-                        >
-                            Import CSV
-                        </button>
-                        <input
-                            ref={importInputRef}
-                            type="file"
-                            accept=".csv,text/csv"
-                            onChange={handleImportPick}
-                            className="hidden"
-                        />
                     </div>
                 </div>
                 <div className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-2">
@@ -659,8 +662,23 @@ export const ItemsPage = () => {
 
                         {/* Bulk actions */}
                         <div className="flex items-center gap-2 md:ml-auto">
+                            <input
+                                ref={importInputRef}
+                                type="file"
+                                accept=".csv,text/csv"
+                                onChange={handleImportPick}
+                                className="hidden"
+                            />
+                            <button
+                                onClick={() => importInputRef.current?.click()}
+                                disabled={importingCsv}
+                                className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm hover:bg-slate-200 dark:hover:bg-gray-700 disabled:opacity-50"
+                            >
+                                {importingCsv ? "Importing..." : "Import CSV"}
+                            </button>
                             <button
                                 onClick={handleExportCSV}
+                                disabled={importingCsv}
                                 className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm hover:bg-slate-200 dark:hover:bg-gray-700"
                                 title={`Export ${selectedCount ? "selected" : "filtered"} rows to CSV`}
                             >
@@ -955,7 +973,10 @@ export const ItemsPage = () => {
                                 onClick={async () => {
                                     const n = Number(String(createInvAvailable).trim());
                                     if (!Number.isFinite(n)) {
-                                        alert("Please enter a valid availability.");
+                                        setFeedbackModal({
+                                            title: "Invalid availability",
+                                            lines: ["Please enter a valid availability."],
+                                        });
                                         return;
                                     }
                                     try {
@@ -975,7 +996,10 @@ export const ItemsPage = () => {
                                         setCreateInvForItem(null);
                                         navigate(`/inventory/${encodeURIComponent(created.code)}/edit`);
                                     } catch (e) {
-                                        alert(e?.message || "Failed to create inventory item");
+                                        setFeedbackModal({
+                                            title: "Create inventory failed",
+                                            lines: [e?.message || "Failed to create inventory item"],
+                                        });
                                     } finally {
                                         setCreatingInventory(false);
                                     }
@@ -1072,6 +1096,35 @@ export const ItemsPage = () => {
                             <div className="mt-4 flex items-center justify-end gap-2">
                                 <button
                                     onClick={() => setImportResultModal(null)}
+                                    className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm"
+                                >
+                                    OK
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {feedbackModal && (
+                <div className="fixed inset-0 z-50">
+                    <div className="absolute inset-0 bg-black/55" onClick={() => setFeedbackModal(null)}/>
+                    <div className="absolute inset-0 flex items-center justify-center p-4">
+                        <div
+                            className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 p-5 shadow-2xl">
+                            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{feedbackModal.title}</h2>
+                            {Array.isArray(feedbackModal.lines) && feedbackModal.lines.length > 0 && (
+                                <div className="mt-3 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 p-3">
+                                    <div className="text-xs text-slate-600 dark:text-gray-400 space-y-1 max-h-52 overflow-auto">
+                                        {feedbackModal.lines.map((line, idx) => (
+                                            <div key={`${idx}-${line}`}>{line}</div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            <div className="mt-4 flex items-center justify-end gap-2">
+                                <button
+                                    onClick={() => setFeedbackModal(null)}
                                     className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm"
                                 >
                                     OK

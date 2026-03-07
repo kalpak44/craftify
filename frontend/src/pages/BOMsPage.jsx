@@ -48,6 +48,7 @@ export const BOMsPage = () => {
     const [importingCsv, setImportingCsv] = useState(false);
     const [exportingCsv, setExportingCsv] = useState(false);
     const [importResultModal, setImportResultModal] = useState(null);
+    const [feedbackModal, setFeedbackModal] = useState(null);
 
     // Single-row deletion modal
     const [deleteOneId, setDeleteOneId] = useState(null);
@@ -285,7 +286,10 @@ export const BOMsPage = () => {
             });
             downloadBlob(blob, filename);
         } catch (e) {
-            alert(e?.message || "Failed to export BOM CSV");
+            setFeedbackModal({
+                title: "BOM export failed",
+                lines: [e?.message || "Failed to export BOM CSV"],
+            });
         } finally {
             setExportingCsv(false);
         }
@@ -437,7 +441,10 @@ export const BOMsPage = () => {
                 navigate("/boms");
             }
         } catch (e) {
-            alert(e?.message || "Failed to create work item request.");
+            setFeedbackModal({
+                title: "Request work item failed",
+                lines: [e?.message || "Failed to create work item request."],
+            });
         } finally {
             setRequestSubmitting(false);
         }
@@ -497,13 +504,6 @@ export const BOMsPage = () => {
                         >
                             + New BOM
                         </button>
-                        <button
-                            disabled={importingCsv || exportingCsv}
-                            onClick={() => importInputRef.current?.click()}
-                            className="flex-1 sm:flex-none px-4 py-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 rounded-lg text-sm disabled:opacity-50">
-                            {importingCsv ? "Importing..." : "Import CSV"}
-                        </button>
-                        <input ref={importInputRef} type="file" accept=".csv,text/csv" className="hidden" onChange={handleImportPick}/>
                     </div>
                 </div>
             </header>
@@ -550,6 +550,13 @@ export const BOMsPage = () => {
                         </div>
 
                         <div className="flex items-center gap-2 md:ml-auto">
+                            <input ref={importInputRef} type="file" accept=".csv,text/csv" className="hidden" onChange={handleImportPick}/>
+                            <button
+                                disabled={importingCsv || exportingCsv}
+                                onClick={() => importInputRef.current?.click()}
+                                className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm hover:bg-slate-200 dark:hover:bg-gray-700 disabled:opacity-50">
+                                {importingCsv ? "Importing..." : "Import CSV"}
+                            </button>
                             <button
                                 disabled={importingCsv || exportingCsv}
                                 onClick={handleExportCSV}
@@ -1061,6 +1068,35 @@ export const BOMsPage = () => {
                             <div className="mt-4 flex items-center justify-end gap-2">
                                 <button
                                     onClick={() => setImportResultModal(null)}
+                                    className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm"
+                                >
+                                    OK
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {feedbackModal && (
+                <div className="fixed inset-0 z-50">
+                    <div className="absolute inset-0 bg-black/55" onClick={() => setFeedbackModal(null)}/>
+                    <div className="absolute inset-0 flex items-center justify-center p-4">
+                        <div
+                            className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 p-5 shadow-2xl">
+                            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{feedbackModal.title}</h2>
+                            {Array.isArray(feedbackModal.lines) && feedbackModal.lines.length > 0 && (
+                                <div className="mt-3 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 p-3">
+                                    <div className="text-xs text-slate-600 dark:text-gray-400 space-y-1 max-h-52 overflow-auto">
+                                        {feedbackModal.lines.map((line, idx) => (
+                                            <div key={`${idx}-${line}`}>{line}</div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            <div className="mt-4 flex items-center justify-end gap-2">
+                                <button
+                                    onClick={() => setFeedbackModal(null)}
                                     className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm"
                                 >
                                     OK

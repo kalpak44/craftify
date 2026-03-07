@@ -346,8 +346,6 @@ export default function InventoryPage() {
                         <p className="mt-1 md:mt-2 text-slate-500 dark:text-gray-400 text-sm md:text-base">
                             Inventory records linked to Items with category override support.
                         </p>
-                        {loading && <p className="mt-1 text-xs text-slate-500 dark:text-gray-400">Loading...</p>}
-                        {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
                     </div>
                     <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
                         <button
@@ -436,6 +434,8 @@ export default function InventoryPage() {
                         </div>
                     </div>
                 </div>
+                {loading && <div className="mt-2 text-xs text-blue-300">Loading…</div>}
+                {error && <div className="mt-2 text-xs text-red-400">{error}</div>}
             </div>
 
             <section className="mx-auto px-4 pb-12">
