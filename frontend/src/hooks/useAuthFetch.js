@@ -1,5 +1,6 @@
 import {useCallback} from 'react';
 import {useAuth0} from '@auth0/auth0-react';
+import {logoutUser} from "../utils/authSession";
 
 export const useAuthFetch = () => {
     const {logout} = useAuth0();
@@ -23,8 +24,7 @@ export const useAuthFetch = () => {
         });
 
         if (res.status === 401) {
-            localStorage.removeItem('access_token');
-            logout({returnTo: window.location.origin});
+            await logoutUser(logout);
             return;
         }
 

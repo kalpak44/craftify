@@ -4,6 +4,7 @@ import {useAuth0} from "@auth0/auth0-react";
 import {NavLink} from "react-router-dom";
 import {Loader as Spinner} from "../common/Loader";
 import {useTheme} from "../../hooks/useTheme";
+import {logoutUser} from "../../utils/authSession";
 
 /**
  * Layout with full width, navbar, and profile dropdown.
@@ -18,7 +19,6 @@ import {useTheme} from "../../hooks/useTheme";
 export const FullWidthLayout = ({children}) => {
     const {isAuthenticated, user, logout, loginWithRedirect, isLoading} = useAuth0();
     const {isDark, toggleTheme} = useTheme();
-    const path = import.meta.env.VITE_APP_ROOT_PATH;
     const [showProfile, setShowProfile] = useState(false);
     const profileMenuRef = useRef(null);
 
@@ -240,11 +240,7 @@ export const FullWidthLayout = ({children}) => {
 
                                         <button
                                             onClick={() => {
-                                                logout({
-                                                    openUrl() {
-                                                        window.location.replace(`${window.location.origin}${path}`);
-                                                    }
-                                                })
+                                                logoutUser(logout);
                                             }}
                                             className="w-full mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
                                         >
@@ -431,11 +427,7 @@ export const FullWidthLayout = ({children}) => {
                                         </NavLink>
                                         <button
                                             onClick={() => {
-                                                logout({
-                                                    openUrl() {
-                                                        window.location.replace(`${window.location.origin}${path}`);
-                                                    }
-                                                })
+                                                logoutUser(logout);
                                             }}
                                             className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
                                         >
