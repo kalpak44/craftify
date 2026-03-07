@@ -71,6 +71,7 @@ export const ItemsPage = () => {
     // Mobile action sheet: id or null
     const [sheetId, setSheetId] = useState(null);
     const importInputRef = useRef(null);
+    const [importResultModal, setImportResultModal] = useState(null);
 
     const navigate = useNavigate();
     const authFetch = useAuthFetch();
@@ -286,15 +287,23 @@ export const ItemsPage = () => {
             const errorCount = result?.errors?.length || 0;
             const headErrors = (result?.errors || [])
                 .slice(0, 5)
-                .map((x) => `row ${x.row}: ${x.field} - ${x.message}`)
-                .join("\n");
-            alert(
-                `Import completed.\nCreated: ${result?.created || 0}\nUpdated: ${result?.updated || 0}\nErrors: ${errorCount}` +
-                (headErrors ? `\n\n${headErrors}` : "")
-            );
+                .map((x) => `row ${x.row}: ${x.field} - ${x.message}`);
+            setImportResultModal({
+                title: "Items import completed",
+                created: result?.created || 0,
+                updated: result?.updated || 0,
+                errors: errorCount,
+                headErrors,
+            });
             setReloadTick((t) => t + 1);
         } catch (err) {
-            alert(err?.message || "Failed to import CSV");
+            setImportResultModal({
+                title: "Items import failed",
+                created: 0,
+                updated: 0,
+                errors: null,
+                headErrors: [err?.message || "Failed to import CSV"],
+            });
         } finally {
             e.target.value = "";
             setLoading(false);
@@ -384,7 +393,14 @@ export const ItemsPage = () => {
             );
             const failures = results.filter(r => r.status === 'rejected');
             if (failures.length) {
-                alert(`Failed to delete ${failures.length} of ${selectedCount} items.`);
+                const reasons = failures
+                    .slice(0, 5)
+                    .map((f) => f?.reason?.message)
+                    .filter(Boolean);
+                alert(
+                    `Failed to delete ${failures.length} of ${selectedCount} items.` +
+                    (reasons.length ? `\n\n${reasons.join("\n")}` : "")
+                );
             }
             setSelected({});
             setShowDeleteModal(false);
@@ -1024,6 +1040,43 @@ export const ItemsPage = () => {
                             >
                                 Delete
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {importResultModal && (
+                <div className="fixed inset-0 z-50">
+                    <div className="absolute inset-0 bg-black/55" onClick={() => setImportResultModal(null)}/>
+                    <div className="absolute inset-0 flex items-center justify-center p-4">
+                        <div
+                            className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 p-5 shadow-2xl">
+                            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{importResultModal.title}</h2>
+                            <div className="mt-3 text-sm text-slate-600 dark:text-gray-400 space-y-1">
+                                <div>Created: <span className="text-slate-900 dark:text-gray-200">{importResultModal.created}</span></div>
+                                <div>Updated: <span className="text-slate-900 dark:text-gray-200">{importResultModal.updated}</span></div>
+                                {importResultModal.errors != null && (
+                                    <div>Errors: <span className="text-slate-900 dark:text-gray-200">{importResultModal.errors}</span></div>
+                                )}
+                            </div>
+                            {Array.isArray(importResultModal.headErrors) && importResultModal.headErrors.length > 0 && (
+                                <div className="mt-3 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 p-3">
+                                    <div className="text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">Details</div>
+                                    <div className="text-xs text-slate-600 dark:text-gray-400 space-y-1 max-h-40 overflow-auto">
+                                        {importResultModal.headErrors.map((line, idx) => (
+                                            <div key={`${idx}-${line}`}>{line}</div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            <div className="mt-4 flex items-center justify-end gap-2">
+                                <button
+                                    onClick={() => setImportResultModal(null)}
+                                    className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm"
+                                >
+                                    OK
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

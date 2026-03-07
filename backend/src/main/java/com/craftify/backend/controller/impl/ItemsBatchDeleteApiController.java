@@ -26,7 +26,7 @@ public class ItemsBatchDeleteApiController implements ItemsBatchDeleteApi {
   public ResponseEntity<ItemsBatchDeletePost200Response> itemsBatchDeletePost(
       ItemsBatchDeletePostRequest request) {
     List<UUID> ids = (request == null || request.getIds() == null) ? List.of() : request.getIds();
-    int deleted = itemService.softDeleteByIds(ids);
+    int deleted = itemService.deleteByIds(ids);
     log.info("POST /items:batch-delete ids={} -> deleted={}", ids, deleted);
     return ResponseEntity.ok(new ItemsBatchDeletePost200Response().deleted(deleted));
   }

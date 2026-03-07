@@ -13,6 +13,8 @@ import com.craftify.backend.persistence.repository.BomRepository;
 import com.craftify.backend.persistence.repository.ItemRepository;
 import com.craftify.backend.persistence.repository.InventoryRepository;
 import com.craftify.backend.persistence.repository.WorkItemRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.criteria.Predicate;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -39,18 +41,24 @@ public class WorkItemService {
   private final ItemRepository itemRepository;
   private final InventoryRepository inventoryRepository;
   private final CurrentUserService currentUserService;
+  private final CategoryService categoryService;
+  private final ObjectMapper objectMapper;
 
   public WorkItemService(
       WorkItemRepository workItemRepository,
       BomRepository bomRepository,
       ItemRepository itemRepository,
       InventoryRepository inventoryRepository,
-      CurrentUserService currentUserService) {
+      CurrentUserService currentUserService,
+      CategoryService categoryService,
+      ObjectMapper objectMapper) {
     this.workItemRepository = workItemRepository;
     this.bomRepository = bomRepository;
     this.itemRepository = itemRepository;
     this.inventoryRepository = inventoryRepository;
     this.currentUserService = currentUserService;
+    this.categoryService = categoryService;
+    this.objectMapper = objectMapper;
   }
 
   @Transactional(readOnly = true)
@@ -103,6 +111,14 @@ public class WorkItemService {
     if (bom == null) {
       throw new IllegalStateException("bom_not_found");
     }
+    String outputItemId = bom.getProductId() == null ? "" : bom.getProductId().trim().toUpperCase(Locale.ROOT);
+    if (outputItemId.isBlank()) {
+      throw new IllegalStateException("invalid_product_item");
+    }
+    ItemEntity outputItem = itemRepository.findByCodeIgnoreCaseAndOwnerSub(outputItemId, ownerSub).orElse(null);
+    if (outputItem == null) {
+      throw new IllegalStateException("output_item_not_found");
+    }
 
     List<BomComponentEmbeddable> components = bom.getComponents() == null ? List.of() : bom.getComponents();
     if (components.isEmpty()) {
@@ -110,6 +126,7 @@ public class WorkItemService {
     }
 
     Map<String, BigDecimal> requiredByItemCode = new HashMap<>();
+    Map<String, ItemEntity> componentItems = new HashMap<>();
     for (BomComponentEmbeddable c : components) {
       String itemCode = c.getItemId() == null ? "" : c.getItemId().trim().toUpperCase(Locale.ROOT);
       BigDecimal perUnit =
@@ -119,6 +136,11 @@ public class WorkItemService {
       if (itemCode.isBlank() || perUnit.compareTo(BigDecimal.ZERO) <= 0) {
         throw new IllegalStateException("invalid_bom_components");
       }
+      ItemEntity componentItem = itemRepository.findByCodeIgnoreCaseAndOwnerSub(itemCode, ownerSub).orElse(null);
+      if (componentItem == null) {
+        throw new IllegalStateException("component_item_not_found");
+      }
+      componentItems.put(itemCode, componentItem);
       BigDecimal required = perUnit.multiply(requestedQty).setScale(6, RoundingMode.HALF_UP);
       requiredByItemCode.merge(itemCode, required, BigDecimal::add);
     }
@@ -133,6 +155,20 @@ public class WorkItemService {
         throw new IllegalStateException("insufficient_inventory");
       }
       inventoryByItemCode.put(itemCode, inv);
+    }
+
+    List<AllocatedComponentSnapshot> allocatedComponents = new ArrayList<>();
+    for (Map.Entry<String, BigDecimal> e : requiredByItemCode.entrySet()) {
+      ItemEntity item = componentItems.get(e.getKey());
+      allocatedComponents.add(
+          new AllocatedComponentSnapshot(
+              e.getKey(),
+              item != null && item.getName() != null && !item.getName().isBlank() ? item.getName() : e.getKey(),
+              item != null && item.getCategoryName() != null && !item.getCategoryName().isBlank()
+                  ? item.getCategoryName()
+                  : "Unknown",
+              item != null && item.getUomBase() != null && !item.getUomBase().isBlank() ? item.getUomBase() : "pcs",
+              e.getValue().setScale(6, RoundingMode.HALF_UP)));
     }
 
     for (Map.Entry<String, BigDecimal> e : requiredByItemCode.entrySet()) {
@@ -153,6 +189,18 @@ public class WorkItemService {
             + " "
             + (bom.getRevision() == null ? "" : bom.getRevision()));
     entity.setComponentsCount(components.size());
+    entity.setOutputItemId(outputItemId);
+    entity.setOutputItemName(
+        outputItem.getName() != null && !outputItem.getName().isBlank()
+            ? outputItem.getName()
+            : (bom.getProductName() == null || bom.getProductName().isBlank() ? outputItemId : bom.getProductName()));
+    entity.setOutputItemCategoryName(
+        outputItem.getCategoryName() != null && !outputItem.getCategoryName().isBlank()
+            ? outputItem.getCategoryName()
+            : "Unknown");
+    entity.setOutputItemUom(
+        outputItem.getUomBase() != null && !outputItem.getUomBase().isBlank() ? outputItem.getUomBase() : "pcs");
+    entity.setAllocatedComponentsJson(toAllocatedComponentsJson(allocatedComponents));
     entity.setRequestedQty(requestedQty.setScale(6, RoundingMode.HALF_UP));
     entity.setStatus(WorkItemStatus.QUEUED);
     entity.setOwnerSub(ownerSub);
@@ -174,39 +222,36 @@ public class WorkItemService {
       throw new IllegalStateException("work_item_not_cancelable");
     }
 
-    BomEntity bom = bomRepository.findByCodeIgnoreCaseAndOwnerSub(existing.getBomId(), ownerSub).orElse(null);
-    if (bom == null) {
-      throw new IllegalStateException("bom_not_found");
+    List<AllocatedComponentSnapshot> allocations = parseAllocatedComponentsJson(existing.getAllocatedComponentsJson());
+    if (allocations.isEmpty()) {
+      allocations = deriveAllocationsFromBom(existing.getBomId(), existing.getRequestedQty(), ownerSub);
     }
-    List<BomComponentEmbeddable> components = bom.getComponents() == null ? List.of() : bom.getComponents();
-    if (components.isEmpty()) {
-      throw new IllegalStateException("invalid_bom_components");
-    }
-
-    Map<String, BigDecimal> allocatedByItemCode = new HashMap<>();
-    for (BomComponentEmbeddable c : components) {
-      String itemCode = c.getItemId() == null ? "" : c.getItemId().trim().toUpperCase(Locale.ROOT);
-      BigDecimal perUnit =
-          c.getQuantity() == null
-              ? BigDecimal.ZERO
-              : c.getQuantity().setScale(6, RoundingMode.HALF_UP);
-      if (itemCode.isBlank() || perUnit.compareTo(BigDecimal.ZERO) <= 0) {
-        throw new IllegalStateException("invalid_bom_components");
-      }
-      BigDecimal allocated =
-          perUnit.multiply(existing.getRequestedQty()).setScale(6, RoundingMode.HALF_UP);
-      allocatedByItemCode.merge(itemCode, allocated, BigDecimal::add);
+    if (allocations.isEmpty()) {
+      throw new IllegalStateException("invalid_work_item_snapshot");
     }
 
-    for (Map.Entry<String, BigDecimal> e : allocatedByItemCode.entrySet()) {
+    for (AllocatedComponentSnapshot alloc : allocations) {
       InventoryEntity inv =
-          inventoryRepository.findByItemIdIgnoreCaseAndOwnerSub(e.getKey(), ownerSub).orElse(null);
+          inventoryRepository.findByItemIdIgnoreCaseAndOwnerSub(alloc.itemId(), ownerSub).orElse(null);
       if (inv == null) {
-        throw new IllegalStateException("inventory_not_found_for_component");
+        InventoryEntity created = new InventoryEntity();
+        created.setCode(generateNextInventoryCode());
+        created.setItemId(alloc.itemId());
+        created.setItemName(alloc.itemName());
+        created.setItemCategoryName(alloc.itemCategoryName());
+        created.setCategoryDetached(false);
+        created.setDetachedCategoryName(null);
+        created.setCategoryName(alloc.itemCategoryName());
+        categoryService.ensureExistsForCurrentUser(alloc.itemCategoryName());
+        created.setUom(alloc.uom());
+        created.setAvailable(alloc.allocatedQty().setScale(6, RoundingMode.HALF_UP));
+        created.setOwnerSub(ownerSub);
+        inventoryRepository.save(created);
+      } else {
+        BigDecimal currentAvailable = inv.getAvailable() == null ? BigDecimal.ZERO : inv.getAvailable();
+        inv.setAvailable(currentAvailable.add(alloc.allocatedQty()).setScale(6, RoundingMode.HALF_UP));
+        inventoryRepository.save(inv);
       }
-      BigDecimal currentAvailable = inv.getAvailable() == null ? BigDecimal.ZERO : inv.getAvailable();
-      inv.setAvailable(currentAvailable.add(e.getValue()).setScale(6, RoundingMode.HALF_UP));
-      inventoryRepository.save(inv);
     }
 
     existing.setStatus(WorkItemStatus.CANCELED);
@@ -227,41 +272,46 @@ public class WorkItemService {
       throw new IllegalStateException("work_item_not_completable");
     }
 
-    BomEntity bom = bomRepository.findByCodeIgnoreCaseAndOwnerSub(existing.getBomId(), ownerSub).orElse(null);
-    if (bom == null) {
-      throw new IllegalStateException("bom_not_found");
+    String productCode =
+        existing.getOutputItemId() == null ? "" : existing.getOutputItemId().trim().toUpperCase(Locale.ROOT);
+    String outputName =
+        existing.getOutputItemName() == null || existing.getOutputItemName().isBlank()
+            ? productCode
+            : existing.getOutputItemName().trim();
+    String outputCategory =
+        existing.getOutputItemCategoryName() == null || existing.getOutputItemCategoryName().isBlank()
+            ? "Unknown"
+            : existing.getOutputItemCategoryName().trim();
+    String outputUom =
+        existing.getOutputItemUom() == null || existing.getOutputItemUom().isBlank()
+            ? "pcs"
+            : existing.getOutputItemUom().trim();
+    if (productCode.isBlank() || "UNKNOWN".equalsIgnoreCase(productCode)) {
+      OutputSnapshot fallback = deriveOutputFromBom(existing.getBomId(), ownerSub);
+      if (fallback != null) {
+        productCode = fallback.itemId();
+        outputName = fallback.itemName();
+        outputCategory = fallback.categoryName();
+        outputUom = fallback.uom();
+      }
     }
-
-    String productCode = bom.getProductId() == null ? "" : bom.getProductId().trim().toUpperCase(Locale.ROOT);
-    if (productCode.isBlank()) {
-      throw new IllegalStateException("invalid_product_item");
+    if (productCode.isBlank() || "UNKNOWN".equalsIgnoreCase(productCode)) {
+      throw new IllegalStateException("invalid_work_item_snapshot");
     }
 
     InventoryEntity productInventory =
         inventoryRepository.findByItemIdIgnoreCaseAndOwnerSub(productCode, ownerSub).orElse(null);
     if (productInventory == null) {
-      ItemEntity productItem = itemRepository.findByCodeIgnoreCaseAndOwnerSub(productCode, ownerSub).orElse(null);
       InventoryEntity created = new InventoryEntity();
       created.setCode(generateNextInventoryCode());
       created.setItemId(productCode);
-      created.setItemName(
-          productItem != null && productItem.getName() != null && !productItem.getName().isBlank()
-              ? productItem.getName()
-              : (bom.getProductName() == null || bom.getProductName().isBlank()
-                  ? productCode
-                  : bom.getProductName()));
-      String categoryName =
-          productItem != null && productItem.getCategoryName() != null && !productItem.getCategoryName().isBlank()
-              ? productItem.getCategoryName()
-              : "Manufactured";
-      created.setItemCategoryName(categoryName);
+      created.setItemName(outputName);
+      created.setItemCategoryName(outputCategory);
       created.setCategoryDetached(false);
       created.setDetachedCategoryName(null);
-      created.setCategoryName(categoryName);
-      created.setUom(
-          productItem != null && productItem.getUomBase() != null && !productItem.getUomBase().isBlank()
-              ? productItem.getUomBase()
-              : "pcs");
+      created.setCategoryName(outputCategory);
+      categoryService.ensureExistsForCurrentUser(outputCategory);
+      created.setUom(outputUom);
       created.setAvailable(existing.getRequestedQty().setScale(6, RoundingMode.HALF_UP));
       created.setOwnerSub(ownerSub);
       inventoryRepository.save(created);
@@ -360,4 +410,79 @@ public class WorkItemService {
     model.setVersion((int) e.getVersion());
     return model;
   }
+
+  private String toAllocatedComponentsJson(List<AllocatedComponentSnapshot> allocations) {
+    try {
+      return objectMapper.writeValueAsString(allocations == null ? List.of() : allocations);
+    } catch (Exception ex) {
+      throw new IllegalStateException("invalid_work_item_snapshot");
+    }
+  }
+
+  private List<AllocatedComponentSnapshot> parseAllocatedComponentsJson(String json) {
+    if (json == null || json.isBlank()) {
+      return List.of();
+    }
+    try {
+      List<AllocatedComponentSnapshot> rows =
+          objectMapper.readValue(json, new TypeReference<List<AllocatedComponentSnapshot>>() {});
+      return rows == null ? List.of() : rows;
+    } catch (Exception ex) {
+      throw new IllegalStateException("invalid_work_item_snapshot");
+    }
+  }
+
+  private record AllocatedComponentSnapshot(
+      String itemId, String itemName, String itemCategoryName, String uom, BigDecimal allocatedQty) {}
+
+  private List<AllocatedComponentSnapshot> deriveAllocationsFromBom(
+      String bomId, BigDecimal requestedQty, String ownerSub) {
+    BomEntity bom = bomRepository.findByCodeIgnoreCaseAndOwnerSub(bomId, ownerSub).orElse(null);
+    if (bom == null || bom.getComponents() == null || bom.getComponents().isEmpty()) {
+      return List.of();
+    }
+    List<AllocatedComponentSnapshot> out = new ArrayList<>();
+    for (BomComponentEmbeddable c : bom.getComponents()) {
+      String itemCode = c.getItemId() == null ? "" : c.getItemId().trim().toUpperCase(Locale.ROOT);
+      BigDecimal perUnit =
+          c.getQuantity() == null ? BigDecimal.ZERO : c.getQuantity().setScale(6, RoundingMode.HALF_UP);
+      if (itemCode.isBlank() || perUnit.compareTo(BigDecimal.ZERO) <= 0) {
+        return List.of();
+      }
+      BigDecimal allocated = perUnit.multiply(requestedQty).setScale(6, RoundingMode.HALF_UP);
+      ItemEntity item = itemRepository.findByCodeIgnoreCaseAndOwnerSub(itemCode, ownerSub).orElse(null);
+      out.add(
+          new AllocatedComponentSnapshot(
+              itemCode,
+              item != null && item.getName() != null && !item.getName().isBlank() ? item.getName() : itemCode,
+              item != null && item.getCategoryName() != null && !item.getCategoryName().isBlank()
+                  ? item.getCategoryName()
+                  : "Unknown",
+              item != null && item.getUomBase() != null && !item.getUomBase().isBlank() ? item.getUomBase() : "pcs",
+              allocated));
+    }
+    return out;
+  }
+
+  private OutputSnapshot deriveOutputFromBom(String bomId, String ownerSub) {
+    BomEntity bom = bomRepository.findByCodeIgnoreCaseAndOwnerSub(bomId, ownerSub).orElse(null);
+    if (bom == null || bom.getProductId() == null || bom.getProductId().isBlank()) {
+      return null;
+    }
+    String productCode = bom.getProductId().trim().toUpperCase(Locale.ROOT);
+    ItemEntity item = itemRepository.findByCodeIgnoreCaseAndOwnerSub(productCode, ownerSub).orElse(null);
+    if (item == null) {
+      return null;
+    }
+    String name =
+        item.getName() != null && !item.getName().isBlank()
+            ? item.getName()
+            : (bom.getProductName() == null || bom.getProductName().isBlank() ? productCode : bom.getProductName());
+    String category =
+        item.getCategoryName() != null && !item.getCategoryName().isBlank() ? item.getCategoryName() : "Unknown";
+    String uom = item.getUomBase() != null && !item.getUomBase().isBlank() ? item.getUomBase() : "pcs";
+    return new OutputSnapshot(productCode, name, category, uom);
+  }
+
+  private record OutputSnapshot(String itemId, String itemName, String categoryName, String uom) {}
 }

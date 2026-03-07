@@ -7,7 +7,9 @@ import com.craftify.backend.model.BomPage;
 import com.craftify.backend.model.BomStatus;
 import com.craftify.backend.persistence.entity.BomComponentEmbeddable;
 import com.craftify.backend.persistence.entity.BomEntity;
+import com.craftify.backend.persistence.entity.ItemEntity;
 import com.craftify.backend.persistence.repository.BomRepository;
+import com.craftify.backend.persistence.repository.ItemRepository;
 import jakarta.persistence.criteria.Predicate;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -27,10 +29,15 @@ public class BomService {
   public record BomQuery(int page, int size, String sort, String q, BomStatus status) {}
 
   private final BomRepository bomRepository;
+  private final ItemRepository itemRepository;
   private final CurrentUserService currentUserService;
 
-  public BomService(BomRepository bomRepository, CurrentUserService currentUserService) {
+  public BomService(
+      BomRepository bomRepository,
+      ItemRepository itemRepository,
+      CurrentUserService currentUserService) {
     this.bomRepository = bomRepository;
+    this.itemRepository = itemRepository;
     this.currentUserService = currentUserService;
   }
 
@@ -89,6 +96,7 @@ public class BomService {
     if (bomRepository.existsByCodeIgnoreCaseAndOwnerSub(code, ownerSub)) {
       return null;
     }
+    validateItemReferences(req.getProductId(), req.getComponents(), ownerSub);
 
     BomEntity entity = new BomEntity();
     entity.setCode(code);
@@ -114,6 +122,7 @@ public class BomService {
     if (expectedVersion == null || existing.getVersion() != expectedVersion.longValue()) {
       throw new IllegalStateException("version_mismatch");
     }
+    validateItemReferences(req.getProductId(), req.getComponents(), ownerSub);
 
     existing.setProductId(req.getProductId().trim());
     existing.setProductName(req.getProductName());
@@ -189,6 +198,7 @@ public class BomService {
       if (createOnly) {
         throw new IllegalStateException("create_only_conflict");
       }
+      validateItemReferences(productId, components, ownerSub);
       existing.setProductId(productId.trim().toUpperCase(Locale.ROOT));
       existing.setProductName(productName == null ? null : productName.trim());
       existing.setRevision(revision.trim());
@@ -200,6 +210,7 @@ public class BomService {
     }
 
     BomEntity entity = new BomEntity();
+    validateItemReferences(productId, components, ownerSub);
     entity.setCode(normalizedCode);
     entity.setProductId(productId.trim().toUpperCase(Locale.ROOT));
     entity.setProductName(productName == null ? null : productName.trim());
@@ -297,6 +308,33 @@ public class BomService {
               return emb;
             })
         .toList();
+  }
+
+  private void validateItemReferences(String productId, List<BomComponent> components, String ownerSub) {
+    String normalizedProductId = productId == null ? "" : productId.trim().toUpperCase(Locale.ROOT);
+    if (normalizedProductId.isBlank()) {
+      throw new IllegalStateException("invalid_product_item");
+    }
+    ItemEntity product = itemRepository.findByCodeIgnoreCaseAndOwnerSub(normalizedProductId, ownerSub).orElse(null);
+    if (product == null) {
+      throw new IllegalStateException("product_item_not_found");
+    }
+
+    if (components == null) {
+      return;
+    }
+    for (BomComponent component : components) {
+      if (component == null) {
+        continue;
+      }
+      String itemId = component.getItemId() == null ? "" : component.getItemId().trim().toUpperCase(Locale.ROOT);
+      if (itemId.isBlank()) {
+        continue;
+      }
+      if (itemRepository.findByCodeIgnoreCaseAndOwnerSub(itemId, ownerSub).isEmpty()) {
+        throw new IllegalStateException("component_item_not_found");
+      }
+    }
   }
 
   private List<BomComponent> toModels(List<BomComponentEmbeddable> components) {

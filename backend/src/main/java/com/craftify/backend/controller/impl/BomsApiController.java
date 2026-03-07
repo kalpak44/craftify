@@ -55,9 +55,20 @@ public class BomsApiController implements BomsApi {
         || req.getStatus() == null) {
       return ResponseEntity.badRequest().build();
     }
-    BomDetail created = bomService.create(req);
+    BomDetail created;
+    try {
+      created = bomService.create(req);
+    } catch (IllegalStateException ex) {
+      if ("product_item_not_found".equals(ex.getMessage())) {
+        return ResponseEntity.status(409).header("X-Error-Code", "product_item_not_found").build();
+      }
+      if ("component_item_not_found".equals(ex.getMessage())) {
+        return ResponseEntity.status(409).header("X-Error-Code", "component_item_not_found").build();
+      }
+      return ResponseEntity.badRequest().build();
+    }
     if (created == null) {
-      return ResponseEntity.status(409).build();
+      return ResponseEntity.status(409).header("X-Error-Code", "bom_code_conflict").build();
     }
     return ResponseEntity.created(URI.create("/boms/" + created.getId()))
         .eTag(BomService.toWeakEtag(created.getVersion()))
@@ -86,6 +97,12 @@ public class BomsApiController implements BomsApi {
       }
       return ResponseEntity.ok().eTag(BomService.toWeakEtag(updated.getVersion())).body(updated);
     } catch (IllegalStateException ex) {
+      if ("product_item_not_found".equals(ex.getMessage())) {
+        return ResponseEntity.status(409).header("X-Error-Code", "product_item_not_found").build();
+      }
+      if ("component_item_not_found".equals(ex.getMessage())) {
+        return ResponseEntity.status(409).header("X-Error-Code", "component_item_not_found").build();
+      }
       return ResponseEntity.status(412).build();
     }
   }

@@ -3,9 +3,14 @@ package com.craftify.backend.service;
 import com.craftify.backend.model.Category;
 import com.craftify.backend.model.CategoryPage;
 import com.craftify.backend.persistence.entity.CategoryEntity;
+import com.craftify.backend.persistence.entity.InventoryEntity;
+import com.craftify.backend.persistence.entity.ItemEntity;
 import com.craftify.backend.persistence.repository.CategoryRepository;
+import com.craftify.backend.persistence.repository.InventoryRepository;
 import com.craftify.backend.persistence.repository.ItemRepository;
 import jakarta.persistence.criteria.Predicate;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -20,16 +25,21 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class CategoryService {
 
+  private static final String UNKNOWN_CATEGORY = "Unknown";
+
   private final CategoryRepository categoryRepository;
   private final ItemRepository itemRepository;
+  private final InventoryRepository inventoryRepository;
   private final CurrentUserService currentUserService;
 
   public CategoryService(
       CategoryRepository categoryRepository,
       ItemRepository itemRepository,
+      InventoryRepository inventoryRepository,
       CurrentUserService currentUserService) {
     this.categoryRepository = categoryRepository;
     this.itemRepository = itemRepository;
+    this.inventoryRepository = inventoryRepository;
     this.currentUserService = currentUserService;
   }
 
@@ -47,9 +57,18 @@ public class CategoryService {
           return cb.and(predicates.toArray(Predicate[]::new));
         };
     Page<CategoryEntity> rows = categoryRepository.findAll(spec, pageable);
+    List<Category> content =
+        rows.stream()
+            .map(this::toModel)
+            .sorted(
+                Comparator.comparing(
+                        (Category c) ->
+                            !UNKNOWN_CATEGORY.equalsIgnoreCase(c.getName() == null ? "" : c.getName().trim()))
+                    .thenComparing(c -> c.getName() == null ? "" : c.getName(), String.CASE_INSENSITIVE_ORDER))
+            .toList();
 
     return new CategoryPage()
-        .content(rows.stream().map(this::toModel).toList())
+        .content(content)
         .page(rows.getNumber())
         .size(rows.getSize())
         .totalElements((int) rows.getTotalElements())
@@ -77,11 +96,33 @@ public class CategoryService {
   }
 
   @Transactional
+  public void ensureExistsForCurrentUser(String name) {
+    if (name == null || name.isBlank()) {
+      return;
+    }
+    String ownerSub = currentUserService.requiredSub();
+    String normalized = name.trim();
+    if (normalized.isBlank()) {
+      return;
+    }
+    if (categoryRepository.existsByNameIgnoreCaseAndOwnerSub(normalized, ownerSub)) {
+      return;
+    }
+    CategoryEntity entity = new CategoryEntity();
+    entity.setName(normalized);
+    entity.setOwnerSub(ownerSub);
+    categoryRepository.save(entity);
+  }
+
+  @Transactional
   public Category rename(UUID id, String newName) {
     String ownerSub = currentUserService.requiredSub();
     CategoryEntity existing = categoryRepository.findByIdAndOwnerSub(id, ownerSub).orElse(null);
     if (existing == null) {
       return null;
+    }
+    if (UNKNOWN_CATEGORY.equalsIgnoreCase(existing.getName() == null ? "" : existing.getName().trim())) {
+      throw new IllegalStateException("cannot_rename_unknown");
     }
 
     String normalized = newName.trim();
@@ -120,11 +161,14 @@ public class CategoryService {
       return false;
     }
 
-    if (!force
-        && itemRepository.existsByDeletedFalseAndCategoryNameIgnoreCaseAndOwnerSub(
-            existing.getName(), ownerSub)) {
-      throw new IllegalStateException("category_in_use");
+    String categoryName = existing.getName() == null ? "" : existing.getName().trim();
+    if (UNKNOWN_CATEGORY.equalsIgnoreCase(categoryName)) {
+      throw new IllegalStateException("cannot_delete_unknown");
     }
+
+    String unknown = ensureUnknownForOwner(ownerSub);
+    reassignItemsToUnknown(ownerSub, categoryName, unknown);
+    reassignInventoryToUnknown(ownerSub, categoryName, unknown);
 
     categoryRepository.delete(existing);
     return true;
@@ -147,5 +191,73 @@ public class CategoryService {
 
   private Category toModel(CategoryEntity entity) {
     return new Category().id(entity.getId()).name(entity.getName());
+  }
+
+  private String ensureUnknownForOwner(String ownerSub) {
+    CategoryEntity unknown =
+        categoryRepository
+            .findByNameIgnoreCaseAndOwnerSub(UNKNOWN_CATEGORY, ownerSub)
+            .orElse(null);
+    if (unknown == null) {
+      unknown = new CategoryEntity();
+      unknown.setName(UNKNOWN_CATEGORY);
+      unknown.setOwnerSub(ownerSub);
+      unknown = categoryRepository.save(unknown);
+    }
+    return unknown.getName();
+  }
+
+  private void reassignItemsToUnknown(String ownerSub, String oldName, String unknownName) {
+    List<ItemEntity> changed = new ArrayList<>();
+    for (ItemEntity item : itemRepository.findAll()) {
+      if (!ownerSub.equals(item.getOwnerSub())) {
+        continue;
+      }
+      if (item.getCategoryName() != null && item.getCategoryName().equalsIgnoreCase(oldName)) {
+        item.setCategoryName(unknownName);
+        changed.add(item);
+      }
+    }
+    if (!changed.isEmpty()) {
+      itemRepository.saveAll(changed);
+    }
+  }
+
+  private void reassignInventoryToUnknown(String ownerSub, String oldName, String unknownName) {
+    List<InventoryEntity> changed = new ArrayList<>();
+    for (InventoryEntity inv : inventoryRepository.findAll()) {
+      if (!ownerSub.equals(inv.getOwnerSub())) {
+        continue;
+      }
+      boolean touched = false;
+      if (inv.getItemCategoryName() != null && inv.getItemCategoryName().equalsIgnoreCase(oldName)) {
+        inv.setItemCategoryName(unknownName);
+        if (!inv.isCategoryDetached()) {
+          inv.setCategoryName(unknownName);
+        }
+        touched = true;
+      }
+      if (inv.isCategoryDetached()
+          && inv.getDetachedCategoryName() != null
+          && inv.getDetachedCategoryName().equalsIgnoreCase(oldName)) {
+        inv.setCategoryDetached(false);
+        inv.setDetachedCategoryName(null);
+        String fallback =
+            (inv.getItemCategoryName() == null || inv.getItemCategoryName().isBlank())
+                ? unknownName
+                : inv.getItemCategoryName();
+        inv.setCategoryName(fallback);
+        touched = true;
+      } else if (inv.getCategoryName() != null && inv.getCategoryName().equalsIgnoreCase(oldName)) {
+        inv.setCategoryName(unknownName);
+        touched = true;
+      }
+      if (touched) {
+        changed.add(inv);
+      }
+    }
+    if (!changed.isEmpty()) {
+      inventoryRepository.saveAll(changed);
+    }
   }
 }

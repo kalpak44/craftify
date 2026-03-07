@@ -32,6 +32,13 @@ export async function createBom(authFetch, payload) {
   const res = await authFetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
   if (!res?.ok) {
     const txt = res ? await res.text() : "auth failed";
+    const errorCode = res?.headers?.get("x-error-code");
+    if (res && res.status === 409 && errorCode === "product_item_not_found") {
+      throw new Error("BOM product item does not exist. Create the Item first.");
+    }
+    if (res && res.status === 409 && errorCode === "component_item_not_found") {
+      throw new Error("One or more BOM component items do not exist. Create Items first.");
+    }
     if (res && res.status === 409) throw new Error("BOM with same id already exists");
     throw new Error(txt || "Failed to create BOM");
   }
@@ -43,6 +50,13 @@ export async function updateBom(authFetch, id, payload, version) {
   const res = await authFetch(url, { method: "PUT", headers: { "Content-Type": "application/json", "If-Match": `W"${version}"` }, body: JSON.stringify(payload) });
   if (!res?.ok) {
     const txt = res ? await res.text() : "auth failed";
+    const errorCode = res?.headers?.get("x-error-code");
+    if (res && res.status === 409 && errorCode === "product_item_not_found") {
+      throw new Error("BOM product item does not exist. Create the Item first.");
+    }
+    if (res && res.status === 409 && errorCode === "component_item_not_found") {
+      throw new Error("One or more BOM component items do not exist. Create Items first.");
+    }
     if (res && res.status === 412) throw new Error("BOM was updated by someone else. Refresh and try again.");
     throw new Error(txt || "Failed to update BOM");
   }

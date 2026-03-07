@@ -79,9 +79,12 @@ public class ItemsApiController implements ItemsApi {
       return ResponseEntity.status(412).build();
     }
     try {
-      boolean deleted = itemService.softDeleteByCode(id, expectedVersion);
+      boolean deleted = itemService.deleteByCode(id, expectedVersion);
       return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     } catch (IllegalStateException ex) {
+      if ("item_in_use".equals(ex.getMessage())) {
+        return ResponseEntity.status(409).header("X-Error-Code", "item_in_use").build();
+      }
       return ResponseEntity.status(412).build();
     }
   }
@@ -122,6 +125,9 @@ public class ItemsApiController implements ItemsApi {
     } catch (IllegalStateException ex) {
       if ("code_conflict".equals(ex.getMessage())) {
         return ResponseEntity.status(409).build();
+      }
+      if ("item_in_use_code_change".equals(ex.getMessage())) {
+        return ResponseEntity.status(409).header("X-Error-Code", "item_in_use_code_change").build();
       }
       return ResponseEntity.status(412).build();
     }

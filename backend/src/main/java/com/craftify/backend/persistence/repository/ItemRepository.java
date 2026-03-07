@@ -17,15 +17,7 @@ public interface ItemRepository extends JpaRepository<ItemEntity, UUID>, JpaSpec
 
   boolean existsByCodeIgnoreCaseAndOwnerSub(String code, String ownerSub);
 
-  boolean existsByDeletedFalseAndCategoryNameIgnoreCase(String categoryName);
+  long countByOwnerSub(String ownerSub);
 
-  boolean existsByDeletedFalseAndCategoryNameIgnoreCaseAndOwnerSub(String categoryName, String ownerSub);
-
-  long countByDeletedFalse();
-
-  long countByDeletedFalseAndOwnerSub(String ownerSub);
-
-  long countByDeletedFalseAndStatus(Status status);
-
-  long countByDeletedFalseAndStatusAndOwnerSub(Status status, String ownerSub);
+  long countByStatusAndOwnerSub(Status status, String ownerSub);
 }

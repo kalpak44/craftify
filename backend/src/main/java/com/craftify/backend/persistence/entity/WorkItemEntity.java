@@ -36,6 +36,21 @@ public class WorkItemEntity {
   @Column(name = "bom_version", nullable = false, length = 96)
   private String bomVersion;
 
+  @Column(name = "output_item_id", nullable = false, length = 64)
+  private String outputItemId;
+
+  @Column(name = "output_item_name", nullable = false, length = 200)
+  private String outputItemName;
+
+  @Column(name = "output_item_category_name", nullable = false, length = 100)
+  private String outputItemCategoryName;
+
+  @Column(name = "output_item_uom", nullable = false, length = 16)
+  private String outputItemUom;
+
+  @Column(name = "allocated_components_json", nullable = false, length = 20000)
+  private String allocatedComponentsJson;
+
   @Column(name = "components_count", nullable = false)
   private int componentsCount;
 
@@ -125,6 +140,46 @@ public class WorkItemEntity {
 
   public void setComponentsCount(int componentsCount) {
     this.componentsCount = componentsCount;
+  }
+
+  public String getOutputItemId() {
+    return outputItemId;
+  }
+
+  public void setOutputItemId(String outputItemId) {
+    this.outputItemId = outputItemId;
+  }
+
+  public String getOutputItemName() {
+    return outputItemName;
+  }
+
+  public void setOutputItemName(String outputItemName) {
+    this.outputItemName = outputItemName;
+  }
+
+  public String getOutputItemCategoryName() {
+    return outputItemCategoryName;
+  }
+
+  public void setOutputItemCategoryName(String outputItemCategoryName) {
+    this.outputItemCategoryName = outputItemCategoryName;
+  }
+
+  public String getOutputItemUom() {
+    return outputItemUom;
+  }
+
+  public void setOutputItemUom(String outputItemUom) {
+    this.outputItemUom = outputItemUom;
+  }
+
+  public String getAllocatedComponentsJson() {
+    return allocatedComponentsJson;
+  }
+
+  public void setAllocatedComponentsJson(String allocatedComponentsJson) {
+    this.allocatedComponentsJson = allocatedComponentsJson;
   }
 
   public BigDecimal getRequestedQty() {

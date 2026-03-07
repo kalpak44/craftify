@@ -58,8 +58,10 @@ public class WorkItemsApiController {
       if ("bom_not_found".equals(ex.getMessage())) {
         return ResponseEntity.notFound().build();
       }
-      if ("insufficient_inventory".equals(ex.getMessage())) {
-        return ResponseEntity.status(409).build();
+      if ("insufficient_inventory".equals(ex.getMessage())
+          || "output_item_not_found".equals(ex.getMessage())
+          || "component_item_not_found".equals(ex.getMessage())) {
+        return ResponseEntity.status(409).header("X-Error-Code", ex.getMessage()).build();
       }
       return ResponseEntity.badRequest().build();
     }
@@ -75,8 +77,8 @@ public class WorkItemsApiController {
         return ResponseEntity.notFound().build();
       }
       if ("work_item_not_cancelable".equals(ex.getMessage())
-          || "inventory_not_found_for_component".equals(ex.getMessage())) {
-        return ResponseEntity.status(409).build();
+          || "invalid_work_item_snapshot".equals(ex.getMessage())) {
+        return ResponseEntity.status(409).header("X-Error-Code", ex.getMessage()).build();
       }
       return ResponseEntity.badRequest().build();
     }
@@ -91,8 +93,9 @@ public class WorkItemsApiController {
       if ("work_item_not_found".equals(ex.getMessage())) {
         return ResponseEntity.notFound().build();
       }
-      if ("work_item_not_completable".equals(ex.getMessage())) {
-        return ResponseEntity.status(409).build();
+      if ("work_item_not_completable".equals(ex.getMessage())
+          || "invalid_work_item_snapshot".equals(ex.getMessage())) {
+        return ResponseEntity.status(409).header("X-Error-Code", ex.getMessage()).build();
       }
       return ResponseEntity.badRequest().build();
     }

@@ -52,9 +52,6 @@ public class ItemEntity {
   @Column(name = "owner_sub", nullable = false, length = 191)
   private String ownerSub;
 
-  @Column(name = "deleted", nullable = false)
-  private boolean deleted;
-
   @Column(name = "created_at", nullable = false)
   private OffsetDateTime createdAt;
 
@@ -146,14 +143,6 @@ public class ItemEntity {
 
   public void setOwnerSub(String ownerSub) {
     this.ownerSub = ownerSub;
-  }
-
-  public boolean isDeleted() {
-    return deleted;
-  }
-
-  public void setDeleted(boolean deleted) {
-    this.deleted = deleted;
   }
 
   public OffsetDateTime getCreatedAt() {

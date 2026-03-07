@@ -48,7 +48,14 @@ export async function requestWorkItem(authFetch, payload) {
   });
   if (!res?.ok) {
     const txt = res ? await res.text() : "auth failed";
+    const errorCode = res?.headers?.get("x-error-code");
     if (res && res.status === 404) throw new Error("BOM not found.");
+    if (res && res.status === 409 && errorCode === "output_item_not_found") {
+      throw new Error("Output item does not exist. Create the Item before requesting a Work Item.");
+    }
+    if (res && res.status === 409 && errorCode === "component_item_not_found") {
+      throw new Error("A BOM component item does not exist. Fix BOM components first.");
+    }
     if (res && res.status === 409) throw new Error("Insufficient inventory for requested quantity.");
     throw new Error(txt || "Failed to request work item");
   }
@@ -60,7 +67,11 @@ export async function cancelWorkItem(authFetch, id) {
   const res = await authFetch(url, { method: "POST" });
   if (!res?.ok) {
     const txt = res ? await res.text() : "auth failed";
+    const errorCode = res?.headers?.get("x-error-code");
     if (res && res.status === 404) throw new Error("Work item not found.");
+    if (res && res.status === 409 && errorCode === "invalid_work_item_snapshot") {
+      throw new Error("This work item is missing allocation snapshot data and cannot be canceled safely.");
+    }
     if (res && res.status === 409) throw new Error("Work item cannot be canceled.");
     throw new Error(txt || "Failed to cancel work item");
   }
@@ -72,7 +83,14 @@ export async function completeWorkItem(authFetch, id) {
   const res = await authFetch(url, { method: "POST" });
   if (!res?.ok) {
     const txt = res ? await res.text() : "auth failed";
+    const errorCode = res?.headers?.get("x-error-code");
     if (res && res.status === 404) throw new Error("Work item not found.");
+    if (res && res.status === 409 && errorCode === "invalid_work_item_snapshot") {
+      throw new Error("This work item is missing snapshot data and cannot be completed safely.");
+    }
+    if (res && res.status === 409 && errorCode === "work_item_not_completable") {
+      throw new Error("Work item is already Completed or Canceled.");
+    }
     if (res && res.status === 409) throw new Error("Work item cannot be completed.");
     throw new Error(txt || "Failed to complete work item");
   }

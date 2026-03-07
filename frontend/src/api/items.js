@@ -145,6 +145,10 @@ export async function updateItem(authFetch, id, payload, version) {
   });
   if (!res?.ok) {
     const txt = res ? await res.text() : "auth failed";
+    const errorCode = res?.headers?.get("x-error-code");
+    if (res && res.status === 409 && errorCode === "item_in_use_code_change") {
+      throw new Error("Item code cannot be changed while it is used by Inventory, BOM, or allocated Work Items.");
+    }
     if (res && res.status === 412) throw new Error("Item was updated by someone else. Refresh and try again.");
     throw new Error(txt || "Failed to update item");
   }
@@ -165,6 +169,10 @@ export async function deleteItem(authFetch, id, version) {
   });
   if (!res?.ok) {
     const txt = res ? await res.text() : "auth failed";
+    const errorCode = res?.headers?.get("x-error-code");
+    if (res && res.status === 409 && errorCode === "item_in_use") {
+      throw new Error("Item is in use by Inventory, BOM, or an allocated Work Item.");
+    }
     if (res && res.status === 412) throw new Error("Item was updated by someone else. Refresh and try again.");
     throw new Error(txt || "Failed to delete item");
   }

@@ -1,6 +1,7 @@
 package com.craftify.backend.persistence.repository;
 
 import com.craftify.backend.persistence.entity.BomEntity;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,6 +12,8 @@ public interface BomRepository extends JpaRepository<BomEntity, UUID>, JpaSpecif
   Optional<BomEntity> findByCodeIgnoreCase(String code);
 
   Optional<BomEntity> findByCodeIgnoreCaseAndOwnerSub(String code, String ownerSub);
+
+  List<BomEntity> findAllByOwnerSub(String ownerSub);
 
   boolean existsByCodeIgnoreCase(String code);
 

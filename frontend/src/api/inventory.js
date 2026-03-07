@@ -119,3 +119,16 @@ export async function createInventoryFromItem(authFetch, itemId, available, mode
   }
   return res.json();
 }
+
+export async function importInventoryCsv(authFetch, file, mode = "upsert") {
+  const url = new URL(`${API_HOST}/inventory:import`);
+  url.searchParams.set("mode", mode);
+  const form = new FormData();
+  form.append("file", file);
+  const res = await authFetch(url, { method: "POST", body: form });
+  if (!res?.ok) {
+    const txt = res ? await res.text() : "auth failed";
+    throw new Error(txt || "Failed to import inventory CSV");
+  }
+  return res.json();
+}

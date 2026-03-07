@@ -32,14 +32,17 @@ public class InventoryService {
   private final InventoryRepository inventoryRepository;
   private final ItemRepository itemRepository;
   private final CurrentUserService currentUserService;
+  private final CategoryService categoryService;
 
   public InventoryService(
       InventoryRepository inventoryRepository,
       ItemRepository itemRepository,
-      CurrentUserService currentUserService) {
+      CurrentUserService currentUserService,
+      CategoryService categoryService) {
     this.inventoryRepository = inventoryRepository;
     this.itemRepository = itemRepository;
     this.currentUserService = currentUserService;
+    this.categoryService = categoryService;
   }
 
   @Transactional(readOnly = true)
@@ -110,6 +113,7 @@ public class InventoryService {
     InventoryEntity entity = new InventoryEntity();
     entity.setCode(code);
     entity.setOwnerSub(ownerSub);
+    collectCategoriesFromRequest(req);
     apply(entity, req);
     return toDetailModel(inventoryRepository.save(entity));
   }
@@ -121,6 +125,7 @@ public class InventoryService {
     if (existing == null) {
       return null;
     }
+    collectCategoriesFromRequest(req);
     apply(existing, req);
     return toDetailModel(inventoryRepository.save(existing));
   }
@@ -142,6 +147,73 @@ public class InventoryService {
   }
 
   @Transactional
+  public InventoryDetail upsertFromImport(
+      String code,
+      String itemId,
+      String itemName,
+      String itemCategoryName,
+      boolean categoryDetached,
+      String detachedCategoryName,
+      String uom,
+      BigDecimal available,
+      boolean createOnly) {
+    String ownerSub = currentUserService.requiredSub();
+    String normalizedCode =
+        (code == null || code.isBlank()) ? generateNextCode() : code.trim().toUpperCase(Locale.ROOT);
+
+    InventoryEntity existing =
+        inventoryRepository.findByCodeIgnoreCaseAndOwnerSub(normalizedCode, ownerSub).orElse(null);
+    if (existing != null) {
+      if (createOnly) {
+        throw new IllegalStateException("create_only_conflict");
+      }
+      String normalizedItemCategory = itemCategoryName.trim();
+      String normalizedDetached = normalize(detachedCategoryName);
+      String effectiveCategory =
+          categoryDetached
+              ? (normalizedDetached == null || normalizedDetached.isBlank()
+                  ? normalizedItemCategory
+                  : normalizedDetached)
+              : normalizedItemCategory;
+      categoryService.ensureExistsForCurrentUser(normalizedItemCategory);
+      categoryService.ensureExistsForCurrentUser(effectiveCategory);
+      existing.setItemId(itemId.trim().toUpperCase(Locale.ROOT));
+      existing.setItemName(itemName.trim());
+      existing.setItemCategoryName(normalizedItemCategory);
+      existing.setCategoryDetached(categoryDetached);
+      existing.setDetachedCategoryName(categoryDetached ? normalizedDetached : null);
+      existing.setCategoryName(effectiveCategory);
+      existing.setUom(uom.trim());
+      existing.setAvailable(available == null ? BigDecimal.ZERO : available);
+      return toDetailModel(inventoryRepository.save(existing));
+    }
+
+    String normalizedItemCategory = itemCategoryName.trim();
+    String normalizedDetached = normalize(detachedCategoryName);
+    String effectiveCategory =
+        categoryDetached
+            ? (normalizedDetached == null || normalizedDetached.isBlank()
+                ? normalizedItemCategory
+                : normalizedDetached)
+            : normalizedItemCategory;
+    categoryService.ensureExistsForCurrentUser(normalizedItemCategory);
+    categoryService.ensureExistsForCurrentUser(effectiveCategory);
+
+    InventoryEntity entity = new InventoryEntity();
+    entity.setCode(normalizedCode);
+    entity.setOwnerSub(ownerSub);
+    entity.setItemId(itemId.trim().toUpperCase(Locale.ROOT));
+    entity.setItemName(itemName.trim());
+    entity.setItemCategoryName(normalizedItemCategory);
+    entity.setCategoryDetached(categoryDetached);
+    entity.setDetachedCategoryName(categoryDetached ? normalizedDetached : null);
+    entity.setCategoryName(effectiveCategory);
+    entity.setUom(uom.trim());
+    entity.setAvailable(available == null ? BigDecimal.ZERO : available);
+    return toDetailModel(inventoryRepository.save(entity));
+  }
+
+  @Transactional
   public CreateFromItemResult createFromItem(String itemCode, BigDecimal available, String mode) {
     String ownerSub = currentUserService.requiredSub();
     if (itemCode == null || itemCode.isBlank()) {
@@ -149,7 +221,7 @@ public class InventoryService {
     }
 
     ItemEntity item = itemRepository.findByCodeIgnoreCaseAndOwnerSub(itemCode.trim(), ownerSub).orElse(null);
-    if (item == null || item.isDeleted()) {
+    if (item == null) {
       throw new IllegalStateException("item_not_found");
     }
     if (item.getStatus() != Status.ACTIVE) {
@@ -171,6 +243,7 @@ public class InventoryService {
       existing.setItemName(item.getName());
       existing.setItemCategoryName(item.getCategoryName());
       existing.setCategoryName(existing.isCategoryDetached() ? existing.getCategoryName() : item.getCategoryName());
+      categoryService.ensureExistsForCurrentUser(existing.getCategoryName());
       existing.setUom(item.getUomBase());
       return new CreateFromItemResult(toDetailModel(inventoryRepository.save(existing)), false);
     }
@@ -183,6 +256,7 @@ public class InventoryService {
     entity.setCategoryDetached(false);
     entity.setDetachedCategoryName(null);
     entity.setCategoryName(item.getCategoryName());
+    categoryService.ensureExistsForCurrentUser(item.getCategoryName());
     entity.setUom(item.getUomBase());
     entity.setAvailable(available == null ? BigDecimal.ZERO : available);
     entity.setOwnerSub(ownerSub);
@@ -288,5 +362,17 @@ public class InventoryService {
 
   private static String normalize(String value) {
     return value == null ? "" : value.trim();
+  }
+
+  private void collectCategoriesFromRequest(InventoryUpsertRequest req) {
+    if (req == null) {
+      return;
+    }
+    String itemCategoryName = normalize(req.getItemCategoryName());
+    boolean categoryDetached = Boolean.TRUE.equals(req.getCategoryDetached());
+    String detachedCategoryName = normalize(req.getDetachedCategoryName());
+    String effectiveCategory = categoryDetached ? detachedCategoryName : itemCategoryName;
+    categoryService.ensureExistsForCurrentUser(itemCategoryName);
+    categoryService.ensureExistsForCurrentUser(effectiveCategory);
   }
 }

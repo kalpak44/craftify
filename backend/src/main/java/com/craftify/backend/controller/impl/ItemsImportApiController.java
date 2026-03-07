@@ -130,7 +130,7 @@ public class ItemsImportApiController implements ItemsImportApi {
         }
 
         try {
-          var before = itemService.getByCodeIncludingDeleted(parsed.code());
+          var before = itemService.getByCode(parsed.code());
           itemService.upsertFromImport(
               parsed.code(),
               parsed.name(),

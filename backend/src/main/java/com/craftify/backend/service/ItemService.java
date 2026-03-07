@@ -9,7 +9,13 @@ import com.craftify.backend.model.CreateItemRequest;
 import com.craftify.backend.model.UpdateItemRequest;
 import com.craftify.backend.persistence.entity.ItemEntity;
 import com.craftify.backend.persistence.entity.ItemUomEmbeddable;
+import com.craftify.backend.persistence.entity.WorkItemEntity;
+import com.craftify.backend.persistence.repository.BomRepository;
+import com.craftify.backend.persistence.repository.InventoryRepository;
 import com.craftify.backend.persistence.repository.ItemRepository;
+import com.craftify.backend.persistence.repository.WorkItemRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.criteria.Predicate;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -38,11 +44,28 @@ public class ItemService {
       boolean includeDeleted) {}
 
   private final ItemRepository itemRepository;
+  private final InventoryRepository inventoryRepository;
+  private final BomRepository bomRepository;
+  private final WorkItemRepository workItemRepository;
   private final CurrentUserService currentUserService;
+  private final CategoryService categoryService;
+  private final ObjectMapper objectMapper;
 
-  public ItemService(ItemRepository itemRepository, CurrentUserService currentUserService) {
+  public ItemService(
+      ItemRepository itemRepository,
+      InventoryRepository inventoryRepository,
+      BomRepository bomRepository,
+      WorkItemRepository workItemRepository,
+      CurrentUserService currentUserService,
+      CategoryService categoryService,
+      ObjectMapper objectMapper) {
     this.itemRepository = itemRepository;
+    this.inventoryRepository = inventoryRepository;
+    this.bomRepository = bomRepository;
+    this.workItemRepository = workItemRepository;
     this.currentUserService = currentUserService;
+    this.categoryService = categoryService;
+    this.objectMapper = objectMapper;
   }
 
   @Transactional(readOnly = true)
@@ -55,9 +78,6 @@ public class ItemService {
         (root, cq, cb) -> {
           List<Predicate> predicates = new ArrayList<>();
           predicates.add(cb.equal(root.get("ownerSub"), ownerSub));
-          if (!query.includeDeleted()) {
-            predicates.add(cb.isFalse(root.get("deleted")));
-          }
           if (query.q() != null && !query.q().isBlank()) {
             String pattern = "%" + query.q().toLowerCase(Locale.ROOT) + "%";
             predicates.add(
@@ -99,18 +119,8 @@ public class ItemService {
     }
     return itemRepository
         .findByCodeIgnoreCaseAndOwnerSub(code, ownerSub)
-        .filter(i -> !i.isDeleted())
         .map(this::toDetailModel)
         .orElse(null);
-  }
-
-  @Transactional(readOnly = true)
-  public ItemDetail getByCodeIncludingDeleted(String code) {
-    String ownerSub = currentUserService.requiredSub();
-    if (code == null || code.isBlank()) {
-      return null;
-    }
-    return itemRepository.findByCodeIgnoreCaseAndOwnerSub(code, ownerSub).map(this::toDetailModel).orElse(null);
   }
 
   @Transactional
@@ -126,6 +136,7 @@ public class ItemService {
     }
 
     ItemEntity entity = new ItemEntity();
+    categoryService.ensureExistsForCurrentUser(req.getCategoryName());
     entity.setCode(code);
     entity.setName(req.getName().trim());
     entity.setStatus(req.getStatus());
@@ -134,7 +145,6 @@ public class ItemService {
     entity.setDescription(req.getDescription());
     entity.setUoms(toEmbeddables(req.getUoms()));
     entity.setOwnerSub(ownerSub);
-    entity.setDeleted(false);
 
     return toDetailModel(itemRepository.save(entity));
   }
@@ -143,7 +153,7 @@ public class ItemService {
   public ItemDetail updateByCode(String code, UpdateItemRequest req, Integer expectedVersion) {
     String ownerSub = currentUserService.requiredSub();
     ItemEntity existing = itemRepository.findByCodeIgnoreCaseAndOwnerSub(code, ownerSub).orElse(null);
-    if (existing == null || existing.isDeleted()) {
+    if (existing == null) {
       return null;
     }
     if (expectedVersion == null || existing.getVersion() != expectedVersion.longValue()) {
@@ -158,8 +168,12 @@ public class ItemService {
         && itemRepository.existsByCodeIgnoreCaseAndOwnerSub(nextCode, ownerSub)) {
       throw new IllegalStateException("code_conflict");
     }
+    if (!nextCode.equalsIgnoreCase(existing.getCode()) && isItemInUse(existing.getCode(), ownerSub)) {
+      throw new IllegalStateException("item_in_use_code_change");
+    }
 
     existing.setCode(nextCode);
+    categoryService.ensureExistsForCurrentUser(req.getCategoryName());
     existing.setName(req.getName().trim());
     existing.setStatus(req.getStatus());
     existing.setCategoryName(req.getCategoryName().trim());
@@ -171,35 +185,43 @@ public class ItemService {
   }
 
   @Transactional
-  public boolean softDeleteByCode(String code, Integer expectedVersion) {
+  public boolean deleteByCode(String code, Integer expectedVersion) {
     String ownerSub = currentUserService.requiredSub();
     ItemEntity existing = itemRepository.findByCodeIgnoreCaseAndOwnerSub(code, ownerSub).orElse(null);
-    if (existing == null || existing.isDeleted()) {
+    if (existing == null) {
       return false;
     }
     if (expectedVersion == null || existing.getVersion() != expectedVersion.longValue()) {
       throw new IllegalStateException("version_mismatch");
     }
-    existing.setDeleted(true);
-    itemRepository.save(existing);
+    if (isItemInUse(existing.getCode(), ownerSub)) {
+      throw new IllegalStateException("item_in_use");
+    }
+    itemRepository.delete(existing);
     return true;
   }
 
   @Transactional
-  public int softDeleteByIds(List<UUID> ids) {
+  public int deleteByIds(List<UUID> ids) {
     String ownerSub = currentUserService.requiredSub();
     if (ids == null || ids.isEmpty()) {
       return 0;
     }
     int deleted = 0;
     List<ItemEntity> rows = itemRepository.findAllById(ids);
+    List<ItemEntity> toDelete = new ArrayList<>();
     for (ItemEntity row : rows) {
-      if (ownerSub.equals(row.getOwnerSub()) && !row.isDeleted()) {
-        row.setDeleted(true);
+      if (ownerSub.equals(row.getOwnerSub())) {
+        if (isItemInUse(row.getCode(), ownerSub)) {
+          continue;
+        }
+        toDelete.add(row);
         deleted++;
       }
     }
-    itemRepository.saveAll(rows);
+    if (!toDelete.isEmpty()) {
+      itemRepository.deleteAll(toDelete);
+    }
     return deleted;
   }
 
@@ -207,9 +229,9 @@ public class ItemService {
   public long count(Status status) {
     String ownerSub = currentUserService.requiredSub();
     if (status == null) {
-      return itemRepository.countByDeletedFalseAndOwnerSub(ownerSub);
+      return itemRepository.countByOwnerSub(ownerSub);
     }
-    return itemRepository.countByDeletedFalseAndStatusAndOwnerSub(status, ownerSub);
+    return itemRepository.countByStatusAndOwnerSub(status, ownerSub);
   }
 
   @Transactional
@@ -233,6 +255,7 @@ public class ItemService {
       }
       existing.setName(name.trim());
       existing.setStatus(status);
+      categoryService.ensureExistsForCurrentUser(categoryName);
       existing.setCategoryName(categoryName.trim());
       existing.setUomBase(uomBase.trim());
       existing.setDescription(description);
@@ -243,6 +266,7 @@ public class ItemService {
     }
 
     ItemEntity entity = new ItemEntity();
+    categoryService.ensureExistsForCurrentUser(categoryName);
     entity.setCode(normalizedCode);
     entity.setName(name.trim());
     entity.setStatus(status);
@@ -251,7 +275,6 @@ public class ItemService {
     entity.setDescription(description);
     entity.setUoms(toEmbeddables(uoms == null ? List.of() : uoms));
     entity.setOwnerSub(ownerSub);
-    entity.setDeleted(false);
     return toDetailModel(itemRepository.save(entity));
   }
 
@@ -262,7 +285,6 @@ public class ItemService {
         (root, cq, cb) -> {
           List<Predicate> predicates = new ArrayList<>();
           predicates.add(cb.equal(root.get("ownerSub"), ownerSub));
-          predicates.add(cb.isFalse(root.get("deleted")));
 
           if (q != null && !q.isBlank()) {
             String pattern = "%" + q.toLowerCase(Locale.ROOT) + "%";
@@ -299,6 +321,67 @@ public class ItemService {
             .max(Integer::compareTo)
             .orElse(0);
     return "ITM-" + String.format("%03d", max + 1);
+  }
+
+  private boolean isItemInUse(String itemCode, String ownerSub) {
+    String normalizedItemCode = itemCode == null ? "" : itemCode.trim().toUpperCase(Locale.ROOT);
+    if (normalizedItemCode.isBlank()) {
+      return false;
+    }
+    if (inventoryRepository.existsByItemIdIgnoreCaseAndOwnerSub(normalizedItemCode, ownerSub)) {
+      return true;
+    }
+    if (isReferencedInBoms(normalizedItemCode, ownerSub)) {
+      return true;
+    }
+    return isReferencedInQueuedWorkItems(normalizedItemCode, ownerSub);
+  }
+
+  private boolean isReferencedInBoms(String normalizedItemCode, String ownerSub) {
+    return bomRepository.findAllByOwnerSub(ownerSub).stream()
+        .anyMatch(
+            bom ->
+                (bom.getProductId() != null && bom.getProductId().trim().equalsIgnoreCase(normalizedItemCode))
+                    || (bom.getComponents() != null
+                        && bom.getComponents().stream()
+                            .anyMatch(
+                                c ->
+                                    c.getItemId() != null
+                                        && c.getItemId().trim().equalsIgnoreCase(normalizedItemCode))));
+  }
+
+  private boolean isReferencedInQueuedWorkItems(String normalizedItemCode, String ownerSub) {
+    for (WorkItemEntity wi : workItemRepository.findAllByOwnerSubAndStatus(ownerSub, com.craftify.backend.model.WorkItemStatus.QUEUED)) {
+      if (wi.getOutputItemId() != null && wi.getOutputItemId().trim().equalsIgnoreCase(normalizedItemCode)) {
+        return true;
+      }
+      if (isInAllocatedSnapshot(wi.getAllocatedComponentsJson(), normalizedItemCode)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean isInAllocatedSnapshot(String json, String normalizedItemCode) {
+    if (json == null || json.isBlank()) {
+      return false;
+    }
+    try {
+      List<AllocatedComponentRef> refs =
+          objectMapper.readValue(json, new TypeReference<List<AllocatedComponentRef>>() {});
+      return refs.stream()
+          .anyMatch(
+              ref ->
+                  ref != null
+                      && ref.itemId != null
+                      && ref.itemId.trim().equalsIgnoreCase(normalizedItemCode));
+    } catch (Exception ignore) {
+      return false;
+    }
+  }
+
+  private static final class AllocatedComponentRef {
+    public String itemId;
   }
 
   private static int extractNumericSuffix(String code) {
