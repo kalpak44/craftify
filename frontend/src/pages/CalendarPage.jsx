@@ -395,11 +395,13 @@ export default function CalendarPage() {
                 <div className="grid grid-cols-7 gap-px bg-slate-100/60 dark:bg-gray-800/40">
                     {days.map((d) => {
                         const evs = eventsOnDay(d);
+                        const isCurrentMonthDay = !isOutside(d);
+                        const isTodayInMonth = isCurrentMonthDay && isSameDay(d, new Date());
                         return (
                             <div
                                 key={d.toISOString()}
                                 className={`min-h-28 bg-white dark:bg-gray-900 p-2 hover:bg-slate-100 dark:hover:bg-gray-800/50 transition ${isOutside(d) ? "opacity-50" : ""} ${
-                                    isSameDay(d, new Date()) ? "ring-1 ring-blue-400" : ""
+                                    isTodayInMonth ? "ring-1 ring-blue-400 ring-inset" : ""
                                 }`}
                                 onDoubleClick={() => onDayDoubleClick(d)}
                                 title="Double-click to add an event"
@@ -454,18 +456,22 @@ export default function CalendarPage() {
                     ))}
                 </div>
                 <div className="grid grid-cols-7 gap-px bg-slate-100/60 dark:bg-gray-800/40">
-                    {days.map((d) => (
+                    {days.map((d) => {
+                        const inMonth = d.getMonth() === monthDate.getMonth();
+                        const isTodayInMonth = inMonth && isSameDay(d, new Date());
+                        return (
                         <button
                             key={d.toISOString()}
                             onClick={() => onPickDay(new Date(d.getFullYear(), d.getMonth(), d.getDate()))}
                             className={`min-h-9 bg-white dark:bg-gray-900 hover:bg-slate-100/70 dark:hover:bg-gray-800/60 transition text-xs text-slate-700 dark:text-gray-300 p-1 text-center ${
-                                d.getMonth() !== monthDate.getMonth() ? "opacity-40" : ""
-                            } ${isSameDay(d, new Date()) ? "ring-1 ring-blue-400" : ""}`}
+                                inMonth ? "" : "opacity-40"
+                            } ${isTodayInMonth ? "ring-1 ring-blue-400 ring-inset" : ""}`}
                             title="Open this date"
                         >
                             {d.getDate()}
                         </button>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
         );
@@ -744,22 +750,29 @@ export default function CalendarPage() {
 
     // ---------- Local subcomponents ----------
     function ViewToggle({view, setView}) {
+        const tabs = [
+            {key: "day", label: "Day"},
+            {key: "week", label: "Week"},
+            {key: "month", label: "Month"},
+            {key: "year", label: "Year"}
+        ];
         const btn = (v, label) => (
             <button
                 onClick={() => setView(v)}
-                className={`px-3 py-2 text-sm rounded-lg border ${
-                    view === v ? "bg-blue-600 text-white border-blue-600" : "bg-slate-100 dark:bg-gray-800 text-slate-900 dark:text-gray-200 border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700"
+                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                    view === v
+                        ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm"
+                        : "text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white"
                 }`}
             >
                 {label}
             </button>
         );
         return (
-            <div className="flex gap-1">
-                {btn("day", "Day")}
-                {btn("week", "Week")}
-                {btn("month", "Month")}
-                {btn("year", "Year")}
+            <div className="inline-flex items-center gap-1 rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/70 p-1">
+                {tabs.map((t) => (
+                    <React.Fragment key={t.key}>{btn(t.key, t.label)}</React.Fragment>
+                ))}
             </div>
         );
     }
