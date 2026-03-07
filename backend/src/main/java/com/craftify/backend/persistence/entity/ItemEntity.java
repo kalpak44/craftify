@@ -30,7 +30,7 @@ public class ItemEntity {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  @Column(name = "code", nullable = false, length = 64, unique = true)
+  @Column(name = "code", nullable = false, length = 64)
   private String code;
 
   @Column(name = "name", nullable = false, length = 200)

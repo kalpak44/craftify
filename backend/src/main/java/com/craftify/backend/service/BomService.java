@@ -80,12 +80,13 @@ public class BomService {
 
   @Transactional
   public BomDetail create(BomDetail req) {
+    String ownerSub = currentUserService.requiredSub();
     String code =
         (req.getId() == null || req.getId().isBlank())
             ? generateNextCode()
             : req.getId().trim().toUpperCase(Locale.ROOT);
 
-    if (bomRepository.existsByCodeIgnoreCase(code)) {
+    if (bomRepository.existsByCodeIgnoreCaseAndOwnerSub(code, ownerSub)) {
       return null;
     }
 
@@ -98,7 +99,7 @@ public class BomService {
     entity.setDescription(req.getDescription());
     entity.setNote(req.getNote());
     entity.setComponents(toEmbeddables(req.getComponents()));
-    entity.setOwnerSub(currentUserService.requiredSub());
+    entity.setOwnerSub(ownerSub);
 
     return toDetailModel(bomRepository.save(entity));
   }

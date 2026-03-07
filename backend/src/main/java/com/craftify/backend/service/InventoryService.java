@@ -97,18 +97,19 @@ public class InventoryService {
 
   @Transactional
   public InventoryDetail create(InventoryUpsertRequest req) {
+    String ownerSub = currentUserService.requiredSub();
     String code =
         (req.getCode() == null || req.getCode().isBlank())
             ? generateNextCode()
             : req.getCode().trim().toUpperCase(Locale.ROOT);
 
-    if (inventoryRepository.existsByCodeIgnoreCase(code)) {
+    if (inventoryRepository.existsByCodeIgnoreCaseAndOwnerSub(code, ownerSub)) {
       return null;
     }
 
     InventoryEntity entity = new InventoryEntity();
     entity.setCode(code);
-    entity.setOwnerSub(currentUserService.requiredSub());
+    entity.setOwnerSub(ownerSub);
     apply(entity, req);
     return toDetailModel(inventoryRepository.save(entity));
   }

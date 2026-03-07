@@ -115,12 +115,13 @@ public class ItemService {
 
   @Transactional
   public ItemDetail create(CreateItemRequest req) {
+    String ownerSub = currentUserService.requiredSub();
     String code =
         (req.getCode() == null || req.getCode().isBlank())
             ? generateNextCode()
             : req.getCode().trim().toUpperCase(Locale.ROOT);
 
-    if (itemRepository.existsByCodeIgnoreCase(code)) {
+    if (itemRepository.existsByCodeIgnoreCaseAndOwnerSub(code, ownerSub)) {
       return null;
     }
 
@@ -132,7 +133,7 @@ public class ItemService {
     entity.setUomBase(req.getUomBase().trim());
     entity.setDescription(req.getDescription());
     entity.setUoms(toEmbeddables(req.getUoms()));
-    entity.setOwnerSub(currentUserService.requiredSub());
+    entity.setOwnerSub(ownerSub);
     entity.setDeleted(false);
 
     return toDetailModel(itemRepository.save(entity));
@@ -154,7 +155,7 @@ public class ItemService {
             ? existing.getCode()
             : req.getCode().trim().toUpperCase(Locale.ROOT);
     if (!nextCode.equalsIgnoreCase(existing.getCode())
-        && itemRepository.existsByCodeIgnoreCase(nextCode)) {
+        && itemRepository.existsByCodeIgnoreCaseAndOwnerSub(nextCode, ownerSub)) {
       throw new IllegalStateException("code_conflict");
     }
 
@@ -239,11 +240,6 @@ public class ItemService {
         existing.setUoms(toEmbeddables(uoms));
       }
       return toDetailModel(itemRepository.save(existing));
-    }
-
-    // Code remains globally unique in DB. If the code exists for another owner, fail with a clear error.
-    if (itemRepository.existsByCodeIgnoreCase(normalizedCode)) {
-      throw new IllegalStateException("code_conflict");
     }
 
     ItemEntity entity = new ItemEntity();
