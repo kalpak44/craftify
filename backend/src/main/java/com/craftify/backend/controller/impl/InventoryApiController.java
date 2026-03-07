@@ -6,11 +6,13 @@ import com.craftify.backend.model.InventoryNextCodeResponse;
 import com.craftify.backend.model.InventoryPage;
 import com.craftify.backend.model.InventoryUpsertRequest;
 import com.craftify.backend.service.InventoryService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import jakarta.annotation.Nullable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,6 +26,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class InventoryApiController {
 
   private static final Logger log = LoggerFactory.getLogger(InventoryApiController.class);
+  private static final String ERROR_ITEM_NOT_FOUND = "item_not_found";
+  private static final String ERROR_ITEM_NOT_ACTIVE = "item_not_active";
+  private static final String ERROR_INVENTORY_EXISTS_FOR_ITEM = "inventory_exists_for_item";
 
   private final InventoryService inventoryService;
 
@@ -72,11 +77,7 @@ public class InventoryApiController {
   }
 
   @PostMapping(value = "/inventory", produces = {"application/json"}, consumes = {"application/json"})
-  public ResponseEntity<InventoryDetail> inventoryPost(@RequestBody InventoryUpsertRequest req) {
-    if (!isValidRequest(req)) {
-      return ResponseEntity.badRequest().build();
-    }
-
+  public ResponseEntity<InventoryDetail> inventoryPost(@Valid @NotNull @RequestBody InventoryUpsertRequest req) {
     InventoryDetail created = inventoryService.create(req);
     if (created == null) {
       return ResponseEntity.status(409).build();
@@ -87,11 +88,7 @@ public class InventoryApiController {
 
   @PutMapping(value = "/inventory/{id}", produces = {"application/json"}, consumes = {"application/json"})
   public ResponseEntity<InventoryDetail> inventoryIdPut(
-      @PathVariable("id") String id, @RequestBody InventoryUpsertRequest req) {
-    if (!isValidRequest(req)) {
-      return ResponseEntity.badRequest().build();
-    }
-
+      @PathVariable("id") String id, @Valid @NotNull @RequestBody InventoryUpsertRequest req) {
     InventoryDetail updated = inventoryService.updateByCode(id, req);
     if (updated == null) {
       return ResponseEntity.notFound().build();
@@ -116,10 +113,7 @@ public class InventoryApiController {
       produces = {"application/json"},
       consumes = {"application/json"})
   public ResponseEntity<InventoryDetail> inventoryCreateFromItemPost(
-      @RequestBody CreateInventoryFromItemRequest req) {
-    if (req == null || req.getItemId() == null || req.getItemId().isBlank() || req.getAvailable() == null) {
-      return ResponseEntity.badRequest().build();
-    }
+      @Valid @NotNull @RequestBody CreateInventoryFromItemRequest req) {
     try {
       InventoryService.CreateFromItemResult result =
           inventoryService.createFromItem(req.getItemId(), req.getAvailable(), req.getMode());
@@ -129,40 +123,18 @@ public class InventoryApiController {
       }
       return ResponseEntity.ok(result.detail());
     } catch (IllegalStateException ex) {
-      if ("item_not_found".equals(ex.getMessage())) {
+      if (ERROR_ITEM_NOT_FOUND.equals(ex.getMessage())) {
         return ResponseEntity.notFound().build();
       }
-      if ("item_not_active".equals(ex.getMessage()) || "inventory_exists_for_item".equals(ex.getMessage())) {
+      if (isItemStateConflict(ex.getMessage())) {
         return ResponseEntity.status(409).build();
       }
       return ResponseEntity.badRequest().build();
     }
   }
 
-  private static boolean isValidRequest(InventoryUpsertRequest req) {
-    if (req == null) {
-      return false;
-    }
-    if (req.getItemId() == null || req.getItemId().isBlank()) {
-      return false;
-    }
-    if (req.getItemName() == null || req.getItemName().isBlank()) {
-      return false;
-    }
-    if (req.getItemCategoryName() == null || req.getItemCategoryName().isBlank()) {
-      return false;
-    }
-    if (req.getUom() == null || req.getUom().isBlank()) {
-      return false;
-    }
-    if (req.getAvailable() == null) {
-      return false;
-    }
-
-    boolean detached = Boolean.TRUE.equals(req.getCategoryDetached());
-    if (detached) {
-      return req.getDetachedCategoryName() != null && !req.getDetachedCategoryName().isBlank();
-    }
-    return true;
+  private static boolean isItemStateConflict(String errorCode) {
+    return ERROR_ITEM_NOT_ACTIVE.equals(errorCode) || ERROR_INVENTORY_EXISTS_FOR_ITEM.equals(errorCode);
   }
+
 }

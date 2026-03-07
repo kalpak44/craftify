@@ -9,7 +9,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import org.springframework.lang.Nullable;
+import jakarta.annotation.Nullable;
 
 /** ItemPage */
 @Generated(

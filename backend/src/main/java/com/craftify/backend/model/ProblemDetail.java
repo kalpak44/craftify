@@ -9,7 +9,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import org.springframework.lang.Nullable;
+import jakarta.annotation.Nullable;
 
 /** RFC-7807 Problem Details */
 @Schema(name = "ProblemDetail", description = "RFC-7807 Problem Details")

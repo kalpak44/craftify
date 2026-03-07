@@ -5,18 +5,22 @@ import com.craftify.backend.model.BomComponent;
 import com.craftify.backend.model.BomDetail;
 import com.craftify.backend.model.BomStatus;
 import com.craftify.backend.service.BomService;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Nullable;
+import jakarta.annotation.Nullable;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -58,55 +62,56 @@ public class BomsExportApiController implements BomsExportApi {
   }
 
   private static String toCsv(List<BomDetail> rows) {
-    StringBuilder sb = new StringBuilder();
-    sb.append(
-        "BomId,ProductId,ProductName,Revision,Status,Description,Note,ComponentOrder,ComponentItemId,ComponentQuantity,ComponentUom,ComponentNote\n");
-    for (BomDetail d : rows) {
-      List<BomComponent> components = d.getComponents() == null ? List.of() : d.getComponents();
-      if (components.isEmpty()) {
-        appendRow(sb, d, null, -1);
-        continue;
+    StringWriter writer = new StringWriter();
+    try (CSVPrinter printer =
+        new CSVPrinter(
+            writer,
+            CSVFormat.DEFAULT.builder()
+                .setHeader(
+                    "BomId",
+                    "ProductId",
+                    "ProductName",
+                    "Revision",
+                    "Status",
+                    "Description",
+                    "Note",
+                    "ComponentOrder",
+                    "ComponentItemId",
+                    "ComponentQuantity",
+                    "ComponentUom",
+                    "ComponentNote")
+                .build())) {
+      for (BomDetail d : rows) {
+        List<BomComponent> components = d.getComponents() == null ? List.of() : d.getComponents();
+        if (components.isEmpty()) {
+          appendRow(printer, d, null, -1);
+          continue;
+        }
+        for (int i = 0; i < components.size(); i++) {
+          appendRow(printer, d, components.get(i), i);
+        }
       }
-      for (int i = 0; i < components.size(); i++) {
-        appendRow(sb, d, components.get(i), i);
-      }
+    } catch (IOException ex) {
+      throw new IllegalStateException("failed_to_generate_csv", ex);
     }
-    return sb.toString();
+    return writer.toString();
   }
 
-  private static void appendRow(StringBuilder sb, BomDetail d, BomComponent c, int ord) {
-    sb.append(csv(d.getId()))
-        .append(',')
-        .append(csv(d.getProductId()))
-        .append(',')
-        .append(csv(d.getProductName()))
-        .append(',')
-        .append(csv(d.getRevision()))
-        .append(',')
-        .append(csv(d.getStatus() == null ? "" : d.getStatus().getValue()))
-        .append(',')
-        .append(csv(d.getDescription()))
-        .append(',')
-        .append(csv(d.getNote()))
-        .append(',')
-        .append(ord >= 0 ? ord : "")
-        .append(',')
-        .append(csv(c == null ? null : c.getItemId()))
-        .append(',')
-        .append(c == null || c.getQuantity() == null ? "" : c.getQuantity())
-        .append(',')
-        .append(csv(c == null ? null : c.getUom()))
-        .append(',')
-        .append(csv(c == null ? null : c.getNote()))
-        .append('\n');
-  }
-
-  private static String csv(String v) {
-    if (v == null) return "";
-    boolean needsQuotes =
-        v.contains(",") || v.contains("\"") || v.contains("\n") || v.contains("\r");
-    String s = v.replace("\"", "\"\"");
-    return needsQuotes ? "\"" + s + "\"" : s;
+  private static void appendRow(CSVPrinter printer, BomDetail d, BomComponent c, int ord)
+      throws IOException {
+    printer.printRecord(
+        d.getId(),
+        d.getProductId(),
+        d.getProductName(),
+        d.getRevision(),
+        d.getStatus() == null ? "" : d.getStatus().getValue(),
+        d.getDescription(),
+        d.getNote(),
+        ord >= 0 ? ord : "",
+        c == null ? "" : c.getItemId(),
+        c == null || c.getQuantity() == null ? "" : c.getQuantity(),
+        c == null ? "" : c.getUom(),
+        c == null ? "" : c.getNote());
   }
 
   private static byte[] concat(byte[] a, byte[] b) {

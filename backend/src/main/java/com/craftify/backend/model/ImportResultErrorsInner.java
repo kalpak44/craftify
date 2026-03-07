@@ -7,7 +7,7 @@ import jakarta.annotation.Generated;
 import jakarta.validation.constraints.Min;
 import java.io.Serializable;
 import java.util.Objects;
-import org.springframework.lang.Nullable;
+import jakarta.annotation.Nullable;
 
 /** ImportResultErrorsInner */
 @JsonTypeName("ImportResult_errors_inner")

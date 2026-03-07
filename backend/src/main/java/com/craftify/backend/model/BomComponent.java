@@ -3,7 +3,7 @@ package com.craftify.backend.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serializable;
-import org.springframework.lang.Nullable;
+import jakarta.annotation.Nullable;
 
 /** Component line in a BOM */
 public class BomComponent implements Serializable {

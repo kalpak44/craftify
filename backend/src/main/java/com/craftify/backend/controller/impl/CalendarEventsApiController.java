@@ -3,13 +3,15 @@ package com.craftify.backend.controller.impl;
 import com.craftify.backend.model.CalendarEventDetail;
 import com.craftify.backend.model.CalendarEventUpsertRequest;
 import com.craftify.backend.service.CalendarEventService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.UUID;
+import jakarta.annotation.Nullable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -52,7 +54,8 @@ public class CalendarEventsApiController {
   }
 
   @PostMapping(value = "/calendar/events", produces = {"application/json"}, consumes = {"application/json"})
-  public ResponseEntity<CalendarEventDetail> calendarEventsPost(@RequestBody CalendarEventUpsertRequest req) {
+  public ResponseEntity<CalendarEventDetail> calendarEventsPost(
+      @Valid @NotNull @RequestBody CalendarEventUpsertRequest req) {
     CalendarEventService.EventCommand command = toCommand(req);
     if (command == null) {
       return ResponseEntity.badRequest().build();
@@ -67,7 +70,7 @@ public class CalendarEventsApiController {
       produces = {"application/json"},
       consumes = {"application/json"})
   public ResponseEntity<CalendarEventDetail> calendarEventsIdPut(
-      @PathVariable("id") String id, @RequestBody CalendarEventUpsertRequest req) {
+      @PathVariable("id") String id, @Valid @NotNull @RequestBody CalendarEventUpsertRequest req) {
     UUID eventId = parseUuid(id);
     if (eventId == null) {
       return ResponseEntity.badRequest().build();
@@ -101,10 +104,6 @@ public class CalendarEventsApiController {
   }
 
   private static CalendarEventService.EventCommand toCommand(CalendarEventUpsertRequest req) {
-    if (req == null || req.getTitle() == null || req.getTitle().isBlank()) {
-      return null;
-    }
-
     try {
       OffsetDateTime start = CalendarEventService.parseDateTime(req.getStart());
       OffsetDateTime end = CalendarEventService.parseDateTime(req.getEnd());

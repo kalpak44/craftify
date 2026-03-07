@@ -3,7 +3,7 @@ package com.craftify.backend.model;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.lang.Nullable;
+import jakarta.annotation.Nullable;
 
 public class WorkItemPage implements Serializable {
 

@@ -13,9 +13,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -78,9 +82,10 @@ public class BomsImportApiController implements BomsImportApi {
     Map<String, GroupedBom> grouped = new HashMap<>();
 
     try (BufferedReader reader =
-        new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
-      String headerLine = reader.readLine();
-      if (headerLine == null || headerLine.isBlank()) {
+            new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
+        CSVParser parser = CSVFormat.DEFAULT.parse(reader)) {
+      Iterator<CSVRecord> records = parser.iterator();
+      if (!records.hasNext()) {
         return ResponseEntity.badRequest()
             .body(
                 new ImportResult()
@@ -94,7 +99,10 @@ public class BomsImportApiController implements BomsImportApi {
                                 .message("CSV header row is missing"))));
       }
 
-      List<String> headers = parseCsvLine(stripBom(headerLine));
+      List<String> headers = toCells(records.next());
+      if (!headers.isEmpty()) {
+        headers.set(0, stripBom(headers.get(0)));
+      }
       Map<String, Integer> columns = mapColumns(headers);
 
       if (!columns.containsKey("bomId")
@@ -115,14 +123,14 @@ public class BomsImportApiController implements BomsImportApi {
                                     "Required columns: bomId, productId, revision, status"))));
       }
 
-      String line;
       int rowNumber = 1;
-      while ((line = reader.readLine()) != null) {
+      while (records.hasNext()) {
+        CSVRecord record = records.next();
         rowNumber++;
-        if (line.isBlank()) {
+        if (isBlankRecord(record)) {
           continue;
         }
-        ParsedRow row = parseRow(parseCsvLine(line), columns, rowNumber, errors);
+        ParsedRow row = parseRow(toCells(record), columns, rowNumber, errors);
         if (!row.valid) {
           continue;
         }
@@ -383,29 +391,25 @@ public class BomsImportApiController implements BomsImportApi {
     return h.trim().toLowerCase(Locale.ROOT).replace(" ", "").replace("-", "_");
   }
 
-  private static List<String> parseCsvLine(String line) {
+  private static List<String> toCells(CSVRecord record) {
     List<String> out = new ArrayList<>();
-    if (line == null) return out;
-    StringBuilder cur = new StringBuilder();
-    boolean inQuotes = false;
-    for (int i = 0; i < line.length(); i++) {
-      char ch = line.charAt(i);
-      if (ch == '"') {
-        if (inQuotes && i + 1 < line.length() && line.charAt(i + 1) == '"') {
-          cur.append('"');
-          i++;
-        } else {
-          inQuotes = !inQuotes;
-        }
-      } else if (ch == ',' && !inQuotes) {
-        out.add(cur.toString());
-        cur.setLength(0);
-      } else {
-        cur.append(ch);
+    if (record == null) {
+      return out;
+    }
+    record.forEach(out::add);
+    return out;
+  }
+
+  private static boolean isBlankRecord(CSVRecord record) {
+    if (record == null || record.size() == 0) {
+      return true;
+    }
+    for (String value : record) {
+      if (value != null && !value.isBlank()) {
+        return false;
       }
     }
-    out.add(cur.toString());
-    return out;
+    return true;
   }
 
   private record ParsedRow(

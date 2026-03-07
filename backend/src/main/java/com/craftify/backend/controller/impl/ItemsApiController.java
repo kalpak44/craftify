@@ -7,12 +7,15 @@ import com.craftify.backend.model.ItemPage;
 import com.craftify.backend.model.Status;
 import com.craftify.backend.model.UpdateItemRequest;
 import com.craftify.backend.service.ItemService;
+import com.craftify.backend.utils.HttpHeaderVersionUtil;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import jakarta.annotation.Nullable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Nullable;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,6 +24,10 @@ import org.springframework.web.bind.annotation.RestController;
 public class ItemsApiController implements ItemsApi {
 
   private static final Logger log = LoggerFactory.getLogger(ItemsApiController.class);
+  private static final String HEADER_ERROR_CODE = "X-Error-Code";
+  private static final String ERROR_ITEM_IN_USE = "item_in_use";
+  private static final String ERROR_CODE_CONFLICT = "code_conflict";
+  private static final String ERROR_ITEM_IN_USE_CODE_CHANGE = "item_in_use_code_change";
 
   private final ItemService itemService;
 
@@ -74,7 +81,7 @@ public class ItemsApiController implements ItemsApi {
 
   @Override
   public ResponseEntity<Void> itemsIdDelete(String id, String ifMatch) {
-    Integer expectedVersion = ItemService.parseIfMatchVersion(ifMatch);
+    Integer expectedVersion = HttpHeaderVersionUtil.parseIfMatchVersion(ifMatch);
     if (expectedVersion == null) {
       return ResponseEntity.status(412).build();
     }
@@ -82,8 +89,8 @@ public class ItemsApiController implements ItemsApi {
       boolean deleted = itemService.deleteByCode(id, expectedVersion);
       return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     } catch (IllegalStateException ex) {
-      if ("item_in_use".equals(ex.getMessage())) {
-        return ResponseEntity.status(409).header("X-Error-Code", "item_in_use").build();
+      if (ERROR_ITEM_IN_USE.equals(ex.getMessage())) {
+        return conflict(ERROR_ITEM_IN_USE).build();
       }
       return ResponseEntity.status(412).build();
     }
@@ -95,23 +102,12 @@ public class ItemsApiController implements ItemsApi {
     if (existing == null) {
       return ResponseEntity.notFound().build();
     }
-    return ResponseEntity.ok().eTag(ItemService.toWeakEtag(existing.getVersion())).body(existing);
+    return ResponseEntity.ok().eTag(HttpHeaderVersionUtil.toWeakEtag(existing.getVersion())).body(existing);
   }
 
   @Override
-  public ResponseEntity<ItemDetail> itemsIdPut(String id, String ifMatch, UpdateItemRequest req) {
-    if (req == null
-        || req.getName() == null
-        || req.getName().isBlank()
-        || req.getStatus() == null
-        || req.getCategoryName() == null
-        || req.getCategoryName().isBlank()
-        || req.getUomBase() == null
-        || req.getUomBase().isBlank()) {
-      return ResponseEntity.badRequest().build();
-    }
-
-    Integer expectedVersion = ItemService.parseIfMatchVersion(ifMatch);
+  public ResponseEntity<ItemDetail> itemsIdPut(String id, String ifMatch, @Valid @NotNull UpdateItemRequest req) {
+    Integer expectedVersion = HttpHeaderVersionUtil.parseIfMatchVersion(ifMatch);
     if (expectedVersion == null) {
       return ResponseEntity.status(412).build();
     }
@@ -121,38 +117,31 @@ public class ItemsApiController implements ItemsApi {
       if (updated == null) {
         return ResponseEntity.notFound().build();
       }
-      return ResponseEntity.ok().eTag(ItemService.toWeakEtag(updated.getVersion())).body(updated);
+      return ResponseEntity.ok().eTag(HttpHeaderVersionUtil.toWeakEtag(updated.getVersion())).body(updated);
     } catch (IllegalStateException ex) {
-      if ("code_conflict".equals(ex.getMessage())) {
+      if (ERROR_CODE_CONFLICT.equals(ex.getMessage())) {
         return ResponseEntity.status(409).build();
       }
-      if ("item_in_use_code_change".equals(ex.getMessage())) {
-        return ResponseEntity.status(409).header("X-Error-Code", "item_in_use_code_change").build();
+      if (ERROR_ITEM_IN_USE_CODE_CHANGE.equals(ex.getMessage())) {
+        return conflict(ERROR_ITEM_IN_USE_CODE_CHANGE).build();
       }
       return ResponseEntity.status(412).build();
     }
   }
 
   @Override
-  public ResponseEntity<ItemDetail> itemsPost(CreateItemRequest req) {
-    if (req == null
-        || req.getName() == null
-        || req.getName().isBlank()
-        || req.getStatus() == null
-        || req.getCategoryName() == null
-        || req.getCategoryName().isBlank()
-        || req.getUomBase() == null
-        || req.getUomBase().isBlank()) {
-      return ResponseEntity.badRequest().build();
-    }
-
+  public ResponseEntity<ItemDetail> itemsPost(@Valid @NotNull CreateItemRequest req) {
     ItemDetail created = itemService.create(req);
     if (created == null) {
       return ResponseEntity.status(409).build();
     }
 
     return ResponseEntity.created(URI.create("/items/" + created.getCode()))
-        .eTag(ItemService.toWeakEtag(created.getVersion()))
+        .eTag(HttpHeaderVersionUtil.toWeakEtag(created.getVersion()))
         .body(created);
+  }
+
+  private static ResponseEntity.BodyBuilder conflict(String errorCode) {
+    return ResponseEntity.status(409).header(HEADER_ERROR_CODE, errorCode);
   }
 }

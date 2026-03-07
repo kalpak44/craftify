@@ -1,10 +1,14 @@
 package com.craftify.backend.model;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
 public class CreateInventoryFromItemRequest {
 
+  @NotBlank
   private String itemId;
+  @NotNull
   private BigDecimal available;
   private String mode;
 

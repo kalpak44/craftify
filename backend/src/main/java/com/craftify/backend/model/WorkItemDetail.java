@@ -3,7 +3,7 @@ package com.craftify.backend.model;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import org.springframework.lang.Nullable;
+import jakarta.annotation.Nullable;
 
 public class WorkItemDetail implements Serializable {
 

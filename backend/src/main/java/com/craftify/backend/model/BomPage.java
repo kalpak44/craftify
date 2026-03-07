@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Min;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.lang.Nullable;
+import jakarta.annotation.Nullable;
 
 public class BomPage implements Serializable {
   private static final long serialVersionUID = 1L;

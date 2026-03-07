@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.lang.Nullable;
+import jakarta.annotation.Nullable;
 
 public class BomList implements Serializable {
 

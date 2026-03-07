@@ -9,7 +9,7 @@ import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.lang.Nullable;
+import jakarta.annotation.Nullable;
 
 /** ItemList */
 @Generated(

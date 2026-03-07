@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Objects;
-import org.springframework.lang.Nullable;
+import jakarta.annotation.Nullable;
 
 /** ItemUom */
 @Generated(

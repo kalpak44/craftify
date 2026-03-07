@@ -147,7 +147,7 @@ public class InventoryService {
   }
 
   @Transactional
-  public InventoryDetail upsertFromImport(
+  public void upsertFromImport(
       String code,
       String itemId,
       String itemName,
@@ -185,7 +185,8 @@ public class InventoryService {
       existing.setCategoryName(effectiveCategory);
       existing.setUom(uom.trim());
       existing.setAvailable(available == null ? BigDecimal.ZERO : available);
-      return toDetailModel(inventoryRepository.save(existing));
+      inventoryRepository.save(existing);
+      return;
     }
 
     String normalizedItemCategory = itemCategoryName.trim();
@@ -210,7 +211,7 @@ public class InventoryService {
     entity.setCategoryName(effectiveCategory);
     entity.setUom(uom.trim());
     entity.setAvailable(available == null ? BigDecimal.ZERO : available);
-    return toDetailModel(inventoryRepository.save(entity));
+    inventoryRepository.save(entity);
   }
 
   @Transactional

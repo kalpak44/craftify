@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.lang.Nullable;
+import jakarta.annotation.Nullable;
 
 /** ItemDetail */
 public class ItemDetail implements Serializable {

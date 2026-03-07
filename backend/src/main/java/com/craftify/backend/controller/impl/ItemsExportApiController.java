@@ -5,6 +5,8 @@ import com.craftify.backend.model.ItemDetail;
 import com.craftify.backend.model.ItemUom;
 import com.craftify.backend.model.Status;
 import com.craftify.backend.service.ItemService;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -12,13 +14,15 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Nullable;
+import jakarta.annotation.Nullable;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.bind.annotation.RestController;
@@ -82,36 +86,44 @@ public class ItemsExportApiController implements ItemsExportApi {
   }
 
   private static String toCsv(List<ItemDetail> rows) {
-    StringBuilder sb = new StringBuilder();
-    sb.append(
-        "Id,Code,Name,Status,Category,UoM Base,Description,Additional Units Count,Additional Units,Created At,Updated At,Version\n");
-    for (ItemDetail d : rows) {
-      sb.append(csv(d.getId()))
-          .append(',')
-          .append(csv(d.getCode()))
-          .append(',')
-          .append(csv(d.getName()))
-          .append(',')
-          .append(csv(d.getStatus() == null ? "" : d.getStatus().getValue()))
-          .append(',')
-          .append(csv(d.getCategoryName()))
-          .append(',')
-          .append(csv(d.getUomBase()))
-          .append(',')
-          .append(csv(d.getDescription()))
-          .append(',')
-          .append(csv(String.valueOf(d.getUoms() == null ? 0 : d.getUoms().size())))
-          .append(',')
-          .append(csv(formatAdditionalUnits(d.getUoms())))
-          .append(',')
-          .append(csv(d.getCreatedAt() == null ? "" : d.getCreatedAt().toString()))
-          .append(',')
-          .append(csv(d.getUpdatedAt() == null ? "" : d.getUpdatedAt().toString()))
-          .append(',')
-          .append(csv(d.getVersion() == null ? "" : d.getVersion().toString()))
-          .append('\n');
+    StringWriter writer = new StringWriter();
+    try (CSVPrinter printer =
+        new CSVPrinter(
+            writer,
+            CSVFormat.DEFAULT.builder()
+                .setHeader(
+                    "Id",
+                    "Code",
+                    "Name",
+                    "Status",
+                    "Category",
+                    "UoM Base",
+                    "Description",
+                    "Additional Units Count",
+                    "Additional Units",
+                    "Created At",
+                    "Updated At",
+                    "Version")
+                .build())) {
+      for (ItemDetail d : rows) {
+        printer.printRecord(
+            d.getId(),
+            d.getCode(),
+            d.getName(),
+            d.getStatus() == null ? "" : d.getStatus().getValue(),
+            d.getCategoryName(),
+            d.getUomBase(),
+            d.getDescription(),
+            String.valueOf(d.getUoms() == null ? 0 : d.getUoms().size()),
+            formatAdditionalUnits(d.getUoms()),
+            d.getCreatedAt() == null ? "" : d.getCreatedAt().toString(),
+            d.getUpdatedAt() == null ? "" : d.getUpdatedAt().toString(),
+            d.getVersion() == null ? "" : d.getVersion().toString());
+      }
+    } catch (IOException ex) {
+      throw new IllegalStateException("failed_to_generate_csv", ex);
     }
-    return sb.toString();
+    return writer.toString();
   }
 
   private static String formatAdditionalUnits(List<ItemUom> uoms) {
@@ -138,14 +150,6 @@ public class ItemsExportApiController implements ItemsExportApi {
         .replace("\\", "\\\\")
         .replace("|", "\\|")
         .replace(";", "\\;");
-  }
-
-  private static String csv(String v) {
-    if (v == null) return "";
-    boolean needsQuotes =
-        v.contains(",") || v.contains("\"") || v.contains("\n") || v.contains("\r");
-    String s = v.replace("\"", "\"\"");
-    return needsQuotes ? "\"" + s + "\"" : s;
   }
 
   private static byte[] concat(byte[] a, byte[] b) {

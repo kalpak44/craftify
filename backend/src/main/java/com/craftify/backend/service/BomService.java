@@ -179,7 +179,7 @@ public class BomService {
   }
 
   @Transactional
-  public BomDetail upsertFromImport(
+  public void upsertFromImport(
       String code,
       String productId,
       String productName,
@@ -206,7 +206,8 @@ public class BomService {
       existing.setDescription(description == null ? null : description.trim());
       existing.setNote(note == null ? null : note.trim());
       existing.setComponents(toEmbeddables(components));
-      return toDetailModel(bomRepository.save(existing));
+      bomRepository.save(existing);
+      return;
     }
 
     BomEntity entity = new BomEntity();
@@ -220,7 +221,7 @@ public class BomService {
     entity.setNote(note == null ? null : note.trim());
     entity.setComponents(toEmbeddables(components));
     entity.setOwnerSub(ownerSub);
-    return toDetailModel(bomRepository.save(entity));
+    bomRepository.save(entity);
   }
 
   private String generateNextCode() {
@@ -352,26 +353,4 @@ public class BomService {
         .toList();
   }
 
-  public static Integer parseIfMatchVersion(String ifMatch) {
-    if (ifMatch == null || ifMatch.isBlank()) {
-      return null;
-    }
-    String cleaned = ifMatch.trim();
-    if (cleaned.startsWith("W\"") && cleaned.endsWith("\"")) {
-      cleaned = cleaned.substring(2, cleaned.length() - 1);
-    }
-    if (cleaned.startsWith("\"") && cleaned.endsWith("\"")) {
-      cleaned = cleaned.substring(1, cleaned.length() - 1);
-    }
-    try {
-      return Integer.parseInt(cleaned);
-    } catch (NumberFormatException ex) {
-      return null;
-    }
-  }
-
-  public static String toWeakEtag(Integer version) {
-    int v = (version == null) ? 0 : Math.max(version, 0);
-    return "W\"" + v + "\"";
-  }
 }

@@ -1,9 +1,14 @@
 package com.craftify.backend.model;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class CalendarEventUpsertRequest {
 
+  @NotBlank
   private String title;
+  @NotBlank
   private String start;
+  @NotBlank
   private String end;
   private String color;
   private String calendar;

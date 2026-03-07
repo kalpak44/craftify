@@ -2,12 +2,15 @@ package com.craftify.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.lang.Nullable;
+import jakarta.annotation.Nullable;
 
 public class BomDetail implements Serializable {
 
@@ -52,6 +55,7 @@ public class BomDetail implements Serializable {
   }
 
   @Schema(name = "productId", example = "ITM-001")
+  @NotBlank
   @JsonProperty("productId")
   public String getProductId() {
     return productId;
@@ -82,6 +86,7 @@ public class BomDetail implements Serializable {
   }
 
   @Schema(name = "revision", example = "v1")
+  @NotBlank
   @JsonProperty("revision")
   public String getRevision() {
     return revision;
@@ -96,6 +101,8 @@ public class BomDetail implements Serializable {
     return this;
   }
 
+  @NotNull
+  @Valid
   @Schema(name = "status")
   @JsonProperty("status")
   public BomStatus getStatus() {

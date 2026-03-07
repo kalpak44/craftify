@@ -11,7 +11,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Nullable;
+import jakarta.annotation.Nullable;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController

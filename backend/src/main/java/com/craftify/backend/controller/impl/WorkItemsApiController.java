@@ -5,11 +5,13 @@ import com.craftify.backend.model.WorkItemPage;
 import com.craftify.backend.model.WorkItemRequest;
 import com.craftify.backend.model.WorkItemStatus;
 import com.craftify.backend.service.WorkItemService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import jakarta.annotation.Nullable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,10 +49,7 @@ public class WorkItemsApiController {
       value = "/work-items:request",
       consumes = {"application/json"},
       produces = {"application/json"})
-  public ResponseEntity<WorkItemDetail> workItemsRequestPost(@RequestBody WorkItemRequest req) {
-    if (req == null || req.getBomId() == null || req.getBomId().isBlank() || req.getRequestedQty() == null) {
-      return ResponseEntity.badRequest().build();
-    }
+  public ResponseEntity<WorkItemDetail> workItemsRequestPost(@Valid @NotNull @RequestBody WorkItemRequest req) {
     try {
       WorkItemDetail created = workItemService.requestFromBom(req.getBomId(), req.getRequestedQty());
       return ResponseEntity.created(URI.create("/work-items/" + created.getId())).body(created);

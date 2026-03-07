@@ -234,7 +234,7 @@ public class ItemService {
   }
 
   @Transactional
-  public ItemDetail upsertFromImport(
+  public void upsertFromImport(
       String code,
       String name,
       Status status,
@@ -261,7 +261,8 @@ public class ItemService {
       if (uoms != null) {
         existing.setUoms(toEmbeddables(uoms));
       }
-      return toDetailModel(itemRepository.save(existing));
+      itemRepository.save(existing);
+      return;
     }
 
     ItemEntity entity = new ItemEntity();
@@ -274,7 +275,7 @@ public class ItemService {
     entity.setDescription(description);
     entity.setUoms(toEmbeddables(uoms == null ? List.of() : uoms));
     entity.setOwnerSub(ownerSub);
-    return toDetailModel(itemRepository.save(entity));
+    itemRepository.save(entity);
   }
 
   @Transactional(readOnly = true)
@@ -453,32 +454,6 @@ public class ItemService {
     return uoms.stream()
         .map(u -> new ItemUom().uom(u.getUom()).coef(u.getCoef()).notes(u.getNotes()))
         .toList();
-  }
-
-  public static Integer parseIfMatchVersion(String ifMatch) {
-    if (ifMatch == null || ifMatch.isBlank()) {
-      return null;
-    }
-    String cleaned = ifMatch.trim();
-    if (cleaned.startsWith("W\"") && cleaned.endsWith("\"")) {
-      cleaned = cleaned.substring(2, cleaned.length() - 1);
-    }
-    if (cleaned.startsWith("\"") && cleaned.endsWith("\"")) {
-      cleaned = cleaned.substring(1, cleaned.length() - 1);
-    }
-    try {
-      return Integer.parseInt(cleaned);
-    } catch (NumberFormatException ex) {
-      return null;
-    }
-  }
-
-  public static String toWeakEtag(int version) {
-    return "W\"" + version + "\"";
-  }
-
-  public static String toWeakEtag(long version) {
-    return "W\"" + version + "\"";
   }
 
 }

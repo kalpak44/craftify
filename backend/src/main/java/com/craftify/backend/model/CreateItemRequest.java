@@ -4,13 +4,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.annotation.Generated;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import org.springframework.lang.Nullable;
+import jakarta.annotation.Nullable;
 
 /** CreateItemRequest */
 @Generated(
@@ -80,8 +81,8 @@ public class CreateItemRequest implements Serializable {
    *
    * @return name
    */
-  @NotNull
-  @Size(min = 1, max = 200)
+  @NotBlank
+  @Size(max = 200)
   @Schema(name = "name", requiredMode = Schema.RequiredMode.REQUIRED)
   @JsonProperty("name")
   public String getName() {
@@ -124,7 +125,7 @@ public class CreateItemRequest implements Serializable {
    *
    * @return categoryName
    */
-  @NotNull
+  @NotBlank
   @Schema(name = "categoryName", requiredMode = Schema.RequiredMode.REQUIRED)
   @JsonProperty("categoryName")
   public String getCategoryName() {
@@ -145,8 +146,8 @@ public class CreateItemRequest implements Serializable {
    *
    * @return uomBase
    */
-  @NotNull
-  @Size(min = 1, max = 16)
+  @NotBlank
+  @Size(max = 16)
   @Schema(name = "uomBase", requiredMode = Schema.RequiredMode.REQUIRED)
   @JsonProperty("uomBase")
   public String getUomBase() {

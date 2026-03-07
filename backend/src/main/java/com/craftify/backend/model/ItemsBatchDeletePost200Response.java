@@ -7,7 +7,7 @@ import jakarta.annotation.Generated;
 import jakarta.validation.constraints.Min;
 import java.io.Serializable;
 import java.util.Objects;
-import org.springframework.lang.Nullable;
+import jakarta.annotation.Nullable;
 
 /** ItemsBatchDeletePost200Response */
 @JsonTypeName("_items_batch_delete_post_200_response")
