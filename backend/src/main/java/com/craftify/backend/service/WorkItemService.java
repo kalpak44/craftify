@@ -101,7 +101,8 @@ public class WorkItemService {
     if (bomId == null || bomId.isBlank()) {
       throw new IllegalStateException("bom_not_found");
     }
-    if (requestedQty == null || requestedQty.compareTo(BigDecimal.ZERO) <= 0) {
+    BigDecimal normalizedRequestedQty = normalizeWholeRequestedQty(requestedQty);
+    if (normalizedRequestedQty == null) {
       throw new IllegalStateException("invalid_requested_qty");
     }
 
@@ -139,7 +140,7 @@ public class WorkItemService {
         throw new IllegalStateException("component_item_not_found");
       }
       componentItems.put(itemCode, componentItem);
-      BigDecimal required = perUnit.multiply(requestedQty).setScale(6, RoundingMode.HALF_UP);
+      BigDecimal required = perUnit.multiply(normalizedRequestedQty).setScale(6, RoundingMode.HALF_UP);
       requiredByItemCode.merge(itemCode, required, BigDecimal::add);
     }
 
@@ -199,7 +200,7 @@ public class WorkItemService {
     entity.setOutputItemUom(
         outputItem.getUomBase() != null && !outputItem.getUomBase().isBlank() ? outputItem.getUomBase() : "pcs");
     entity.setAllocatedComponentsJson(toAllocatedComponentsJson(allocatedComponents));
-    entity.setRequestedQty(requestedQty.setScale(6, RoundingMode.HALF_UP));
+    entity.setRequestedQty(normalizedRequestedQty.setScale(6, RoundingMode.HALF_UP));
     entity.setStatus(WorkItemStatus.QUEUED);
     entity.setOwnerSub(ownerSub);
     WorkItemEntity created = workItemRepository.save(entity);
@@ -483,4 +484,18 @@ public class WorkItemService {
   }
 
   private record OutputSnapshot(String itemId, String itemName, String categoryName, String uom) {}
+
+  private static BigDecimal normalizeWholeRequestedQty(BigDecimal requestedQty) {
+    if (requestedQty == null) {
+      return null;
+    }
+    BigDecimal cleaned = requestedQty.stripTrailingZeros();
+    if (cleaned.scale() > 0) {
+      return null;
+    }
+    if (cleaned.compareTo(BigDecimal.ONE) < 0) {
+      return null;
+    }
+    return cleaned;
+  }
 }

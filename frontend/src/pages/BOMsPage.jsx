@@ -395,16 +395,19 @@ export const BOMsPage = () => {
         const validRows = rowsWithCalc.filter((r) => r.hasItem && r.hasQty);
         const hasComponents = rowsWithCalc.length > 0;
         const allAvailable = hasComponents && invalidRows.length === 0 && validRows.every((r) => r.missing <= 1e-9);
+        const isWholeQty = Number.isInteger(requestQty);
         const bottleneck =
             validRows.length > 0
                 ? validRows.reduce((acc, cur) => (acc == null || cur.maxPossible < acc.maxPossible ? cur : acc), null)
                 : null;
         const maxBuildQty = bottleneck ? Math.max(0, bottleneck.maxPossible) : 0;
+        const maxBuildQtyWhole = Math.max(0, Math.floor(maxBuildQty + 1e-9));
 
         let blockReason = "";
         if (!hasComponents) blockReason = "BOM has no component lines.";
         else if (invalidRows.length > 0) blockReason = "BOM has components with missing item or required quantity.";
         else if (!(requestQty > 0)) blockReason = "Requested quantity must be greater than 0.";
+        else if (!isWholeQty) blockReason = "Requested quantity must be a whole number.";
         else if (!allAvailable) blockReason = "Not enough inventory for one or more components.";
 
         return {
@@ -415,16 +418,17 @@ export const BOMsPage = () => {
             allAvailable,
             bottleneck,
             maxBuildQty,
+            maxBuildQtyWhole,
             canRequest: !blockReason,
             blockReason,
         };
     }, [inventoryByItemId, requestDetail, requestQty]);
 
     const requestSliderMax = useMemo(() => {
-        const raw = requestCheck.maxBuildQty;
+        const raw = requestCheck.maxBuildQtyWhole;
         if (!Number.isFinite(raw) || raw <= 0) return 1;
         return Math.max(1, Math.floor(raw));
-    }, [requestCheck.maxBuildQty]);
+    }, [requestCheck.maxBuildQtyWhole]);
 
     const submitWorkItemRequest = async () => {
         if (!requestCheck.canRequest || !requestDetail) return;
@@ -859,7 +863,7 @@ export const BOMsPage = () => {
                                         <div className="text-xs text-slate-500 dark:text-gray-400">Bottleneck</div>
                                         <div className="mt-1 text-slate-900 dark:text-gray-200">
                                             {requestCheck.bottleneck
-                                                ? `${requestCheck.bottleneck.itemId} (${requestCheck.maxBuildQty.toFixed(2)} max)`
+                                                ? `${requestCheck.bottleneck.itemId} (${requestCheck.maxBuildQtyWhole} max whole)`
                                                 : "N/A"}
                                         </div>
                                     </div>
@@ -872,15 +876,15 @@ export const BOMsPage = () => {
                                             <button
                                                 type="button"
                                                 className="px-2.5 py-1.5 rounded-md bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-xs"
-                                                onClick={() => setRequestQtyInput(String((requestCheck.maxBuildQty || 0).toFixed(2)))}
-                                                disabled={!Number.isFinite(requestCheck.maxBuildQty) || requestCheck.maxBuildQty <= 0}
+                                                onClick={() => setRequestQtyInput(String(requestCheck.maxBuildQtyWhole || 0))}
+                                                disabled={!Number.isFinite(requestCheck.maxBuildQtyWhole) || requestCheck.maxBuildQtyWhole <= 0}
                                             >
                                                 Use Max
                                             </button>
                                             <input
                                                 type="number"
-                                                min="0"
-                                                step="0.01"
+                                                min="1"
+                                                step="1"
                                                 value={requestQtyInput}
                                                 onChange={(e) => setRequestQtyInput(e.target.value)}
                                                 className="w-32 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm text-right font-mono tabular-nums"
@@ -890,7 +894,7 @@ export const BOMsPage = () => {
                                     <div className="mt-2 text-xs text-slate-500 dark:text-gray-400">
                                         Max possible request:{" "}
                                         <span className="font-mono text-slate-700 dark:text-gray-300">
-                                            {Number.isFinite(requestCheck.maxBuildQty) ? requestCheck.maxBuildQty.toFixed(2) : "0.00"}
+                                            {Number.isFinite(requestCheck.maxBuildQtyWhole) ? requestCheck.maxBuildQtyWhole : "0"}
                                         </span>
                                     </div>
                                     <input

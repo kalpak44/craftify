@@ -58,6 +58,9 @@ public class WorkItemsApiController {
       if ("bom_not_found".equals(ex.getMessage())) {
         return ResponseEntity.notFound().build();
       }
+      if ("invalid_requested_qty".equals(ex.getMessage())) {
+        return ResponseEntity.badRequest().header("X-Error-Code", "invalid_requested_qty").build();
+      }
       if ("insufficient_inventory".equals(ex.getMessage())
           || "output_item_not_found".equals(ex.getMessage())
           || "component_item_not_found".equals(ex.getMessage())) {

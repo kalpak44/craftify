@@ -50,6 +50,9 @@ export async function requestWorkItem(authFetch, payload) {
     const txt = res ? await res.text() : "auth failed";
     const errorCode = res?.headers?.get("x-error-code");
     if (res && res.status === 404) throw new Error("BOM not found.");
+    if (res && res.status === 400 && errorCode === "invalid_requested_qty") {
+      throw new Error("Requested quantity must be a whole number greater than 0.");
+    }
     if (res && res.status === 409 && errorCode === "output_item_not_found") {
       throw new Error("Output item does not exist. Create the Item before requesting a Work Item.");
     }
