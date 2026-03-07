@@ -52,6 +52,9 @@ public class BomEntity {
   @Column(name = "note", length = 4000)
   private String note;
 
+  @Column(name = "owner_sub", nullable = false, length = 191)
+  private String ownerSub;
+
   @Column(name = "created_at", nullable = false)
   private OffsetDateTime createdAt;
 
@@ -143,6 +146,14 @@ public class BomEntity {
 
   public void setNote(String note) {
     this.note = note;
+  }
+
+  public String getOwnerSub() {
+    return ownerSub;
+  }
+
+  public void setOwnerSub(String ownerSub) {
+    this.ownerSub = ownerSub;
   }
 
   public OffsetDateTime getCreatedAt() {

@@ -11,11 +11,21 @@ public interface ItemRepository extends JpaRepository<ItemEntity, UUID>, JpaSpec
 
   Optional<ItemEntity> findByCodeIgnoreCase(String code);
 
+  Optional<ItemEntity> findByCodeIgnoreCaseAndOwnerSub(String code, String ownerSub);
+
   boolean existsByCodeIgnoreCase(String code);
+
+  boolean existsByCodeIgnoreCaseAndOwnerSub(String code, String ownerSub);
 
   boolean existsByDeletedFalseAndCategoryNameIgnoreCase(String categoryName);
 
+  boolean existsByDeletedFalseAndCategoryNameIgnoreCaseAndOwnerSub(String categoryName, String ownerSub);
+
   long countByDeletedFalse();
 
+  long countByDeletedFalseAndOwnerSub(String ownerSub);
+
   long countByDeletedFalseAndStatus(Status status);
+
+  long countByDeletedFalseAndStatusAndOwnerSub(Status status, String ownerSub);
 }

@@ -49,6 +49,9 @@ public class ItemEntity {
   @Column(name = "description", length = 4000)
   private String description;
 
+  @Column(name = "owner_sub", nullable = false, length = 191)
+  private String ownerSub;
+
   @Column(name = "deleted", nullable = false)
   private boolean deleted;
 
@@ -135,6 +138,14 @@ public class ItemEntity {
 
   public void setDescription(String description) {
     this.description = description;
+  }
+
+  public String getOwnerSub() {
+    return ownerSub;
+  }
+
+  public void setOwnerSub(String ownerSub) {
+    this.ownerSub = ownerSub;
   }
 
   public boolean isDeleted() {

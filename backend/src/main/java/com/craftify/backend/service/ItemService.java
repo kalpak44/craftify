@@ -38,19 +38,23 @@ public class ItemService {
       boolean includeDeleted) {}
 
   private final ItemRepository itemRepository;
+  private final CurrentUserService currentUserService;
 
-  public ItemService(ItemRepository itemRepository) {
+  public ItemService(ItemRepository itemRepository, CurrentUserService currentUserService) {
     this.itemRepository = itemRepository;
+    this.currentUserService = currentUserService;
   }
 
   @Transactional(readOnly = true)
   public ItemPage list(ItemQuery query) {
+    String ownerSub = currentUserService.requiredSub();
     Pageable pageable =
         PageRequest.of(Math.max(query.page(), 0), Math.max(query.size(), 1), parseSort(query.sort()));
 
     Specification<ItemEntity> spec =
         (root, cq, cb) -> {
           List<Predicate> predicates = new ArrayList<>();
+          predicates.add(cb.equal(root.get("ownerSub"), ownerSub));
           if (!query.includeDeleted()) {
             predicates.add(cb.isFalse(root.get("deleted")));
           }
@@ -89,11 +93,12 @@ public class ItemService {
 
   @Transactional(readOnly = true)
   public ItemDetail getByCode(String code) {
+    String ownerSub = currentUserService.requiredSub();
     if (code == null || code.isBlank()) {
       return null;
     }
     return itemRepository
-        .findByCodeIgnoreCase(code)
+        .findByCodeIgnoreCaseAndOwnerSub(code, ownerSub)
         .filter(i -> !i.isDeleted())
         .map(this::toDetailModel)
         .orElse(null);
@@ -101,10 +106,11 @@ public class ItemService {
 
   @Transactional(readOnly = true)
   public ItemDetail getByCodeIncludingDeleted(String code) {
+    String ownerSub = currentUserService.requiredSub();
     if (code == null || code.isBlank()) {
       return null;
     }
-    return itemRepository.findByCodeIgnoreCase(code).map(this::toDetailModel).orElse(null);
+    return itemRepository.findByCodeIgnoreCaseAndOwnerSub(code, ownerSub).map(this::toDetailModel).orElse(null);
   }
 
   @Transactional
@@ -126,6 +132,7 @@ public class ItemService {
     entity.setUomBase(req.getUomBase().trim());
     entity.setDescription(req.getDescription());
     entity.setUoms(toEmbeddables(req.getUoms()));
+    entity.setOwnerSub(currentUserService.requiredSub());
     entity.setDeleted(false);
 
     return toDetailModel(itemRepository.save(entity));
@@ -133,7 +140,8 @@ public class ItemService {
 
   @Transactional
   public ItemDetail updateByCode(String code, UpdateItemRequest req, Integer expectedVersion) {
-    ItemEntity existing = itemRepository.findByCodeIgnoreCase(code).orElse(null);
+    String ownerSub = currentUserService.requiredSub();
+    ItemEntity existing = itemRepository.findByCodeIgnoreCaseAndOwnerSub(code, ownerSub).orElse(null);
     if (existing == null || existing.isDeleted()) {
       return null;
     }
@@ -163,7 +171,8 @@ public class ItemService {
 
   @Transactional
   public boolean softDeleteByCode(String code, Integer expectedVersion) {
-    ItemEntity existing = itemRepository.findByCodeIgnoreCase(code).orElse(null);
+    String ownerSub = currentUserService.requiredSub();
+    ItemEntity existing = itemRepository.findByCodeIgnoreCaseAndOwnerSub(code, ownerSub).orElse(null);
     if (existing == null || existing.isDeleted()) {
       return false;
     }
@@ -177,13 +186,14 @@ public class ItemService {
 
   @Transactional
   public int softDeleteByIds(List<UUID> ids) {
+    String ownerSub = currentUserService.requiredSub();
     if (ids == null || ids.isEmpty()) {
       return 0;
     }
     int deleted = 0;
     List<ItemEntity> rows = itemRepository.findAllById(ids);
     for (ItemEntity row : rows) {
-      if (!row.isDeleted()) {
+      if (ownerSub.equals(row.getOwnerSub()) && !row.isDeleted()) {
         row.setDeleted(true);
         deleted++;
       }
@@ -194,10 +204,11 @@ public class ItemService {
 
   @Transactional(readOnly = true)
   public long count(Status status) {
+    String ownerSub = currentUserService.requiredSub();
     if (status == null) {
-      return itemRepository.countByDeletedFalse();
+      return itemRepository.countByDeletedFalseAndOwnerSub(ownerSub);
     }
-    return itemRepository.countByDeletedFalseAndStatus(status);
+    return itemRepository.countByDeletedFalseAndStatusAndOwnerSub(status, ownerSub);
   }
 
   @Transactional
@@ -210,10 +221,11 @@ public class ItemService {
       String description,
       List<ItemUom> uoms,
       boolean createOnly) {
+    String ownerSub = currentUserService.requiredSub();
     String normalizedCode =
         (code == null || code.isBlank()) ? generateNextCode() : code.trim().toUpperCase(Locale.ROOT);
 
-    ItemEntity existing = itemRepository.findByCodeIgnoreCase(normalizedCode).orElse(null);
+    ItemEntity existing = itemRepository.findByCodeIgnoreCaseAndOwnerSub(normalizedCode, ownerSub).orElse(null);
     if (existing != null) {
       if (createOnly) {
         throw new IllegalStateException("create_only_conflict");
@@ -237,15 +249,18 @@ public class ItemService {
     entity.setUomBase(uomBase.trim());
     entity.setDescription(description);
     entity.setUoms(toEmbeddables(uoms == null ? List.of() : uoms));
+    entity.setOwnerSub(ownerSub);
     entity.setDeleted(false);
     return toDetailModel(itemRepository.save(entity));
   }
 
   @Transactional(readOnly = true)
   public List<ItemDetail> listForExport(String q, Status status, String categoryName, String uom, List<String> codes) {
+    String ownerSub = currentUserService.requiredSub();
     Specification<ItemEntity> spec =
         (root, cq, cb) -> {
           List<Predicate> predicates = new ArrayList<>();
+          predicates.add(cb.equal(root.get("ownerSub"), ownerSub));
           predicates.add(cb.isFalse(root.get("deleted")));
 
           if (q != null && !q.isBlank()) {

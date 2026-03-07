@@ -38,26 +38,31 @@ public class WorkItemService {
   private final BomRepository bomRepository;
   private final ItemRepository itemRepository;
   private final InventoryRepository inventoryRepository;
+  private final CurrentUserService currentUserService;
 
   public WorkItemService(
       WorkItemRepository workItemRepository,
       BomRepository bomRepository,
       ItemRepository itemRepository,
-      InventoryRepository inventoryRepository) {
+      InventoryRepository inventoryRepository,
+      CurrentUserService currentUserService) {
     this.workItemRepository = workItemRepository;
     this.bomRepository = bomRepository;
     this.itemRepository = itemRepository;
     this.inventoryRepository = inventoryRepository;
+    this.currentUserService = currentUserService;
   }
 
   @Transactional(readOnly = true)
   public WorkItemPage list(WorkItemQuery query) {
+    String ownerSub = currentUserService.requiredSub();
     Pageable pageable =
         PageRequest.of(Math.max(query.page(), 0), Math.max(query.size(), 1), parseSort(query.sort()));
 
     Specification<WorkItemEntity> spec =
         (root, cq, cb) -> {
           List<Predicate> predicates = new ArrayList<>();
+          predicates.add(cb.equal(root.get("ownerSub"), ownerSub));
           if (query.q() != null && !query.q().isBlank()) {
             String pattern = "%" + query.q().toLowerCase(Locale.ROOT) + "%";
             predicates.add(
@@ -86,6 +91,7 @@ public class WorkItemService {
 
   @Transactional
   public WorkItemDetail requestFromBom(String bomId, BigDecimal requestedQty) {
+    String ownerSub = currentUserService.requiredSub();
     if (bomId == null || bomId.isBlank()) {
       throw new IllegalStateException("bom_not_found");
     }
@@ -93,7 +99,7 @@ public class WorkItemService {
       throw new IllegalStateException("invalid_requested_qty");
     }
 
-    BomEntity bom = bomRepository.findByCodeIgnoreCase(bomId.trim()).orElse(null);
+    BomEntity bom = bomRepository.findByCodeIgnoreCaseAndOwnerSub(bomId.trim(), ownerSub).orElse(null);
     if (bom == null) {
       throw new IllegalStateException("bom_not_found");
     }
@@ -121,7 +127,7 @@ public class WorkItemService {
     for (Map.Entry<String, BigDecimal> e : requiredByItemCode.entrySet()) {
       String itemCode = e.getKey();
       BigDecimal required = e.getValue();
-      InventoryEntity inv = inventoryRepository.findByItemIdIgnoreCase(itemCode).orElse(null);
+      InventoryEntity inv = inventoryRepository.findByItemIdIgnoreCaseAndOwnerSub(itemCode, ownerSub).orElse(null);
       BigDecimal available = inv == null || inv.getAvailable() == null ? BigDecimal.ZERO : inv.getAvailable();
       if (inv == null || available.compareTo(required) < 0) {
         throw new IllegalStateException("insufficient_inventory");
@@ -149,16 +155,18 @@ public class WorkItemService {
     entity.setComponentsCount(components.size());
     entity.setRequestedQty(requestedQty.setScale(6, RoundingMode.HALF_UP));
     entity.setStatus(WorkItemStatus.QUEUED);
+    entity.setOwnerSub(ownerSub);
     WorkItemEntity created = workItemRepository.save(entity);
     return toDetailModel(created);
   }
 
   @Transactional
   public WorkItemDetail cancel(String id) {
+    String ownerSub = currentUserService.requiredSub();
     if (id == null || id.isBlank()) {
       throw new IllegalStateException("work_item_not_found");
     }
-    WorkItemEntity existing = workItemRepository.findByCodeIgnoreCase(id.trim()).orElse(null);
+    WorkItemEntity existing = workItemRepository.findByCodeIgnoreCaseAndOwnerSub(id.trim(), ownerSub).orElse(null);
     if (existing == null) {
       throw new IllegalStateException("work_item_not_found");
     }
@@ -166,7 +174,7 @@ public class WorkItemService {
       throw new IllegalStateException("work_item_not_cancelable");
     }
 
-    BomEntity bom = bomRepository.findByCodeIgnoreCase(existing.getBomId()).orElse(null);
+    BomEntity bom = bomRepository.findByCodeIgnoreCaseAndOwnerSub(existing.getBomId(), ownerSub).orElse(null);
     if (bom == null) {
       throw new IllegalStateException("bom_not_found");
     }
@@ -191,7 +199,8 @@ public class WorkItemService {
     }
 
     for (Map.Entry<String, BigDecimal> e : allocatedByItemCode.entrySet()) {
-      InventoryEntity inv = inventoryRepository.findByItemIdIgnoreCase(e.getKey()).orElse(null);
+      InventoryEntity inv =
+          inventoryRepository.findByItemIdIgnoreCaseAndOwnerSub(e.getKey(), ownerSub).orElse(null);
       if (inv == null) {
         throw new IllegalStateException("inventory_not_found_for_component");
       }
@@ -206,10 +215,11 @@ public class WorkItemService {
 
   @Transactional
   public WorkItemDetail complete(String id) {
+    String ownerSub = currentUserService.requiredSub();
     if (id == null || id.isBlank()) {
       throw new IllegalStateException("work_item_not_found");
     }
-    WorkItemEntity existing = workItemRepository.findByCodeIgnoreCase(id.trim()).orElse(null);
+    WorkItemEntity existing = workItemRepository.findByCodeIgnoreCaseAndOwnerSub(id.trim(), ownerSub).orElse(null);
     if (existing == null) {
       throw new IllegalStateException("work_item_not_found");
     }
@@ -217,7 +227,7 @@ public class WorkItemService {
       throw new IllegalStateException("work_item_not_completable");
     }
 
-    BomEntity bom = bomRepository.findByCodeIgnoreCase(existing.getBomId()).orElse(null);
+    BomEntity bom = bomRepository.findByCodeIgnoreCaseAndOwnerSub(existing.getBomId(), ownerSub).orElse(null);
     if (bom == null) {
       throw new IllegalStateException("bom_not_found");
     }
@@ -227,9 +237,10 @@ public class WorkItemService {
       throw new IllegalStateException("invalid_product_item");
     }
 
-    InventoryEntity productInventory = inventoryRepository.findByItemIdIgnoreCase(productCode).orElse(null);
+    InventoryEntity productInventory =
+        inventoryRepository.findByItemIdIgnoreCaseAndOwnerSub(productCode, ownerSub).orElse(null);
     if (productInventory == null) {
-      ItemEntity productItem = itemRepository.findByCodeIgnoreCase(productCode).orElse(null);
+      ItemEntity productItem = itemRepository.findByCodeIgnoreCaseAndOwnerSub(productCode, ownerSub).orElse(null);
       InventoryEntity created = new InventoryEntity();
       created.setCode(generateNextInventoryCode());
       created.setItemId(productCode);
@@ -252,6 +263,7 @@ public class WorkItemService {
               ? productItem.getUomBase()
               : "pcs");
       created.setAvailable(existing.getRequestedQty().setScale(6, RoundingMode.HALF_UP));
+      created.setOwnerSub(ownerSub);
       inventoryRepository.save(created);
     } else {
       BigDecimal current = productInventory.getAvailable() == null ? BigDecimal.ZERO : productInventory.getAvailable();

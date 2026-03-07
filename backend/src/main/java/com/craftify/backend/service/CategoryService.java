@@ -22,10 +22,15 @@ public class CategoryService {
 
   private final CategoryRepository categoryRepository;
   private final ItemRepository itemRepository;
+  private final CurrentUserService currentUserService;
 
-  public CategoryService(CategoryRepository categoryRepository, ItemRepository itemRepository) {
+  public CategoryService(
+      CategoryRepository categoryRepository,
+      ItemRepository itemRepository,
+      CurrentUserService currentUserService) {
     this.categoryRepository = categoryRepository;
     this.itemRepository = itemRepository;
+    this.currentUserService = currentUserService;
   }
 
   @Transactional(readOnly = true)
@@ -68,6 +73,7 @@ public class CategoryService {
 
   @Transactional
   public Category rename(UUID id, String newName) {
+    String ownerSub = currentUserService.requiredSub();
     CategoryEntity existing = categoryRepository.findById(id).orElse(null);
     if (existing == null) {
       return null;
@@ -91,7 +97,9 @@ public class CategoryService {
         .findAll()
         .forEach(
             item -> {
-              if (item.getCategoryName() != null && item.getCategoryName().equalsIgnoreCase(oldName)) {
+              if (ownerSub.equals(item.getOwnerSub())
+                  && item.getCategoryName() != null
+                  && item.getCategoryName().equalsIgnoreCase(oldName)) {
                 item.setCategoryName(normalized);
               }
             });
@@ -101,12 +109,15 @@ public class CategoryService {
 
   @Transactional
   public boolean delete(UUID id, boolean force) {
+    String ownerSub = currentUserService.requiredSub();
     CategoryEntity existing = categoryRepository.findById(id).orElse(null);
     if (existing == null) {
       return false;
     }
 
-    if (!force && itemRepository.existsByDeletedFalseAndCategoryNameIgnoreCase(existing.getName())) {
+    if (!force
+        && itemRepository.existsByDeletedFalseAndCategoryNameIgnoreCaseAndOwnerSub(
+            existing.getName(), ownerSub)) {
       throw new IllegalStateException("category_in_use");
     }
 

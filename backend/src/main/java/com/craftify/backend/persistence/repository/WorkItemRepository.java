@@ -11,5 +11,9 @@ public interface WorkItemRepository
 
   Optional<WorkItemEntity> findByCodeIgnoreCase(String code);
 
+  Optional<WorkItemEntity> findByCodeIgnoreCaseAndOwnerSub(String code, String ownerSub);
+
   boolean existsByCodeIgnoreCase(String code);
+
+  boolean existsByCodeIgnoreCaseAndOwnerSub(String code, String ownerSub);
 }

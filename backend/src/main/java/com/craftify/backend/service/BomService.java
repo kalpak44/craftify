@@ -27,19 +27,23 @@ public class BomService {
   public record BomQuery(int page, int size, String sort, String q, BomStatus status) {}
 
   private final BomRepository bomRepository;
+  private final CurrentUserService currentUserService;
 
-  public BomService(BomRepository bomRepository) {
+  public BomService(BomRepository bomRepository, CurrentUserService currentUserService) {
     this.bomRepository = bomRepository;
+    this.currentUserService = currentUserService;
   }
 
   @Transactional(readOnly = true)
   public BomPage list(BomQuery query) {
+    String ownerSub = currentUserService.requiredSub();
     Pageable pageable =
         PageRequest.of(Math.max(query.page(), 0), Math.max(query.size(), 1), parseSort(query.sort()));
 
     Specification<BomEntity> spec =
         (root, cq, cb) -> {
           List<Predicate> predicates = new ArrayList<>();
+          predicates.add(cb.equal(root.get("ownerSub"), ownerSub));
           if (query.q() != null && !query.q().isBlank()) {
             String pattern = "%" + query.q().toLowerCase(Locale.ROOT) + "%";
             predicates.add(
@@ -67,10 +71,11 @@ public class BomService {
 
   @Transactional(readOnly = true)
   public BomDetail getByCode(String code) {
+    String ownerSub = currentUserService.requiredSub();
     if (code == null || code.isBlank()) {
       return null;
     }
-    return bomRepository.findByCodeIgnoreCase(code).map(this::toDetailModel).orElse(null);
+    return bomRepository.findByCodeIgnoreCaseAndOwnerSub(code, ownerSub).map(this::toDetailModel).orElse(null);
   }
 
   @Transactional
@@ -93,13 +98,15 @@ public class BomService {
     entity.setDescription(req.getDescription());
     entity.setNote(req.getNote());
     entity.setComponents(toEmbeddables(req.getComponents()));
+    entity.setOwnerSub(currentUserService.requiredSub());
 
     return toDetailModel(bomRepository.save(entity));
   }
 
   @Transactional
   public BomDetail updateByCode(String code, BomDetail req, Integer expectedVersion) {
-    BomEntity existing = bomRepository.findByCodeIgnoreCase(code).orElse(null);
+    String ownerSub = currentUserService.requiredSub();
+    BomEntity existing = bomRepository.findByCodeIgnoreCaseAndOwnerSub(code, ownerSub).orElse(null);
     if (existing == null) {
       return null;
     }
@@ -120,7 +127,8 @@ public class BomService {
 
   @Transactional
   public boolean deleteByCode(String code, Integer expectedVersion) {
-    BomEntity existing = bomRepository.findByCodeIgnoreCase(code).orElse(null);
+    String ownerSub = currentUserService.requiredSub();
+    BomEntity existing = bomRepository.findByCodeIgnoreCaseAndOwnerSub(code, ownerSub).orElse(null);
     if (existing == null) {
       return false;
     }
@@ -133,9 +141,11 @@ public class BomService {
 
   @Transactional(readOnly = true)
   public List<BomDetail> listForExport(String q, BomStatus status, List<String> codes) {
+    String ownerSub = currentUserService.requiredSub();
     Specification<BomEntity> spec =
         (root, cq, cb) -> {
           List<Predicate> predicates = new ArrayList<>();
+          predicates.add(cb.equal(root.get("ownerSub"), ownerSub));
           if (q != null && !q.isBlank()) {
             String pattern = "%" + q.toLowerCase(Locale.ROOT) + "%";
             predicates.add(
@@ -169,10 +179,11 @@ public class BomService {
       String note,
       List<BomComponent> components,
       boolean createOnly) {
+    String ownerSub = currentUserService.requiredSub();
     String normalizedCode =
         (code == null || code.isBlank()) ? generateNextCode() : code.trim().toUpperCase(Locale.ROOT);
 
-    BomEntity existing = bomRepository.findByCodeIgnoreCase(normalizedCode).orElse(null);
+    BomEntity existing = bomRepository.findByCodeIgnoreCaseAndOwnerSub(normalizedCode, ownerSub).orElse(null);
     if (existing != null) {
       if (createOnly) {
         throw new IllegalStateException("create_only_conflict");
@@ -196,6 +207,7 @@ public class BomService {
     entity.setDescription(description == null ? null : description.trim());
     entity.setNote(note == null ? null : note.trim());
     entity.setComponents(toEmbeddables(components));
+    entity.setOwnerSub(ownerSub);
     return toDetailModel(bomRepository.save(entity));
   }
 

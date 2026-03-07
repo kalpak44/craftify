@@ -11,9 +11,17 @@ public interface InventoryRepository
 
   Optional<InventoryEntity> findByCodeIgnoreCase(String code);
 
+  Optional<InventoryEntity> findByCodeIgnoreCaseAndOwnerSub(String code, String ownerSub);
+
   Optional<InventoryEntity> findByItemIdIgnoreCase(String itemId);
+
+  Optional<InventoryEntity> findByItemIdIgnoreCaseAndOwnerSub(String itemId, String ownerSub);
 
   boolean existsByCodeIgnoreCase(String code);
 
+  boolean existsByCodeIgnoreCaseAndOwnerSub(String code, String ownerSub);
+
   boolean existsByItemIdIgnoreCase(String itemId);
+
+  boolean existsByItemIdIgnoreCaseAndOwnerSub(String itemId, String ownerSub);
 }

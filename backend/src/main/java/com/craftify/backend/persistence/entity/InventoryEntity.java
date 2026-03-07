@@ -48,6 +48,9 @@ public class InventoryEntity {
   @Column(name = "available", nullable = false, precision = 19, scale = 6)
   private BigDecimal available;
 
+  @Column(name = "owner_sub", nullable = false, length = 191)
+  private String ownerSub;
+
   @Column(name = "created_at", nullable = false)
   private OffsetDateTime createdAt;
 
@@ -150,6 +153,14 @@ public class InventoryEntity {
 
   public void setAvailable(BigDecimal available) {
     this.available = available;
+  }
+
+  public String getOwnerSub() {
+    return ownerSub;
+  }
+
+  public void setOwnerSub(String ownerSub) {
+    this.ownerSub = ownerSub;
   }
 
   public OffsetDateTime getCreatedAt() {

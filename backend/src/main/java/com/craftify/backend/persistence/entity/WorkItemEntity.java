@@ -49,6 +49,9 @@ public class WorkItemEntity {
   @Column(name = "status", nullable = false, length = 32)
   private WorkItemStatus status;
 
+  @Column(name = "owner_sub", nullable = false, length = 191)
+  private String ownerSub;
+
   @Column(name = "created_at", nullable = false)
   private OffsetDateTime createdAt;
 
@@ -146,6 +149,14 @@ public class WorkItemEntity {
 
   public void setStatus(WorkItemStatus status) {
     this.status = status;
+  }
+
+  public String getOwnerSub() {
+    return ownerSub;
+  }
+
+  public void setOwnerSub(String ownerSub) {
+    this.ownerSub = ownerSub;
   }
 
   public OffsetDateTime getCreatedAt() {

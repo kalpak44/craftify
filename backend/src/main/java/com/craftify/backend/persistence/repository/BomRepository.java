@@ -10,5 +10,9 @@ public interface BomRepository extends JpaRepository<BomEntity, UUID>, JpaSpecif
 
   Optional<BomEntity> findByCodeIgnoreCase(String code);
 
+  Optional<BomEntity> findByCodeIgnoreCaseAndOwnerSub(String code, String ownerSub);
+
   boolean existsByCodeIgnoreCase(String code);
+
+  boolean existsByCodeIgnoreCaseAndOwnerSub(String code, String ownerSub);
 }

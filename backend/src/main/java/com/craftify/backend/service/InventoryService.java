@@ -31,20 +31,27 @@ public class InventoryService {
 
   private final InventoryRepository inventoryRepository;
   private final ItemRepository itemRepository;
+  private final CurrentUserService currentUserService;
 
-  public InventoryService(InventoryRepository inventoryRepository, ItemRepository itemRepository) {
+  public InventoryService(
+      InventoryRepository inventoryRepository,
+      ItemRepository itemRepository,
+      CurrentUserService currentUserService) {
     this.inventoryRepository = inventoryRepository;
     this.itemRepository = itemRepository;
+    this.currentUserService = currentUserService;
   }
 
   @Transactional(readOnly = true)
   public InventoryPage list(InventoryQuery query) {
+    String ownerSub = currentUserService.requiredSub();
     Pageable pageable =
         PageRequest.of(Math.max(query.page(), 0), Math.max(query.size(), 1), parseSort(query.sort()));
 
     Specification<InventoryEntity> spec =
         (root, cq, cb) -> {
           List<Predicate> predicates = new ArrayList<>();
+          predicates.add(cb.equal(root.get("ownerSub"), ownerSub));
           if (query.q() != null && !query.q().isBlank()) {
             String pattern = "%" + query.q().toLowerCase(Locale.ROOT) + "%";
             predicates.add(
@@ -78,10 +85,14 @@ public class InventoryService {
 
   @Transactional(readOnly = true)
   public InventoryDetail getByCode(String code) {
+    String ownerSub = currentUserService.requiredSub();
     if (code == null || code.isBlank()) {
       return null;
     }
-    return inventoryRepository.findByCodeIgnoreCase(code.trim()).map(this::toDetailModel).orElse(null);
+    return inventoryRepository
+        .findByCodeIgnoreCaseAndOwnerSub(code.trim(), ownerSub)
+        .map(this::toDetailModel)
+        .orElse(null);
   }
 
   @Transactional
@@ -97,13 +108,15 @@ public class InventoryService {
 
     InventoryEntity entity = new InventoryEntity();
     entity.setCode(code);
+    entity.setOwnerSub(currentUserService.requiredSub());
     apply(entity, req);
     return toDetailModel(inventoryRepository.save(entity));
   }
 
   @Transactional
   public InventoryDetail updateByCode(String code, InventoryUpsertRequest req) {
-    InventoryEntity existing = inventoryRepository.findByCodeIgnoreCase(code).orElse(null);
+    String ownerSub = currentUserService.requiredSub();
+    InventoryEntity existing = inventoryRepository.findByCodeIgnoreCaseAndOwnerSub(code, ownerSub).orElse(null);
     if (existing == null) {
       return null;
     }
@@ -113,7 +126,8 @@ public class InventoryService {
 
   @Transactional
   public boolean deleteByCode(String code) {
-    InventoryEntity existing = inventoryRepository.findByCodeIgnoreCase(code).orElse(null);
+    String ownerSub = currentUserService.requiredSub();
+    InventoryEntity existing = inventoryRepository.findByCodeIgnoreCaseAndOwnerSub(code, ownerSub).orElse(null);
     if (existing == null) {
       return false;
     }
@@ -128,11 +142,12 @@ public class InventoryService {
 
   @Transactional
   public CreateFromItemResult createFromItem(String itemCode, BigDecimal available, String mode) {
+    String ownerSub = currentUserService.requiredSub();
     if (itemCode == null || itemCode.isBlank()) {
       throw new IllegalStateException("item_not_found");
     }
 
-    ItemEntity item = itemRepository.findByCodeIgnoreCase(itemCode.trim()).orElse(null);
+    ItemEntity item = itemRepository.findByCodeIgnoreCaseAndOwnerSub(itemCode.trim(), ownerSub).orElse(null);
     if (item == null || item.isDeleted()) {
       throw new IllegalStateException("item_not_found");
     }
@@ -140,7 +155,8 @@ public class InventoryService {
       throw new IllegalStateException("item_not_active");
     }
 
-    InventoryEntity existing = inventoryRepository.findByItemIdIgnoreCase(item.getCode()).orElse(null);
+    InventoryEntity existing =
+        inventoryRepository.findByItemIdIgnoreCaseAndOwnerSub(item.getCode(), ownerSub).orElse(null);
     if (existing != null) {
       String normalizedMode = mode == null ? "" : mode.trim().toLowerCase(Locale.ROOT);
       if ("add".equals(normalizedMode)) {
@@ -168,6 +184,7 @@ public class InventoryService {
     entity.setCategoryName(item.getCategoryName());
     entity.setUom(item.getUomBase());
     entity.setAvailable(available == null ? BigDecimal.ZERO : available);
+    entity.setOwnerSub(ownerSub);
 
     return new CreateFromItemResult(toDetailModel(inventoryRepository.save(entity)), true);
   }
