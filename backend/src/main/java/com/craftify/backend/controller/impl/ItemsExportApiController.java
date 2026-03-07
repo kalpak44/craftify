@@ -123,10 +123,21 @@ public class ItemsExportApiController implements ItemsExportApi {
             uom ->
                 String.join(
                     "|",
-                    uom.getUom() == null ? "" : uom.getUom(),
-                    uom.getCoef() == null ? "" : uom.getCoef().toPlainString(),
-                    uom.getNotes() == null ? "" : uom.getNotes()))
+                    escapeAdditionalUnitsPart(uom.getUom()),
+                    escapeAdditionalUnitsPart(
+                        uom.getCoef() == null ? "" : uom.getCoef().toPlainString()),
+                    escapeAdditionalUnitsPart(uom.getNotes())))
         .collect(Collectors.joining("; "));
+  }
+
+  private static String escapeAdditionalUnitsPart(String value) {
+    if (value == null) {
+      return "";
+    }
+    return value
+        .replace("\\", "\\\\")
+        .replace("|", "\\|")
+        .replace(";", "\\;");
   }
 
   private static String csv(String v) {
