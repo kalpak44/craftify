@@ -14,14 +14,14 @@ import com.craftify.backend.persistence.repository.BomRepository;
 import com.craftify.backend.persistence.repository.InventoryRepository;
 import com.craftify.backend.persistence.repository.ItemRepository;
 import com.craftify.backend.persistence.repository.WorkItemRepository;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.criteria.Predicate;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -49,7 +49,8 @@ public class ItemService {
   private final WorkItemRepository workItemRepository;
   private final CurrentUserService currentUserService;
   private final CategoryService categoryService;
-  private final ObjectMapper objectMapper;
+  private static final Pattern SNAPSHOT_ITEM_ID_PATTERN =
+      Pattern.compile("\"itemId\"\\s*:\\s*\"([^\"]+)\"", Pattern.CASE_INSENSITIVE);
 
   public ItemService(
       ItemRepository itemRepository,
@@ -57,15 +58,13 @@ public class ItemService {
       BomRepository bomRepository,
       WorkItemRepository workItemRepository,
       CurrentUserService currentUserService,
-      CategoryService categoryService,
-      ObjectMapper objectMapper) {
+      CategoryService categoryService) {
     this.itemRepository = itemRepository;
     this.inventoryRepository = inventoryRepository;
     this.bomRepository = bomRepository;
     this.workItemRepository = workItemRepository;
     this.currentUserService = currentUserService;
     this.categoryService = categoryService;
-    this.objectMapper = objectMapper;
   }
 
   @Transactional(readOnly = true)
@@ -366,22 +365,14 @@ public class ItemService {
     if (json == null || json.isBlank()) {
       return false;
     }
-    try {
-      List<AllocatedComponentRef> refs =
-          objectMapper.readValue(json, new TypeReference<List<AllocatedComponentRef>>() {});
-      return refs.stream()
-          .anyMatch(
-              ref ->
-                  ref != null
-                      && ref.itemId != null
-                      && ref.itemId.trim().equalsIgnoreCase(normalizedItemCode));
-    } catch (Exception ignore) {
-      return false;
+    Matcher matcher = SNAPSHOT_ITEM_ID_PATTERN.matcher(json);
+    while (matcher.find()) {
+      String itemId = matcher.group(1);
+      if (itemId != null && itemId.trim().equalsIgnoreCase(normalizedItemCode)) {
+        return true;
+      }
     }
-  }
-
-  private static final class AllocatedComponentRef {
-    public String itemId;
+    return false;
   }
 
   private static int extractNumericSuffix(String code) {

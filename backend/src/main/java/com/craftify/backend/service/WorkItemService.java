@@ -42,7 +42,7 @@ public class WorkItemService {
   private final InventoryRepository inventoryRepository;
   private final CurrentUserService currentUserService;
   private final CategoryService categoryService;
-  private final ObjectMapper objectMapper;
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
   public WorkItemService(
       WorkItemRepository workItemRepository,
@@ -50,15 +50,13 @@ public class WorkItemService {
       ItemRepository itemRepository,
       InventoryRepository inventoryRepository,
       CurrentUserService currentUserService,
-      CategoryService categoryService,
-      ObjectMapper objectMapper) {
+      CategoryService categoryService) {
     this.workItemRepository = workItemRepository;
     this.bomRepository = bomRepository;
     this.itemRepository = itemRepository;
     this.inventoryRepository = inventoryRepository;
     this.currentUserService = currentUserService;
     this.categoryService = categoryService;
-    this.objectMapper = objectMapper;
   }
 
   @Transactional(readOnly = true)
