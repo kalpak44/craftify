@@ -17,9 +17,17 @@ import ItemDetailsPage from "./pages/ItemDetailsPage.jsx";
 import CalendarPage from "./pages/CalendarPage.jsx";
 import InventoryDetailsPage from "./pages/InventoryDetailsPage.jsx";
 import {WorkItemsPage} from "./pages/WorkItemsPage.jsx";
+import {clearLogoutInProgress} from "./utils/authSession";
 
 export default function App() {
-    const {isLoading} = useAuth0();
+    const {isLoading, isAuthenticated} = useAuth0();
+
+    React.useEffect(() => {
+        if (!isLoading && !isAuthenticated) {
+            clearLogoutInProgress();
+        }
+    }, [isLoading, isAuthenticated]);
+
     if (isLoading) {
         return (
             <div className="page-layout">
