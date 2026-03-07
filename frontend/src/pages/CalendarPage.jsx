@@ -1,4 +1,6 @@
-import React, {useMemo, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
+import {useAuthFetch} from "../hooks/useAuthFetch";
+import {createCalendarEvent, listCalendarEvents} from "../api/calendarEvents";
 
 /**
  * CalendarPage — ERP-aligned (Tailwind-only, raw JS)
@@ -7,7 +9,7 @@ import React, {useMemo, useState} from "react";
  * - Single "+ Create" button (header only). Toolbar shows Today/Prev/Next and a right-aligned "Upcoming" list.
  * - Day, Week, Month, Year views.
  * - Add Event modal + validation modal (no alerts).
- * - Pure JS date math, no external libs. Mock data in component state.
+ * - Pure JS date math, no external libs.
  */
 
 export default function CalendarPage() {
@@ -39,74 +41,12 @@ export default function CalendarPage() {
         };
     }
 
-    // ---------- Mocked Events ----------
-    const initialEvents = [
-        {
-            id: "e-1001",
-            title: "Line Changeover",
-            start: "2025-09-1T09:00",
-            end: "2025-02-20T11:30",
-            color: "indigo",
-            calendar: "Production",
-            location: "Line A",
-            description: "Swap tooling and run trial lot."
-        },
-        {
-            id: "e-1002",
-            title: "BOM Review",
-            start: "2025-02-21T13:00",
-            end: "2025-02-21T14:00",
-            color: "emerald",
-            calendar: "Engineering",
-            location: "Room 3",
-            description: "Rev D → Rev E deltas."
-        },
-        {
-            id: "e-1003",
-            title: "Supplier Call",
-            start: "2025-02-21T16:00",
-            end: "2025-02-21T16:45",
-            color: "orange",
-            calendar: "Supply Chain",
-            location: "Meet",
-            description: "Lead times and alt vendors."
-        },
-        {
-            id: "e-1004",
-            title: "Maintenance Window",
-            start: "2025-02-22T22:00",
-            end: "2025-02-23T02:00",
-            color: "rose",
-            calendar: "Maintenance",
-            location: "Plant",
-            description: "Planned downtime."
-        },
-        {
-            id: "e-1005",
-            title: "Daily Standup",
-            start: "2025-02-24T09:00",
-            end: "2025-02-24T09:15",
-            color: "sky",
-            calendar: "Team",
-            location: "Huddle area",
-            description: "Quick sync."
-        },
-        {
-            id: "e-1006",
-            title: "Yearly Audit",
-            start: "2025-03-05T10:00",
-            end: "2025-03-05T12:00",
-            color: "purple",
-            calendar: "Quality",
-            location: "HQ",
-            description: "ISO 9001 surveillance."
-        }
-    ];
-
     // ---------- State ----------
+    const authFetch = useAuthFetch();
     const [view, setView] = useState("year"); // 'day' | 'week' | 'month' | 'year'
     const [anchor, setAnchor] = useState(new Date());
-    const [events, setEvents] = useState(initialEvents);
+    const [events, setEvents] = useState([]);
+    const [eventsLoading, setEventsLoading] = useState(false);
 
     // Add Event modal
     const [showAdd, setShowAdd] = useState(false);
@@ -172,6 +112,68 @@ export default function CalendarPage() {
         const e = new Date(evEnd);
         return s < winEnd && e > winStart;
     };
+    const normalizeEvent = (ev) => ({
+        id: String(ev?.id || ""),
+        title: ev?.title || "",
+        start: ev?.start || "",
+        end: ev?.end || "",
+        color: ev?.color || "indigo",
+        calendar: ev?.calendar || "General",
+        location: ev?.location || "",
+        description: ev?.description || ""
+    });
+
+    const queryRange = useMemo(() => {
+        if (view === "day") {
+            const from = startOfDay(anchor);
+            const to = addDays(from, 1);
+            return {from, to};
+        }
+        if (view === "week") {
+            const from = startOfWeek(anchor);
+            const to = addDays(from, 7);
+            return {from, to};
+        }
+        if (view === "month") {
+            const first = startOfMonth(anchor);
+            const from = startOfWeek(first);
+            const to = addDays(from, 42);
+            return {from, to};
+        }
+        const from = new Date(anchor.getFullYear(), 0, 1);
+        const to = new Date(anchor.getFullYear() + 1, 0, 1);
+        return {from, to};
+    }, [anchor, view]);
+
+    useEffect(() => {
+        let cancelled = false;
+        const run = async () => {
+            try {
+                setEventsLoading(true);
+                const rows = await listCalendarEvents(authFetch, {
+                    from: queryRange.from.toISOString(),
+                    to: queryRange.to.toISOString()
+                });
+                if (!cancelled) {
+                    const mapped = (Array.isArray(rows) ? rows : []).map(normalizeEvent);
+                    setEvents(mapped);
+                }
+            } catch (e) {
+                if (!cancelled) {
+                    setMsg({title: "Load failed", message: e?.message || "Failed to load calendar events."});
+                }
+            } finally {
+                if (!cancelled) {
+                    setEventsLoading(false);
+                }
+            }
+        };
+        run();
+        return () => {
+            cancelled = true;
+        };
+    }, [authFetch, queryRange.from, queryRange.to]);
+
     const eventsInRange = (winStart, winEnd) => events.filter((ev) => overlaps(ev.start, ev.end, winStart, winEnd));
     const eventsOnDay = (day) => {
         const ds = startOfDay(day);
@@ -566,7 +568,9 @@ export default function CalendarPage() {
                             <div className="flex items-center gap-3 justify-between md:justify-end">
                                 <span className="text-sm text-slate-500 dark:text-gray-400">Upcoming</span>
                                 <ul className="hidden md:flex items-center gap-4">
-                                    {upcoming.length > 0 ? (
+                                    {eventsLoading ? (
+                                        <li className="text-sm text-slate-600 dark:text-gray-500">Loading events...</li>
+                                    ) : upcoming.length > 0 ? (
                                         upcoming.map((e) => {
                                             const ds = new Date(e.start);
                                             return (
@@ -592,6 +596,9 @@ export default function CalendarPage() {
 
             {/* Main content */}
             <main className="mx-auto max-w-6xl px-4 pb-12 space-y-4">
+                {eventsLoading && (
+                    <div className="text-sm text-slate-500 dark:text-gray-400">Loading events...</div>
+                )}
                 {view === "day" && <DayView/>}
                 {view === "week" && <WeekView/>}
                 {view === "month" && <MonthView/>}
@@ -607,7 +614,7 @@ export default function CalendarPage() {
                         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Create event</h2>
                         <form
                             className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3"
-                            onSubmit={(e) => {
+                            onSubmit={async (e) => {
                                 e.preventDefault();
                                 const s = parseLocal(draft.start);
                                 const en = parseLocal(draft.end);
@@ -621,18 +628,27 @@ export default function CalendarPage() {
                                     return;
                                 }
 
-                                const newEvent = {
-                                    id: "e-" + Math.random().toString(36).slice(2, 9),
-                                    title: draft.title.trim(),
-                                    start: draft.start,
-                                    end: draft.end,
-                                    color: draft.color || "indigo",
-                                    calendar: draft.calendar || "General",
-                                    location: draft.location || "",
-                                    description: draft.description || ""
-                                };
-                                setEvents((evs) => [...evs, newEvent]);
-                                setShowAdd(false);
+                                try {
+                                    const created = await createCalendarEvent(authFetch, {
+                                        title: draft.title.trim(),
+                                        start: s.toISOString(),
+                                        end: en.toISOString(),
+                                        color: draft.color || "indigo",
+                                        calendar: draft.calendar || "General",
+                                        location: draft.location || "",
+                                        description: draft.description || ""
+                                    });
+
+                                    setEvents((evs) =>
+                                        [...evs, normalizeEvent(created)].sort((a, b) => new Date(a.start) - new Date(b.start))
+                                    );
+                                    setShowAdd(false);
+                                } catch (err) {
+                                    setMsg({
+                                        title: "Save failed",
+                                        message: err?.message || "Failed to save event."
+                                    });
+                                }
                             }}
                         >
                             <div className="sm:col-span-2">
