@@ -1,15 +1,6 @@
 const LOGOUT_IN_PROGRESS_KEY = "auth:logout_in_progress_at";
 const LOGOUT_TTL_MS = 45_000;
 
-function appReturnTo() {
-    const explicit = import.meta.env.VITE_AUTH0_LOGOUT_RETURN_TO;
-    if (explicit && String(explicit).trim()) {
-        return String(explicit).trim();
-    }
-    // Most Auth0 tenants whitelist origin by default; path-specific returnTo can fail with "Oops".
-    return window.location.origin;
-}
-
 export function markLogoutInProgress() {
     try {
         sessionStorage.setItem(LOGOUT_IN_PROGRESS_KEY, String(Date.now()));
@@ -51,13 +42,5 @@ export function logoutUser(logout) {
     localStorage.removeItem("email_verified");
     sessionStorage.removeItem("redirect");
 
-    return logout({
-        logoutParams: {
-            returnTo: appReturnTo(),
-        },
-        openUrl(url) {
-            // Use a hard navigation to fully reset SPA state/caches after logout.
-            window.location.replace(url);
-        },
-    });
+    return logout();
 }

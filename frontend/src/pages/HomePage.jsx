@@ -117,7 +117,7 @@ export const HomePage = () => {
                         Get started free
                     </button>
                     <button
-                        onClick={() => loginWithRedirect({screen_hint: "signup"})}
+                        onClick={() => loginWithRedirect({authorizationParams: {screen_hint: "signup"}})}
                         className="rounded-2xl px-6 py-3 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-white/10 text-base"
                     >
                         Create an account
