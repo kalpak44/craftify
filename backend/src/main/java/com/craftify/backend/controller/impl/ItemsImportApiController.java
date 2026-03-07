@@ -181,7 +181,8 @@ public class ItemsImportApiController implements ItemsImportApi {
     String categoryName = pick(cells, columns.get("categoryName"));
     String uomBase = pick(cells, columns.get("uomBase"));
     String description = pick(cells, columns.get("description"));
-    List<ItemUom> uoms = parseAdditionalUnits(pick(cells, columns.get("additionalUnits")), rowNumber, errors);
+    String additionalUnitsRaw = pick(cells, columns.get("additionalUnits"));
+    List<ItemUom> uoms = parseAdditionalUnits(additionalUnitsRaw, rowNumber, errors);
 
     boolean ok = true;
     if (name == null || name.isBlank()) {
@@ -210,6 +211,9 @@ public class ItemsImportApiController implements ItemsImportApi {
               .row(rowNumber)
               .field("status")
               .message("Status must be one of: Draft, Active, Hold, Discontinued"));
+      ok = false;
+    }
+    if (additionalUnitsRaw != null && uoms == null) {
       ok = false;
     }
 
@@ -320,14 +324,14 @@ public class ItemsImportApiController implements ItemsImportApi {
     }
 
     List<ItemUom> out = new ArrayList<>();
-    String[] entries = raw.split(";");
-    for (int i = 0; i < entries.length; i++) {
-      String entry = entries[i].trim();
+    List<String> entries = splitEscaped(raw, ';');
+    for (int i = 0; i < entries.size(); i++) {
+      String entry = entries.get(i).trim();
       if (entry.isBlank()) {
         continue;
       }
-      String[] parts = entry.split("\\|", 3);
-      if (parts.length < 2) {
+      List<String> parts = splitEscaped(entry, '|');
+      if (parts.size() < 2) {
         errors.add(
             new ImportResultErrorsInner()
                 .row(rowNumber)
@@ -339,9 +343,12 @@ public class ItemsImportApiController implements ItemsImportApi {
         return null;
       }
 
-      String uom = parts[0] == null ? "" : parts[0].trim();
-      String coefRaw = parts[1] == null ? "" : parts[1].trim();
-      String notes = parts.length > 2 && parts[2] != null ? parts[2].trim() : null;
+      String uom = unescapeAdditionalUnitsPart(parts.get(0)).trim();
+      String coefRaw = unescapeAdditionalUnitsPart(parts.get(1)).trim();
+      String notes =
+          parts.size() > 2
+              ? unescapeAdditionalUnitsPart(String.join("|", parts.subList(2, parts.size()))).trim()
+              : null;
       if (uom.isBlank() || coefRaw.isBlank()) {
         errors.add(
             new ImportResultErrorsInner()
@@ -366,6 +373,54 @@ public class ItemsImportApiController implements ItemsImportApi {
       out.add(new ItemUom().uom(uom).coef(coef).notes(notes));
     }
     return out;
+  }
+
+  private static List<String> splitEscaped(String value, char delimiter) {
+    List<String> out = new ArrayList<>();
+    StringBuilder cur = new StringBuilder();
+    boolean escaped = false;
+    for (int i = 0; i < value.length(); i++) {
+      char ch = value.charAt(i);
+      if (escaped) {
+        cur.append(ch);
+        escaped = false;
+      } else if (ch == '\\') {
+        escaped = true;
+      } else if (ch == delimiter) {
+        out.add(cur.toString());
+        cur.setLength(0);
+      } else {
+        cur.append(ch);
+      }
+    }
+    if (escaped) {
+      cur.append('\\');
+    }
+    out.add(cur.toString());
+    return out;
+  }
+
+  private static String unescapeAdditionalUnitsPart(String value) {
+    if (value == null || value.isEmpty()) {
+      return value;
+    }
+    StringBuilder out = new StringBuilder();
+    boolean escaped = false;
+    for (int i = 0; i < value.length(); i++) {
+      char ch = value.charAt(i);
+      if (escaped) {
+        out.append(ch);
+        escaped = false;
+      } else if (ch == '\\') {
+        escaped = true;
+      } else {
+        out.append(ch);
+      }
+    }
+    if (escaped) {
+      out.append('\\');
+    }
+    return out.toString();
   }
 
   private record ParsedRow(

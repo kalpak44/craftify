@@ -361,12 +361,34 @@ export const FullWidthLayout = ({children}) => {
                         <button
                             type="button"
                             onClick={toggleTheme}
-                            className={`mb-3 inline-flex items-center justify-center h-8 w-8 shrink-0 overflow-visible rounded-full ${isDark ? "text-amber-300 hover:text-amber-200" : "text-slate-600 hover:text-slate-900"}`}
+                            className={`mb-3 w-full rounded-xl border px-2 py-2 transition-colors focus:outline-none focus-visible:ring focus-visible:ring-blue-500/50 ${
+                                isDark
+                                    ? "border-gray-700 bg-gray-800/80 hover:bg-gray-800"
+                                    : "border-gray-300 bg-gray-100 hover:bg-gray-200"
+                            }`}
                             title={`Switch to ${isDark ? "light" : "dark"} theme`}
                             aria-label={`Switch to ${isDark ? "light" : "dark"} theme`}
                         >
-                            <span className="text-lg leading-none select-none" aria-hidden="true">
-                                {isDark ? "☀" : "☾"}
+                            <span className="flex items-center justify-between">
+                                <span className={`text-xs font-medium ${isDark ? "text-gray-300" : "text-gray-600"}`}>
+                                    Theme
+                                </span>
+                                <span className={`inline-flex rounded-lg p-0.5 ${isDark ? "bg-gray-900/80" : "bg-white"}`}>
+                                    <span
+                                        className={`px-2.5 py-1 text-xs rounded-md transition ${
+                                            isDark ? "text-gray-500" : "bg-slate-900 text-white"
+                                        }`}
+                                    >
+                                        Light
+                                    </span>
+                                    <span
+                                        className={`px-2.5 py-1 text-xs rounded-md transition ${
+                                            isDark ? "bg-slate-100 text-slate-900" : "text-gray-500"
+                                        }`}
+                                    >
+                                        Dark
+                                    </span>
+                                </span>
                             </span>
                         </button>
 
