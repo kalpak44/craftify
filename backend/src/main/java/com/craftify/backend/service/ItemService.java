@@ -241,6 +241,11 @@ public class ItemService {
       return toDetailModel(itemRepository.save(existing));
     }
 
+    // Code remains globally unique in DB. If the code exists for another owner, fail with a clear error.
+    if (itemRepository.existsByCodeIgnoreCase(normalizedCode)) {
+      throw new IllegalStateException("code_conflict");
+    }
+
     ItemEntity entity = new ItemEntity();
     entity.setCode(normalizedCode);
     entity.setName(name.trim());

@@ -18,6 +18,7 @@ import java.util.Locale;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -145,11 +146,30 @@ public class ItemsImportApiController implements ItemsImportApi {
             updated++;
           }
         } catch (IllegalStateException ex) {
+          String message =
+              switch (ex.getMessage()) {
+                case "create_only_conflict" -> "Item already exists in create-only mode";
+                case "code_conflict" -> "Item code already exists";
+                default -> "Failed to import item: " + ex.getMessage();
+              };
           errors.add(
               new ImportResultErrorsInner()
                   .row(rowNumber)
                   .field("code")
-                  .message("Item already exists in create-only mode"));
+                  .message(message));
+        } catch (DataIntegrityViolationException ex) {
+          errors.add(
+              new ImportResultErrorsInner()
+                  .row(rowNumber)
+                  .field("code")
+                  .message("Item code already exists"));
+        } catch (RuntimeException ex) {
+          log.error("Unexpected import error at row {}", rowNumber, ex);
+          errors.add(
+              new ImportResultErrorsInner()
+                  .row(rowNumber)
+                  .field("row")
+                  .message("Unexpected error while importing this row"));
         }
       }
     } catch (IOException e) {
