@@ -208,6 +208,7 @@ public class ItemService {
       String categoryName,
       String uomBase,
       String description,
+      List<ItemUom> uoms,
       boolean createOnly) {
     String normalizedCode =
         (code == null || code.isBlank()) ? generateNextCode() : code.trim().toUpperCase(Locale.ROOT);
@@ -222,6 +223,9 @@ public class ItemService {
       existing.setCategoryName(categoryName.trim());
       existing.setUomBase(uomBase.trim());
       existing.setDescription(description);
+      if (uoms != null) {
+        existing.setUoms(toEmbeddables(uoms));
+      }
       return toDetailModel(itemRepository.save(existing));
     }
 
@@ -232,6 +236,7 @@ public class ItemService {
     entity.setCategoryName(categoryName.trim());
     entity.setUomBase(uomBase.trim());
     entity.setDescription(description);
+    entity.setUoms(toEmbeddables(uoms == null ? List.of() : uoms));
     entity.setDeleted(false);
     return toDetailModel(itemRepository.save(entity));
   }

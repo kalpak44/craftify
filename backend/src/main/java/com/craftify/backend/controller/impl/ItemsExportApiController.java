@@ -2,6 +2,7 @@ package com.craftify.backend.controller.impl;
 
 import com.craftify.backend.controller.ItemsExportApi;
 import com.craftify.backend.model.ItemDetail;
+import com.craftify.backend.model.ItemUom;
 import com.craftify.backend.model.Status;
 import com.craftify.backend.service.ItemService;
 import java.nio.charset.StandardCharsets;
@@ -10,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ByteArrayResource;
@@ -81,9 +83,12 @@ public class ItemsExportApiController implements ItemsExportApi {
 
   private static String toCsv(List<ItemDetail> rows) {
     StringBuilder sb = new StringBuilder();
-    sb.append("Code,Name,Status,Category,UoM,Description\n");
+    sb.append(
+        "Id,Code,Name,Status,Category,UoM Base,Description,Additional Units Count,Additional Units,Created At,Updated At,Version\n");
     for (ItemDetail d : rows) {
-      sb.append(csv(d.getCode()))
+      sb.append(csv(d.getId()))
+          .append(',')
+          .append(csv(d.getCode()))
           .append(',')
           .append(csv(d.getName()))
           .append(',')
@@ -94,9 +99,34 @@ public class ItemsExportApiController implements ItemsExportApi {
           .append(csv(d.getUomBase()))
           .append(',')
           .append(csv(d.getDescription()))
+          .append(',')
+          .append(csv(String.valueOf(d.getUoms() == null ? 0 : d.getUoms().size())))
+          .append(',')
+          .append(csv(formatAdditionalUnits(d.getUoms())))
+          .append(',')
+          .append(csv(d.getCreatedAt() == null ? "" : d.getCreatedAt().toString()))
+          .append(',')
+          .append(csv(d.getUpdatedAt() == null ? "" : d.getUpdatedAt().toString()))
+          .append(',')
+          .append(csv(d.getVersion() == null ? "" : d.getVersion().toString()))
           .append('\n');
     }
     return sb.toString();
+  }
+
+  private static String formatAdditionalUnits(List<ItemUom> uoms) {
+    if (uoms == null || uoms.isEmpty()) {
+      return "";
+    }
+    return uoms.stream()
+        .map(
+            uom ->
+                String.join(
+                    "|",
+                    uom.getUom() == null ? "" : uom.getUom(),
+                    uom.getCoef() == null ? "" : uom.getCoef().toPlainString(),
+                    uom.getNotes() == null ? "" : uom.getNotes()))
+        .collect(Collectors.joining("; "));
   }
 
   private static String csv(String v) {

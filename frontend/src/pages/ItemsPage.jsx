@@ -57,7 +57,7 @@ export const ItemsPage = () => {
     // Single-row deletion modal
     const [deleteOneId, setDeleteOneId] = useState(null);
     const [createInvForItem, setCreateInvForItem] = useState(null);
-    const [createInvAvailable, setCreateInvAvailable] = useState("0");
+    const [createInvAvailable, setCreateInvAvailable] = useState("");
     const [createInvMode, setCreateInvMode] = useState("add");
     const [creatingInventory, setCreatingInventory] = useState(false);
 
@@ -251,20 +251,6 @@ export const ItemsPage = () => {
     // ---------- Export helpers ----------
     const rowsForExport = () => (selectedCount ? filtered.filter((r) => selectedIds.includes(itemCode(r))) : filtered);
 
-    const toCSV = (data) => {
-        const headers = ["ID", "Product name", "Status", "Category", "UoM"];
-        const escape = (v) => {
-            const s = String(v ?? "");
-            if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
-            return s;
-        };
-        const lines = [headers.join(",")];
-        data.forEach((r) => {
-            lines.push([escape(itemCode(r)), escape(r.name), escape(r.status), escape(r.categoryName || ""), escape(r.uomBase || "")].join(","));
-        });
-        return lines.join("\n");
-    };
-
     const downloadBlob = (blob, filename) => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -277,19 +263,13 @@ export const ItemsPage = () => {
     };
 
     const handleExportCSV = async () => {
-        if (selectedCount) {
-            const csv = toCSV(rowsForExport());
-            downloadBlob(new Blob(["\ufeff" + csv], {type: "text/csv;charset=utf-8;"}), `items_${new Date()
-                .toISOString()
-                .slice(0, 10)}.csv`);
-            return;
-        }
         try {
             const {blob, filename} = await exportItemsCsv(authFetch, {
-                q: queryDebounced || undefined,
-                status: status !== "all" ? status : undefined,
-                categoryName: category !== "all" ? category : undefined,
-                uom: uom !== "all" ? uom : undefined,
+                ids: selectedCount ? selectedIds : undefined,
+                q: selectedCount ? undefined : (queryDebounced || undefined),
+                status: selectedCount ? undefined : (status !== "all" ? status : undefined),
+                categoryName: selectedCount ? undefined : (category !== "all" ? category : undefined),
+                uom: selectedCount ? undefined : (uom !== "all" ? uom : undefined),
             });
             downloadBlob(blob, filename);
         } catch (e) {
@@ -520,7 +500,7 @@ export const ItemsPage = () => {
                         e.stopPropagation();
                         const row = rowById.get(id);
                         setCreateInvForItem({id, name: row?.name || ""});
-                        setCreateInvAvailable("0");
+                        setCreateInvAvailable("");
                         setCreateInvMode("add");
                         onDone?.();
                     }}

@@ -3,11 +3,13 @@ package com.craftify.backend.controller.impl;
 import com.craftify.backend.controller.ItemsImportApi;
 import com.craftify.backend.model.ImportResult;
 import com.craftify.backend.model.ImportResultErrorsInner;
+import com.craftify.backend.model.ItemUom;
 import com.craftify.backend.model.Status;
 import com.craftify.backend.service.ItemService;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -135,6 +137,7 @@ public class ItemsImportApiController implements ItemsImportApi {
               parsed.categoryName(),
               parsed.uomBase(),
               parsed.description(),
+              parsed.uoms(),
               createOnly);
           if (before == null) {
             created++;
@@ -178,6 +181,7 @@ public class ItemsImportApiController implements ItemsImportApi {
     String categoryName = pick(cells, columns.get("categoryName"));
     String uomBase = pick(cells, columns.get("uomBase"));
     String description = pick(cells, columns.get("description"));
+    List<ItemUom> uoms = parseAdditionalUnits(pick(cells, columns.get("additionalUnits")), rowNumber, errors);
 
     boolean ok = true;
     if (name == null || name.isBlank()) {
@@ -210,7 +214,7 @@ public class ItemsImportApiController implements ItemsImportApi {
     }
 
     if (!ok) {
-      return new ParsedRow(false, null, null, null, null, null, null);
+      return new ParsedRow(false, null, null, null, null, null, null, null);
     }
 
     return new ParsedRow(
@@ -220,7 +224,8 @@ public class ItemsImportApiController implements ItemsImportApi {
         status,
         categoryName.trim(),
         uomBase.trim(),
-        description == null ? null : description.trim());
+        description == null ? null : description.trim(),
+        uoms);
   }
 
   private static Status parseStatus(String raw) {
@@ -259,6 +264,13 @@ public class ItemsImportApiController implements ItemsImportApi {
         case "status" -> out.put("status", i);
         case "category", "categoryname", "category_name" -> out.put("categoryName", i);
         case "uom", "uombase", "uom_base" -> out.put("uomBase", i);
+        case "additionalunits",
+            "additional_units",
+            "additionaluoms",
+            "additional_uoms",
+            "uoms",
+            "extraunits",
+            "extra_units" -> out.put("additionalUnits", i);
         case "description", "desc" -> out.put("description", i);
         default -> {
           // ignore unknown columns
@@ -298,6 +310,64 @@ public class ItemsImportApiController implements ItemsImportApi {
     return out;
   }
 
+  private static List<ItemUom> parseAdditionalUnits(
+      String raw, int rowNumber, List<ImportResultErrorsInner> errors) {
+    if (raw == null) {
+      return null;
+    }
+    if (raw.isBlank()) {
+      return List.of();
+    }
+
+    List<ItemUom> out = new ArrayList<>();
+    String[] entries = raw.split(";");
+    for (int i = 0; i < entries.length; i++) {
+      String entry = entries[i].trim();
+      if (entry.isBlank()) {
+        continue;
+      }
+      String[] parts = entry.split("\\|", 3);
+      if (parts.length < 2) {
+        errors.add(
+            new ImportResultErrorsInner()
+                .row(rowNumber)
+                .field("additionalUnits")
+                .message(
+                    "Invalid additional unit format at entry "
+                        + (i + 1)
+                        + ". Expected: uom|coef|notes"));
+        return null;
+      }
+
+      String uom = parts[0] == null ? "" : parts[0].trim();
+      String coefRaw = parts[1] == null ? "" : parts[1].trim();
+      String notes = parts.length > 2 && parts[2] != null ? parts[2].trim() : null;
+      if (uom.isBlank() || coefRaw.isBlank()) {
+        errors.add(
+            new ImportResultErrorsInner()
+                .row(rowNumber)
+                .field("additionalUnits")
+                .message("Additional unit must include both uom and coef"));
+        return null;
+      }
+
+      BigDecimal coef;
+      try {
+        coef = new BigDecimal(coefRaw);
+      } catch (NumberFormatException ex) {
+        errors.add(
+            new ImportResultErrorsInner()
+                .row(rowNumber)
+                .field("additionalUnits")
+                .message("Invalid coefficient for additional unit '" + uom + "'"));
+        return null;
+      }
+
+      out.add(new ItemUom().uom(uom).coef(coef).notes(notes));
+    }
+    return out;
+  }
+
   private record ParsedRow(
       boolean valid,
       String code,
@@ -305,5 +375,6 @@ public class ItemsImportApiController implements ItemsImportApi {
       Status status,
       String categoryName,
       String uomBase,
-      String description) {}
+      String description,
+      List<ItemUom> uoms) {}
 }
