@@ -16,8 +16,11 @@ public class CategoryEntity {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  @Column(name = "name", nullable = false, length = 100, unique = true)
+  @Column(name = "name", nullable = false, length = 100)
   private String name;
+
+  @Column(name = "owner_sub", nullable = false, length = 191)
+  private String ownerSub;
 
   public UUID getId() {
     return id;
@@ -33,5 +36,13 @@ public class CategoryEntity {
 
   public void setName(String name) {
     this.name = name;
+  }
+
+  public String getOwnerSub() {
+    return ownerSub;
+  }
+
+  public void setOwnerSub(String ownerSub) {
+    this.ownerSub = ownerSub;
   }
 }

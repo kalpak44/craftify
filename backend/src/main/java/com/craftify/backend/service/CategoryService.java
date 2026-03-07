@@ -35,10 +35,12 @@ public class CategoryService {
 
   @Transactional(readOnly = true)
   public CategoryPage list(int page, int size, String sort, String q) {
+    String ownerSub = currentUserService.requiredSub();
     Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1), parseSort(sort));
     Specification<CategoryEntity> spec =
         (root, cq, cb) -> {
           List<Predicate> predicates = new java.util.ArrayList<>();
+          predicates.add(cb.equal(root.get("ownerSub"), ownerSub));
           if (q != null && !q.isBlank()) {
             predicates.add(cb.like(cb.lower(root.get("name")), "%" + q.toLowerCase(Locale.ROOT) + "%"));
           }
@@ -57,31 +59,34 @@ public class CategoryService {
 
   @Transactional(readOnly = true)
   public Category get(UUID id) {
-    return categoryRepository.findById(id).map(this::toModel).orElse(null);
+    String ownerSub = currentUserService.requiredSub();
+    return categoryRepository.findByIdAndOwnerSub(id, ownerSub).map(this::toModel).orElse(null);
   }
 
   @Transactional
   public Category create(String name) {
+    String ownerSub = currentUserService.requiredSub();
     String normalized = name.trim();
-    if (categoryRepository.existsByNameIgnoreCase(normalized)) {
+    if (categoryRepository.existsByNameIgnoreCaseAndOwnerSub(normalized, ownerSub)) {
       return null;
     }
     CategoryEntity entity = new CategoryEntity();
     entity.setName(normalized);
+    entity.setOwnerSub(ownerSub);
     return toModel(categoryRepository.save(entity));
   }
 
   @Transactional
   public Category rename(UUID id, String newName) {
     String ownerSub = currentUserService.requiredSub();
-    CategoryEntity existing = categoryRepository.findById(id).orElse(null);
+    CategoryEntity existing = categoryRepository.findByIdAndOwnerSub(id, ownerSub).orElse(null);
     if (existing == null) {
       return null;
     }
 
     String normalized = newName.trim();
     boolean clash =
-        categoryRepository.findByNameIgnoreCase(normalized)
+        categoryRepository.findByNameIgnoreCaseAndOwnerSub(normalized, ownerSub)
             .map(c -> !c.getId().equals(id))
             .orElse(false);
     if (clash) {
@@ -110,7 +115,7 @@ public class CategoryService {
   @Transactional
   public boolean delete(UUID id, boolean force) {
     String ownerSub = currentUserService.requiredSub();
-    CategoryEntity existing = categoryRepository.findById(id).orElse(null);
+    CategoryEntity existing = categoryRepository.findByIdAndOwnerSub(id, ownerSub).orElse(null);
     if (existing == null) {
       return false;
     }

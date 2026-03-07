@@ -11,5 +11,11 @@ public interface CategoryRepository
 
   boolean existsByNameIgnoreCase(String name);
 
+  boolean existsByNameIgnoreCaseAndOwnerSub(String name, String ownerSub);
+
   Optional<CategoryEntity> findByNameIgnoreCase(String name);
+
+  Optional<CategoryEntity> findByNameIgnoreCaseAndOwnerSub(String name, String ownerSub);
+
+  Optional<CategoryEntity> findByIdAndOwnerSub(UUID id, String ownerSub);
 }
