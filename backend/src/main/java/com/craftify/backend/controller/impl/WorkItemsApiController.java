@@ -23,6 +23,16 @@ import org.springframework.web.bind.annotation.RestController;
 public class WorkItemsApiController {
 
   private static final Logger log = LoggerFactory.getLogger(WorkItemsApiController.class);
+  private static final String HEADER_ERROR_CODE = "X-Error-Code";
+  private static final String ERROR_BOM_NOT_FOUND = "bom_not_found";
+  private static final String ERROR_INVALID_REQUESTED_QTY = "invalid_requested_qty";
+  private static final String ERROR_INSUFFICIENT_INVENTORY = "insufficient_inventory";
+  private static final String ERROR_OUTPUT_ITEM_NOT_FOUND = "output_item_not_found";
+  private static final String ERROR_COMPONENT_ITEM_NOT_FOUND = "component_item_not_found";
+  private static final String ERROR_WORK_ITEM_NOT_FOUND = "work_item_not_found";
+  private static final String ERROR_WORK_ITEM_NOT_CANCELABLE = "work_item_not_cancelable";
+  private static final String ERROR_WORK_ITEM_NOT_COMPLETABLE = "work_item_not_completable";
+  private static final String ERROR_INVALID_WORK_ITEM_SNAPSHOT = "invalid_work_item_snapshot";
 
   private final WorkItemService workItemService;
 
@@ -54,16 +64,14 @@ public class WorkItemsApiController {
       WorkItemDetail created = workItemService.requestFromBom(req.getBomId(), req.getRequestedQty());
       return ResponseEntity.created(URI.create("/work-items/" + created.getId())).body(created);
     } catch (IllegalStateException ex) {
-      if ("bom_not_found".equals(ex.getMessage())) {
+      if (ERROR_BOM_NOT_FOUND.equals(ex.getMessage())) {
         return ResponseEntity.notFound().build();
       }
-      if ("invalid_requested_qty".equals(ex.getMessage())) {
-        return ResponseEntity.badRequest().header("X-Error-Code", "invalid_requested_qty").build();
+      if (ERROR_INVALID_REQUESTED_QTY.equals(ex.getMessage())) {
+        return badRequestWithCode(ERROR_INVALID_REQUESTED_QTY).build();
       }
-      if ("insufficient_inventory".equals(ex.getMessage())
-          || "output_item_not_found".equals(ex.getMessage())
-          || "component_item_not_found".equals(ex.getMessage())) {
-        return ResponseEntity.status(409).header("X-Error-Code", ex.getMessage()).build();
+      if (isRequestConflict(ex.getMessage())) {
+        return conflictWithCode(ex.getMessage()).build();
       }
       return ResponseEntity.badRequest().build();
     }
@@ -75,12 +83,11 @@ public class WorkItemsApiController {
       WorkItemDetail updated = workItemService.cancel(id);
       return ResponseEntity.ok(updated);
     } catch (IllegalStateException ex) {
-      if ("work_item_not_found".equals(ex.getMessage())) {
+      if (ERROR_WORK_ITEM_NOT_FOUND.equals(ex.getMessage())) {
         return ResponseEntity.notFound().build();
       }
-      if ("work_item_not_cancelable".equals(ex.getMessage())
-          || "invalid_work_item_snapshot".equals(ex.getMessage())) {
-        return ResponseEntity.status(409).header("X-Error-Code", ex.getMessage()).build();
+      if (isCancelConflict(ex.getMessage())) {
+        return conflictWithCode(ex.getMessage()).build();
       }
       return ResponseEntity.badRequest().build();
     }
@@ -92,14 +99,37 @@ public class WorkItemsApiController {
       WorkItemDetail updated = workItemService.complete(id);
       return ResponseEntity.ok(updated);
     } catch (IllegalStateException ex) {
-      if ("work_item_not_found".equals(ex.getMessage())) {
+      if (ERROR_WORK_ITEM_NOT_FOUND.equals(ex.getMessage())) {
         return ResponseEntity.notFound().build();
       }
-      if ("work_item_not_completable".equals(ex.getMessage())
-          || "invalid_work_item_snapshot".equals(ex.getMessage())) {
-        return ResponseEntity.status(409).header("X-Error-Code", ex.getMessage()).build();
+      if (isCompleteConflict(ex.getMessage())) {
+        return conflictWithCode(ex.getMessage()).build();
       }
       return ResponseEntity.badRequest().build();
     }
+  }
+
+  private static boolean isRequestConflict(String errorCode) {
+    return ERROR_INSUFFICIENT_INVENTORY.equals(errorCode)
+        || ERROR_OUTPUT_ITEM_NOT_FOUND.equals(errorCode)
+        || ERROR_COMPONENT_ITEM_NOT_FOUND.equals(errorCode);
+  }
+
+  private static boolean isCancelConflict(String errorCode) {
+    return ERROR_WORK_ITEM_NOT_CANCELABLE.equals(errorCode)
+        || ERROR_INVALID_WORK_ITEM_SNAPSHOT.equals(errorCode);
+  }
+
+  private static boolean isCompleteConflict(String errorCode) {
+    return ERROR_WORK_ITEM_NOT_COMPLETABLE.equals(errorCode)
+        || ERROR_INVALID_WORK_ITEM_SNAPSHOT.equals(errorCode);
+  }
+
+  private static ResponseEntity.BodyBuilder badRequestWithCode(String errorCode) {
+    return ResponseEntity.badRequest().header(HEADER_ERROR_CODE, errorCode);
+  }
+
+  private static ResponseEntity.BodyBuilder conflictWithCode(String errorCode) {
+    return ResponseEntity.status(409).header(HEADER_ERROR_CODE, errorCode);
   }
 }
