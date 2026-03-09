@@ -26,9 +26,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class InventoryApiController {
 
   private static final Logger log = LoggerFactory.getLogger(InventoryApiController.class);
-  private static final String ERROR_ITEM_NOT_FOUND = "item_not_found";
-  private static final String ERROR_ITEM_NOT_ACTIVE = "item_not_active";
-  private static final String ERROR_INVENTORY_EXISTS_FOR_ITEM = "inventory_exists_for_item";
 
   private final InventoryService inventoryService;
 
@@ -68,7 +65,7 @@ public class InventoryApiController {
   }
 
   @GetMapping(value = "/inventory/{id}", produces = {"application/json"})
-  public ResponseEntity<InventoryDetail> inventoryIdGet(@PathVariable("id") String id) {
+  public ResponseEntity<InventoryDetail> inventoryIdGet(@PathVariable String id) {
     InventoryDetail existing = inventoryService.getByCode(id);
     if (existing == null) {
       return ResponseEntity.notFound().build();
@@ -88,7 +85,7 @@ public class InventoryApiController {
 
   @PutMapping(value = "/inventory/{id}", produces = {"application/json"}, consumes = {"application/json"})
   public ResponseEntity<InventoryDetail> inventoryIdPut(
-      @PathVariable("id") String id, @Valid @NotNull @RequestBody InventoryUpsertRequest req) {
+          @PathVariable String id, @Valid @NotNull @RequestBody InventoryUpsertRequest req) {
     InventoryDetail updated = inventoryService.updateByCode(id, req);
     if (updated == null) {
       return ResponseEntity.notFound().build();
@@ -114,27 +111,12 @@ public class InventoryApiController {
       consumes = {"application/json"})
   public ResponseEntity<InventoryDetail> inventoryCreateFromItemPost(
       @Valid @NotNull @RequestBody CreateInventoryFromItemRequest req) {
-    try {
-      InventoryService.CreateFromItemResult result =
-          inventoryService.createFromItem(req.getItemId(), req.getAvailable(), req.getMode());
-      if (result.created()) {
-        return ResponseEntity.created(URI.create("/inventory/" + result.detail().getCode()))
-            .body(result.detail());
-      }
-      return ResponseEntity.ok(result.detail());
-    } catch (IllegalStateException ex) {
-      if (ERROR_ITEM_NOT_FOUND.equals(ex.getMessage())) {
-        return ResponseEntity.notFound().build();
-      }
-      if (isItemStateConflict(ex.getMessage())) {
-        return ResponseEntity.status(409).build();
-      }
-      return ResponseEntity.badRequest().build();
+    InventoryService.CreateFromItemResult result =
+        inventoryService.createFromItem(req.getItemId(), req.getAvailable(), req.getMode());
+    if (result.created()) {
+      return ResponseEntity.created(URI.create("/inventory/" + result.detail().getCode()))
+          .body(result.detail());
     }
+    return ResponseEntity.ok(result.detail());
   }
-
-  private static boolean isItemStateConflict(String errorCode) {
-    return ERROR_ITEM_NOT_ACTIVE.equals(errorCode) || ERROR_INVENTORY_EXISTS_FOR_ITEM.equals(errorCode);
-  }
-
 }

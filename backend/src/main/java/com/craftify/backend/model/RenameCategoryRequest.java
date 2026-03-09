@@ -3,8 +3,10 @@ package com.craftify.backend.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.annotation.Generated;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -14,6 +16,7 @@ import java.util.Objects;
     comments = "Generator version: 7.15.0")
 public class RenameCategoryRequest implements Serializable {
 
+  @Serial
   private static final long serialVersionUID = 1L;
 
   private String name;
@@ -37,8 +40,8 @@ public class RenameCategoryRequest implements Serializable {
    *
    * @return name
    */
-  @NotNull
-  @Size(min = 1, max = 100)
+  @NotBlank
+  @Size(max = 100)
   @Schema(name = "name", requiredMode = Schema.RequiredMode.REQUIRED)
   @JsonProperty("name")
   public String getName() {

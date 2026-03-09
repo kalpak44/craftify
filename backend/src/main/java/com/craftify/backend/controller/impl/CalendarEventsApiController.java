@@ -86,7 +86,7 @@ public class CalendarEventsApiController {
   }
 
   @DeleteMapping(value = "/calendar/events/{id}")
-  public ResponseEntity<Void> calendarEventsIdDelete(@PathVariable("id") String id) {
+  public ResponseEntity<Void> calendarEventsIdDelete(@PathVariable String id) {
     UUID eventId = parseUuid(id);
     if (eventId == null) {
       return ResponseEntity.badRequest().build();

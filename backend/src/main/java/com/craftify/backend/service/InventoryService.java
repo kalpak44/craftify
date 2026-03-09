@@ -1,5 +1,6 @@
 package com.craftify.backend.service;
 
+import com.craftify.backend.error.ApiException;
 import com.craftify.backend.model.InventoryDetail;
 import com.craftify.backend.model.InventoryList;
 import com.craftify.backend.model.InventoryPage;
@@ -103,7 +104,7 @@ public class InventoryService {
     String ownerSub = currentUserService.requiredSub();
     String code =
         (req.getCode() == null || req.getCode().isBlank())
-            ? generateNextCode()
+            ? generateNextCode(ownerSub)
             : req.getCode().trim().toUpperCase(Locale.ROOT);
 
     if (inventoryRepository.existsByCodeIgnoreCaseAndOwnerSub(code, ownerSub)) {
@@ -143,7 +144,7 @@ public class InventoryService {
 
   @Transactional(readOnly = true)
   public String nextCode() {
-    return generateNextCode();
+    return generateNextCode(currentUserService.requiredSub());
   }
 
   @Transactional
@@ -159,22 +160,22 @@ public class InventoryService {
       boolean createOnly) {
     String ownerSub = currentUserService.requiredSub();
     String normalizedCode =
-        (code == null || code.isBlank()) ? generateNextCode() : code.trim().toUpperCase(Locale.ROOT);
+        (code == null || code.isBlank()) ? generateNextCode(ownerSub) : code.trim().toUpperCase(Locale.ROOT);
 
     InventoryEntity existing =
         inventoryRepository.findByCodeIgnoreCaseAndOwnerSub(normalizedCode, ownerSub).orElse(null);
     if (existing != null) {
       if (createOnly) {
-        throw new IllegalStateException("create_only_conflict");
+        throw ApiException.conflict("create_only_conflict");
       }
       String normalizedItemCategory = itemCategoryName.trim();
       String normalizedDetached = normalize(detachedCategoryName);
       String effectiveCategory =
-          categoryDetached
-              ? (normalizedDetached == null || normalizedDetached.isBlank()
-                  ? normalizedItemCategory
-                  : normalizedDetached)
-              : normalizedItemCategory;
+              categoryDetached
+                  ? normalizedDetached.isBlank()
+                      ? normalizedItemCategory
+                      : normalizedDetached
+                  : normalizedItemCategory;
       categoryService.ensureExistsForCurrentUser(normalizedItemCategory);
       categoryService.ensureExistsForCurrentUser(effectiveCategory);
       existing.setItemId(itemId.trim().toUpperCase(Locale.ROOT));
@@ -218,15 +219,15 @@ public class InventoryService {
   public CreateFromItemResult createFromItem(String itemCode, BigDecimal available, String mode) {
     String ownerSub = currentUserService.requiredSub();
     if (itemCode == null || itemCode.isBlank()) {
-      throw new IllegalStateException("item_not_found");
+      throw ApiException.notFound("item_not_found");
     }
 
     ItemEntity item = itemRepository.findByCodeIgnoreCaseAndOwnerSub(itemCode.trim(), ownerSub).orElse(null);
     if (item == null) {
-      throw new IllegalStateException("item_not_found");
+      throw ApiException.notFound("item_not_found");
     }
     if (item.getStatus() != Status.ACTIVE) {
-      throw new IllegalStateException("item_not_active");
+      throw ApiException.conflict("item_not_active");
     }
 
     InventoryEntity existing =
@@ -239,7 +240,7 @@ public class InventoryService {
       } else if ("override".equals(normalizedMode)) {
         existing.setAvailable(available == null ? BigDecimal.ZERO : available);
       } else {
-        throw new IllegalStateException("inventory_exists_for_item");
+        throw ApiException.conflict("inventory_exists_for_item");
       }
       existing.setItemName(item.getName());
       existing.setItemCategoryName(item.getCategoryName());
@@ -250,7 +251,7 @@ public class InventoryService {
     }
 
     InventoryEntity entity = new InventoryEntity();
-    entity.setCode(generateNextCode());
+    entity.setCode(generateNextCode(ownerSub));
     entity.setItemId(item.getCode());
     entity.setItemName(item.getName());
     entity.setItemCategoryName(item.getCategoryName());
@@ -281,26 +282,9 @@ public class InventoryService {
     entity.setAvailable(req.getAvailable() == null ? BigDecimal.ZERO : req.getAvailable());
   }
 
-  private String generateNextCode() {
-    int max =
-        inventoryRepository.findAll().stream()
-            .map(InventoryEntity::getCode)
-            .map(InventoryService::extractNumericSuffix)
-            .filter(n -> n >= 0)
-            .max(Integer::compareTo)
-            .orElse(0);
+  private String generateNextCode(String ownerSub) {
+    int max = inventoryRepository.findMaxCodeSuffixByOwnerSub(ownerSub);
     return "INV-" + String.format("%03d", max + 1);
-  }
-
-  private static int extractNumericSuffix(String code) {
-    if (code == null) return -1;
-    int idx = code.lastIndexOf('-');
-    if (idx < 0 || idx == code.length() - 1) return -1;
-    try {
-      return Integer.parseInt(code.substring(idx + 1));
-    } catch (NumberFormatException ex) {
-      return -1;
-    }
   }
 
   private Sort parseSort(String sort) {

@@ -6,7 +6,10 @@ import com.craftify.backend.model.CategoryPage;
 import com.craftify.backend.model.CreateCategoryRequest;
 import com.craftify.backend.model.RenameCategoryRequest;
 import com.craftify.backend.service.CategoryService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import java.net.URI;
+import java.util.Objects;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,17 +32,15 @@ public class CategoriesApiController implements CategoriesApi {
   public ResponseEntity<CategoryPage> categoriesGet(
       Integer page, Integer size, @Nullable String sort, @Nullable String q) {
     log.info("GET /categories page={} size={} sort={} q={}", page, size, sort, q);
-    return ResponseEntity.ok(categoryService.list(page == null ? 0 : page, size == null ? 8 : size, sort, q));
+    return ResponseEntity.ok(
+        categoryService.list(
+            Objects.requireNonNullElse(page, 0), Objects.requireNonNullElse(size, 8), sort, q));
   }
 
   @Override
   public ResponseEntity<Void> categoriesIdDelete(UUID id, @Nullable Boolean force) {
-    try {
-      boolean deleted = categoryService.delete(id, force != null && force);
-      return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
-    } catch (IllegalStateException ex) {
-      return ResponseEntity.status(409).build();
-    }
+    boolean deleted = categoryService.delete(id, force != null && force);
+    return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
   }
 
   @Override
@@ -53,32 +54,16 @@ public class CategoriesApiController implements CategoriesApi {
 
   @Override
   public ResponseEntity<Category> categoriesIdPatch(
-      UUID id, RenameCategoryRequest renameCategoryRequest) {
-    if (renameCategoryRequest == null
-        || renameCategoryRequest.getName() == null
-        || renameCategoryRequest.getName().isBlank()) {
-      return ResponseEntity.badRequest().build();
+      UUID id, @Valid @NotNull RenameCategoryRequest renameCategoryRequest) {
+    Category updated = categoryService.rename(id, renameCategoryRequest.getName());
+    if (updated == null) {
+      return ResponseEntity.notFound().build();
     }
-
-    try {
-      Category updated = categoryService.rename(id, renameCategoryRequest.getName());
-      if (updated == null) {
-        return ResponseEntity.notFound().build();
-      }
-      return ResponseEntity.ok(updated);
-    } catch (IllegalStateException ex) {
-      return ResponseEntity.status(409).build();
-    }
+    return ResponseEntity.ok(updated);
   }
 
   @Override
-  public ResponseEntity<Category> categoriesPost(CreateCategoryRequest createCategoryRequest) {
-    if (createCategoryRequest == null
-        || createCategoryRequest.getName() == null
-        || createCategoryRequest.getName().isBlank()) {
-      return ResponseEntity.badRequest().build();
-    }
-
+  public ResponseEntity<Category> categoriesPost(@Valid @NotNull CreateCategoryRequest createCategoryRequest) {
     Category created = categoryService.create(createCategoryRequest.getName());
     if (created == null) {
       return ResponseEntity.status(409).build();

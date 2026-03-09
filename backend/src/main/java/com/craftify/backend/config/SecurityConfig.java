@@ -2,7 +2,6 @@ package com.craftify.backend.config;
 
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -15,7 +14,6 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.util.Assert;
 
 @Configuration
 public class SecurityConfig {
@@ -40,10 +38,9 @@ public class SecurityConfig {
 
   @Bean
   public JwtDecoder jwtDecoder(
-      @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}") String issuerUri,
-      @Value("${auth0.audience}") String audience) {
-    Assert.hasText(issuerUri, "spring.security.oauth2.resourceserver.jwt.issuer-uri must be set");
-    Assert.hasText(audience, "auth0.audience must be set");
+      ResourceServerJwtProperties jwtProperties, Auth0Properties auth0Properties) {
+    String issuerUri = jwtProperties.getIssuerUri();
+    String audience = auth0Properties.getAudience();
 
     String normalizedIssuer = issuerUri.endsWith("/") ? issuerUri.substring(0, issuerUri.length() - 1) : issuerUri;
     String jwkSetUri = normalizedIssuer + "/.well-known/jwks.json";

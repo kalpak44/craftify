@@ -1,5 +1,6 @@
 package com.craftify.backend.service;
 
+import com.craftify.backend.error.ApiException;
 import com.craftify.backend.model.ItemDetail;
 import com.craftify.backend.model.ItemList;
 import com.craftify.backend.model.ItemPage;
@@ -19,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -127,7 +129,7 @@ public class ItemService {
     String ownerSub = currentUserService.requiredSub();
     String code =
         (req.getCode() == null || req.getCode().isBlank())
-            ? generateNextCode()
+            ? generateNextCode(ownerSub)
             : req.getCode().trim().toUpperCase(Locale.ROOT);
 
     if (itemRepository.existsByCodeIgnoreCaseAndOwnerSub(code, ownerSub)) {
@@ -156,7 +158,7 @@ public class ItemService {
       return null;
     }
     if (expectedVersion == null || existing.getVersion() != expectedVersion.longValue()) {
-      throw new IllegalStateException("version_mismatch");
+      throw ApiException.preconditionFailed("version_mismatch");
     }
 
     String nextCode =
@@ -165,10 +167,10 @@ public class ItemService {
             : req.getCode().trim().toUpperCase(Locale.ROOT);
     if (!nextCode.equalsIgnoreCase(existing.getCode())
         && itemRepository.existsByCodeIgnoreCaseAndOwnerSub(nextCode, ownerSub)) {
-      throw new IllegalStateException("code_conflict");
+      throw ApiException.conflict("code_conflict");
     }
     if (!nextCode.equalsIgnoreCase(existing.getCode()) && isItemInUse(existing.getCode(), ownerSub)) {
-      throw new IllegalStateException("item_in_use_code_change");
+      throw ApiException.conflict("item_in_use_code_change");
     }
 
     existing.setCode(nextCode);
@@ -191,10 +193,10 @@ public class ItemService {
       return false;
     }
     if (expectedVersion == null || existing.getVersion() != expectedVersion.longValue()) {
-      throw new IllegalStateException("version_mismatch");
+      throw ApiException.preconditionFailed("version_mismatch");
     }
     if (isItemInUse(existing.getCode(), ownerSub)) {
-      throw new IllegalStateException("item_in_use");
+      throw ApiException.conflict("item_in_use");
     }
     itemRepository.delete(existing);
     return true;
@@ -224,15 +226,6 @@ public class ItemService {
     return deleted;
   }
 
-  @Transactional(readOnly = true)
-  public long count(Status status) {
-    String ownerSub = currentUserService.requiredSub();
-    if (status == null) {
-      return itemRepository.countByOwnerSub(ownerSub);
-    }
-    return itemRepository.countByStatusAndOwnerSub(status, ownerSub);
-  }
-
   @Transactional
   public void upsertFromImport(
       String code,
@@ -245,12 +238,12 @@ public class ItemService {
       boolean createOnly) {
     String ownerSub = currentUserService.requiredSub();
     String normalizedCode =
-        (code == null || code.isBlank()) ? generateNextCode() : code.trim().toUpperCase(Locale.ROOT);
+        (code == null || code.isBlank()) ? generateNextCode(ownerSub) : code.trim().toUpperCase(Locale.ROOT);
 
     ItemEntity existing = itemRepository.findByCodeIgnoreCaseAndOwnerSub(normalizedCode, ownerSub).orElse(null);
     if (existing != null) {
       if (createOnly) {
-        throw new IllegalStateException("create_only_conflict");
+        throw ApiException.conflict("create_only_conflict");
       }
       existing.setName(name.trim());
       existing.setStatus(status);
@@ -273,7 +266,7 @@ public class ItemService {
     entity.setCategoryName(categoryName.trim());
     entity.setUomBase(uomBase.trim());
     entity.setDescription(description);
-    entity.setUoms(toEmbeddables(uoms == null ? List.of() : uoms));
+    entity.setUoms(toEmbeddables(Objects.requireNonNullElse(uoms, List.of())));
     entity.setOwnerSub(ownerSub);
     itemRepository.save(entity);
   }
@@ -312,14 +305,8 @@ public class ItemService {
     return itemRepository.findAll(spec, Sort.by(Sort.Direction.ASC, "code")).stream().map(this::toDetailModel).toList();
   }
 
-  private String generateNextCode() {
-    int max =
-        itemRepository.findAll().stream()
-            .map(ItemEntity::getCode)
-            .map(ItemService::extractNumericSuffix)
-            .filter(n -> n >= 0)
-            .max(Integer::compareTo)
-            .orElse(0);
+  private String generateNextCode(String ownerSub) {
+    int max = itemRepository.findMaxCodeSuffixByOwnerSub(ownerSub);
     return "ITM-" + String.format("%03d", max + 1);
   }
 
@@ -376,17 +363,6 @@ public class ItemService {
     return false;
   }
 
-  private static int extractNumericSuffix(String code) {
-    if (code == null) return -1;
-    int idx = code.lastIndexOf('-');
-    if (idx < 0 || idx == code.length() - 1) return -1;
-    try {
-      return Integer.parseInt(code.substring(idx + 1));
-    } catch (NumberFormatException ex) {
-      return -1;
-    }
-  }
-
   private Sort parseSort(String sort) {
     String value = (sort == null || sort.isBlank()) ? "updatedAt,desc" : sort;
     String[] parts = value.split(",", 2);
@@ -440,7 +416,7 @@ public class ItemService {
             u -> {
               ItemUomEmbeddable emb = new ItemUomEmbeddable();
               emb.setUom(u.getUom());
-              emb.setCoef(u.getCoef() == null ? BigDecimal.ONE : u.getCoef());
+              emb.setCoef(Objects.requireNonNullElse(u.getCoef(), BigDecimal.ONE));
               emb.setNotes(u.getNotes());
               return emb;
             })

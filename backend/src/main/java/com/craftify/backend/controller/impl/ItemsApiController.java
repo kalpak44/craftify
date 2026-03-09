@@ -24,10 +24,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class ItemsApiController implements ItemsApi {
 
   private static final Logger log = LoggerFactory.getLogger(ItemsApiController.class);
-  private static final String HEADER_ERROR_CODE = "X-Error-Code";
-  private static final String ERROR_ITEM_IN_USE = "item_in_use";
-  private static final String ERROR_CODE_CONFLICT = "code_conflict";
-  private static final String ERROR_ITEM_IN_USE_CODE_CHANGE = "item_in_use_code_change";
 
   private final ItemService itemService;
 
@@ -85,15 +81,8 @@ public class ItemsApiController implements ItemsApi {
     if (expectedVersion == null) {
       return ResponseEntity.status(412).build();
     }
-    try {
-      boolean deleted = itemService.deleteByCode(id, expectedVersion);
-      return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
-    } catch (IllegalStateException ex) {
-      if (ERROR_ITEM_IN_USE.equals(ex.getMessage())) {
-        return conflict(ERROR_ITEM_IN_USE).build();
-      }
-      return ResponseEntity.status(412).build();
-    }
+    boolean deleted = itemService.deleteByCode(id, expectedVersion);
+    return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
   }
 
   @Override
@@ -112,21 +101,11 @@ public class ItemsApiController implements ItemsApi {
       return ResponseEntity.status(412).build();
     }
 
-    try {
-      ItemDetail updated = itemService.updateByCode(id, req, expectedVersion);
-      if (updated == null) {
-        return ResponseEntity.notFound().build();
-      }
-      return ResponseEntity.ok().eTag(HttpHeaderVersionUtil.toWeakEtag(updated.getVersion())).body(updated);
-    } catch (IllegalStateException ex) {
-      if (ERROR_CODE_CONFLICT.equals(ex.getMessage())) {
-        return ResponseEntity.status(409).build();
-      }
-      if (ERROR_ITEM_IN_USE_CODE_CHANGE.equals(ex.getMessage())) {
-        return conflict(ERROR_ITEM_IN_USE_CODE_CHANGE).build();
-      }
-      return ResponseEntity.status(412).build();
+    ItemDetail updated = itemService.updateByCode(id, req, expectedVersion);
+    if (updated == null) {
+      return ResponseEntity.notFound().build();
     }
+    return ResponseEntity.ok().eTag(HttpHeaderVersionUtil.toWeakEtag(updated.getVersion())).body(updated);
   }
 
   @Override
@@ -139,9 +118,5 @@ public class ItemsApiController implements ItemsApi {
     return ResponseEntity.created(URI.create("/items/" + created.getCode()))
         .eTag(HttpHeaderVersionUtil.toWeakEtag(created.getVersion()))
         .body(created);
-  }
-
-  private static ResponseEntity.BodyBuilder conflict(String errorCode) {
-    return ResponseEntity.status(409).header(HEADER_ERROR_CODE, errorCode);
   }
 }

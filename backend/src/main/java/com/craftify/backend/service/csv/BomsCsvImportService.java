@@ -1,0 +1,383 @@
+package com.craftify.backend.service.csv;
+
+import com.craftify.backend.error.ApiException;
+import com.craftify.backend.model.BomComponent;
+import com.craftify.backend.model.BomStatus;
+import com.craftify.backend.model.ImportResult;
+import com.craftify.backend.model.ImportResultErrorsInner;
+import com.craftify.backend.service.BomService;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+@Service
+public class BomsCsvImportService {
+
+  private static final Logger log = LoggerFactory.getLogger(BomsCsvImportService.class);
+
+  private final BomService bomService;
+
+  public BomsCsvImportService(BomService bomService) {
+    this.bomService = bomService;
+  }
+
+  public CsvImportExecution importCsv(MultipartFile file, String mode) {
+    if (file == null || file.isEmpty()) {
+      return badRequest(error("file", "CSV file is required"));
+    }
+
+    boolean createOnly = "create-only".equalsIgnoreCase(mode);
+    boolean upsert = mode == null || mode.isBlank() || "upsert".equalsIgnoreCase(mode);
+    if (!createOnly && !upsert) {
+      return badRequest(error("mode", "Mode must be 'upsert' or 'create-only'"));
+    }
+
+    log.info(
+        "POST /boms:import mode={} fileName={} size={}",
+        mode,
+        file.getOriginalFilename(),
+        file.getSize());
+
+    List<ImportResultErrorsInner> errors = new ArrayList<>();
+    int created = 0;
+    int updated = 0;
+    Map<String, GroupedBom> grouped = new HashMap<>();
+
+    try (BufferedReader reader =
+            new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
+        CSVParser parser = CSVFormat.DEFAULT.parse(reader)) {
+      Iterator<CSVRecord> records = parser.iterator();
+      if (!records.hasNext()) {
+        return badRequest(error("file", "CSV header row is missing"));
+      }
+
+      List<String> headers = toCells(records.next());
+      if (!headers.isEmpty()) {
+        headers.set(0, stripBom(headers.getFirst()));
+      }
+      Map<String, Integer> columns = mapColumns(headers);
+
+      if (!columns.containsKey("bomId")
+          || !columns.containsKey("productId")
+          || !columns.containsKey("revision")
+          || !columns.containsKey("status")) {
+        return badRequest(error("header", "Required columns: bomId, productId, revision, status"));
+      }
+
+      int rowNumber = 1;
+      while (records.hasNext()) {
+        CSVRecord record = records.next();
+        rowNumber++;
+        if (isBlankRecord(record)) {
+          continue;
+        }
+        ParsedRow row = parseRow(toCells(record), columns, rowNumber, errors);
+        if (!row.valid) {
+          continue;
+        }
+        final int currentRowNumber = rowNumber;
+        GroupedBom gb = grouped.computeIfAbsent(row.bomId, k -> new GroupedBom(row, currentRowNumber));
+        gb.mergeHeader(row, currentRowNumber, errors);
+        gb.addComponent(row.componentOrder, row.componentItemId, row.componentQuantity, row.componentUom, row.componentNote);
+      }
+
+      for (GroupedBom gb : grouped.values()) {
+        List<BomComponent> components =
+            gb.components.stream()
+                .sorted(Comparator.comparingInt(ComponentLine::order))
+                .map(c -> new BomComponent().itemId(c.itemId()).quantity(c.quantity()).uom(c.uom()).note(c.note()))
+                .toList();
+
+        try {
+          var before = bomService.getByCode(gb.bomId);
+          bomService.upsertFromImport(
+              gb.bomId,
+              gb.productId,
+              gb.productName,
+              gb.revision,
+              gb.status,
+              gb.description,
+              gb.note,
+              components,
+              createOnly);
+          if (before == null) {
+            created++;
+          } else {
+            updated++;
+          }
+        } catch (ApiException ex) {
+          errors.add(error(gb.firstRow, "bomId", "BOM already exists in create-only mode"));
+        }
+      }
+    } catch (IOException e) {
+      log.error("Failed to read BOM CSV import file", e);
+      return badRequest(error("file", "Failed to read CSV file"));
+    }
+
+    return new CsvImportExecution(
+        HttpStatus.OK, new ImportResult().created(created).updated(updated).errors(errors));
+  }
+
+  private static ParsedRow parseRow(
+      List<String> cells, Map<String, Integer> columns, int rowNumber, List<ImportResultErrorsInner> errors) {
+    String bomId = pick(cells, columns.get("bomId"));
+    String productId = pick(cells, columns.get("productId"));
+    String productName = pick(cells, columns.get("productName"));
+    String revision = pick(cells, columns.get("revision"));
+    String statusRaw = pick(cells, columns.get("status"));
+    String description = pick(cells, columns.get("description"));
+    String note = pick(cells, columns.get("note"));
+    String compOrderRaw = pick(cells, columns.get("componentOrder"));
+    String compItemId = pick(cells, columns.get("componentItemId"));
+    String compQtyRaw = pick(cells, columns.get("componentQuantity"));
+    String compUom = pick(cells, columns.get("componentUom"));
+    String compNote = pick(cells, columns.get("componentNote"));
+
+    boolean ok = true;
+    if (bomId == null || bomId.isBlank()) {
+      errors.add(error(rowNumber, "bomId", "BOM ID is required"));
+      ok = false;
+    }
+    if (productId == null || productId.isBlank()) {
+      errors.add(error(rowNumber, "productId", "Product ID is required"));
+      ok = false;
+    }
+    if (revision == null || revision.isBlank()) {
+      errors.add(error(rowNumber, "revision", "Revision is required"));
+      ok = false;
+    }
+
+    BomStatus status = parseStatus(statusRaw);
+    if (status == null) {
+      errors.add(error(rowNumber, "status", "Status must be one of: Draft, Active, Hold, Obsolite"));
+      ok = false;
+    }
+
+    Integer compOrder = null;
+    Double compQty = null;
+    if (compOrderRaw != null && !compOrderRaw.isBlank()) {
+      try {
+        compOrder = Integer.parseInt(compOrderRaw.trim());
+      } catch (NumberFormatException ex) {
+        errors.add(error(rowNumber, "componentOrder", "Component order must be integer"));
+        ok = false;
+      }
+    }
+    if (compQtyRaw != null && !compQtyRaw.isBlank()) {
+      try {
+        compQty = Double.parseDouble(compQtyRaw.trim());
+      } catch (NumberFormatException ex) {
+        errors.add(error(rowNumber, "componentQuantity", "Component quantity must be numeric"));
+        ok = false;
+      }
+    }
+
+    boolean hasAnyComp =
+        (compItemId != null && !compItemId.isBlank()) || compQty != null || (compUom != null && !compUom.isBlank());
+    if (hasAnyComp) {
+      if (compItemId == null || compItemId.isBlank()) {
+        errors.add(error(rowNumber, "componentItemId", "Component item ID is required when component is present"));
+        ok = false;
+      }
+      if (compQty == null || compQty <= 0) {
+        errors.add(error(rowNumber, "componentQuantity", "Component quantity must be > 0"));
+        ok = false;
+      }
+      if (compUom == null || compUom.isBlank()) {
+        errors.add(error(rowNumber, "componentUom", "Component UoM is required"));
+        ok = false;
+      }
+      if (compOrder == null) {
+        compOrder = Integer.MAX_VALUE;
+      }
+    }
+
+    if (!ok) {
+      return new ParsedRow(false, null, null, null, null, null, null, null, null, null, null, null, null);
+    }
+
+    return new ParsedRow(
+        true,
+        bomId.trim().toUpperCase(Locale.ROOT),
+        productId.trim().toUpperCase(Locale.ROOT),
+        productName == null ? null : productName.trim(),
+        revision.trim(),
+        status,
+        description == null ? null : description.trim(),
+        note == null ? null : note.trim(),
+        compOrder,
+        compItemId == null ? null : compItemId.trim().toUpperCase(Locale.ROOT),
+        compQty,
+        compUom == null ? null : compUom.trim(),
+        compNote == null ? null : compNote.trim());
+  }
+
+  private static BomStatus parseStatus(String raw) {
+    if (raw == null || raw.isBlank()) return null;
+    try {
+      return BomStatus.fromValue(raw);
+    } catch (IllegalArgumentException ex) {
+      String norm = raw.trim().toUpperCase(Locale.ROOT).replace('-', '_').replace(' ', '_');
+      if ("OBSOLETE".equals(norm)) {
+        norm = "OBSOLITE";
+      }
+      try {
+        return BomStatus.valueOf(norm);
+      } catch (IllegalArgumentException e2) {
+        return null;
+      }
+    }
+  }
+
+  private static String stripBom(String s) {
+    return s != null && s.startsWith("\uFEFF") ? s.substring(1) : s;
+  }
+
+  private static String pick(List<String> cells, Integer idx) {
+    if (idx == null || idx < 0 || idx >= cells.size()) return null;
+    String v = cells.get(idx);
+    return v == null ? null : v.trim();
+  }
+
+  private static Map<String, Integer> mapColumns(List<String> headers) {
+    Map<String, Integer> out = new HashMap<>();
+    for (int i = 0; i < headers.size(); i++) {
+      String key = normalizeHeader(headers.get(i));
+      switch (key) {
+        case "bomid", "bom_id", "id" -> out.put("bomId", i);
+        case "productid", "product_id", "itemid" -> out.put("productId", i);
+        case "productname", "product_name" -> out.put("productName", i);
+        case "revision", "rev" -> out.put("revision", i);
+        case "status" -> out.put("status", i);
+        case "description", "desc" -> out.put("description", i);
+        case "note", "bomnote", "bom_note" -> out.put("note", i);
+        case "componentorder", "component_order", "line", "lineorder" -> out.put("componentOrder", i);
+        case "componentitemid", "component_item_id", "itemcode", "component" -> out.put("componentItemId", i);
+        case "componentquantity", "component_qty", "qty", "quantity" -> out.put("componentQuantity", i);
+        case "componentuom", "component_uom", "uom" -> out.put("componentUom", i);
+        case "componentnote", "component_note", "linenote", "line_note" -> out.put("componentNote", i);
+        default -> {
+        }
+      }
+    }
+    return out;
+  }
+
+  private static String normalizeHeader(String h) {
+    if (h == null) return "";
+    return h.trim().toLowerCase(Locale.ROOT).replace(" ", "").replace("-", "_");
+  }
+
+  private static List<String> toCells(CSVRecord record) {
+    List<String> out = new ArrayList<>();
+    if (record == null) {
+      return out;
+    }
+    record.forEach(out::add);
+    return out;
+  }
+
+  private static boolean isBlankRecord(CSVRecord record) {
+    if (record == null || record.size() == 0) {
+      return true;
+    }
+    for (String value : record) {
+      if (value != null && !value.isBlank()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private static CsvImportExecution badRequest(ImportResultErrorsInner error) {
+    return new CsvImportExecution(
+        HttpStatus.BAD_REQUEST, new ImportResult().created(0).updated(0).errors(List.of(error)));
+  }
+
+  private static ImportResultErrorsInner error(String field, String message) {
+    return error(1, field, message);
+  }
+
+  private static ImportResultErrorsInner error(int row, String field, String message) {
+    return new ImportResultErrorsInner().row(row).field(field).message(message);
+  }
+
+  private record ParsedRow(
+      boolean valid,
+      String bomId,
+      String productId,
+      String productName,
+      String revision,
+      BomStatus status,
+      String description,
+      String note,
+      Integer componentOrder,
+      String componentItemId,
+      Double componentQuantity,
+      String componentUom,
+      String componentNote) {}
+
+  private record ComponentLine(int order, String itemId, Double quantity, String uom, String note) {}
+
+  private static final class GroupedBom {
+    private final String bomId;
+    private final int firstRow;
+    private String productId;
+    private String productName;
+    private String revision;
+    private BomStatus status;
+    private String description;
+    private String note;
+    private final List<ComponentLine> components = new ArrayList<>();
+
+    private GroupedBom(ParsedRow row, int rowNumber) {
+      this.bomId = row.bomId;
+      this.firstRow = rowNumber;
+      this.productId = row.productId;
+      this.productName = row.productName;
+      this.revision = row.revision;
+      this.status = row.status;
+      this.description = row.description;
+      this.note = row.note;
+    }
+
+    private void mergeHeader(ParsedRow row, int rowNumber, List<ImportResultErrorsInner> errors) {
+      if (!eq(this.productId, row.productId)
+          || !eq(this.productName, row.productName)
+          || !eq(this.revision, row.revision)
+          || this.status != row.status
+          || !eq(this.description, row.description)
+          || !eq(this.note, row.note)) {
+        errors.add(error(rowNumber, "bomId", "Conflicting BOM header values for same BOM ID"));
+      }
+    }
+
+    private void addComponent(Integer order, String itemId, Double qty, String uom, String note) {
+      boolean hasAny = (itemId != null && !itemId.isBlank()) || qty != null || (uom != null && !uom.isBlank());
+      if (!hasAny) {
+        return;
+      }
+      components.add(new ComponentLine(order == null ? Integer.MAX_VALUE : order, itemId, qty, uom, note));
+    }
+
+    private static boolean eq(Object a, Object b) {
+      return (a == null && b == null) || (a != null && a.equals(b));
+    }
+  }
+}

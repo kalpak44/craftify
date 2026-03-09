@@ -1,5 +1,6 @@
 package com.craftify.backend.service;
 
+import com.craftify.backend.error.ApiException;
 import com.craftify.backend.model.Category;
 import com.craftify.backend.model.CategoryPage;
 import com.craftify.backend.persistence.entity.CategoryEntity;
@@ -122,7 +123,7 @@ public class CategoryService {
       return null;
     }
     if (UNKNOWN_CATEGORY.equalsIgnoreCase(existing.getName() == null ? "" : existing.getName().trim())) {
-      throw new IllegalStateException("cannot_rename_unknown");
+      throw ApiException.conflict("cannot_rename_unknown");
     }
 
     String normalized = newName.trim();
@@ -131,7 +132,7 @@ public class CategoryService {
             .map(c -> !c.getId().equals(id))
             .orElse(false);
     if (clash) {
-      throw new IllegalStateException("name_conflict");
+      throw ApiException.conflict("name_conflict");
     }
 
     String oldName = existing.getName();
@@ -163,7 +164,7 @@ public class CategoryService {
 
     String categoryName = existing.getName() == null ? "" : existing.getName().trim();
     if (UNKNOWN_CATEGORY.equalsIgnoreCase(categoryName)) {
-      throw new IllegalStateException("cannot_delete_unknown");
+      throw ApiException.conflict("cannot_delete_unknown");
     }
 
     String unknown = ensureUnknownForOwner(ownerSub);

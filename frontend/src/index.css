@@ -3,3 +3,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    * {
+        @apply border-transparent;
+    }
+
+    body {
+        @apply antialiased;
+    }
+
+    a,
+    button,
+    input,
+    select,
+    textarea {
+        @apply transition-colors;
+    }
+}

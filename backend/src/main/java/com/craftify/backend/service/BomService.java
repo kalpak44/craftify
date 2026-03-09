@@ -1,5 +1,6 @@
 package com.craftify.backend.service;
 
+import com.craftify.backend.error.ApiException;
 import com.craftify.backend.model.BomComponent;
 import com.craftify.backend.model.BomDetail;
 import com.craftify.backend.model.BomList;
@@ -15,6 +16,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -90,7 +92,7 @@ public class BomService {
     String ownerSub = currentUserService.requiredSub();
     String code =
         (req.getId() == null || req.getId().isBlank())
-            ? generateNextCode()
+            ? generateNextCode(ownerSub)
             : req.getId().trim().toUpperCase(Locale.ROOT);
 
     if (bomRepository.existsByCodeIgnoreCaseAndOwnerSub(code, ownerSub)) {
@@ -120,7 +122,7 @@ public class BomService {
       return null;
     }
     if (expectedVersion == null || existing.getVersion() != expectedVersion.longValue()) {
-      throw new IllegalStateException("version_mismatch");
+      throw ApiException.preconditionFailed("version_mismatch");
     }
     validateItemReferences(req.getProductId(), req.getComponents(), ownerSub);
 
@@ -143,7 +145,7 @@ public class BomService {
       return false;
     }
     if (expectedVersion == null || existing.getVersion() != expectedVersion.longValue()) {
-      throw new IllegalStateException("version_mismatch");
+      throw ApiException.preconditionFailed("version_mismatch");
     }
     bomRepository.delete(existing);
     return true;
@@ -191,12 +193,12 @@ public class BomService {
       boolean createOnly) {
     String ownerSub = currentUserService.requiredSub();
     String normalizedCode =
-        (code == null || code.isBlank()) ? generateNextCode() : code.trim().toUpperCase(Locale.ROOT);
+        (code == null || code.isBlank()) ? generateNextCode(ownerSub) : code.trim().toUpperCase(Locale.ROOT);
 
     BomEntity existing = bomRepository.findByCodeIgnoreCaseAndOwnerSub(normalizedCode, ownerSub).orElse(null);
     if (existing != null) {
       if (createOnly) {
-        throw new IllegalStateException("create_only_conflict");
+        throw ApiException.conflict("create_only_conflict");
       }
       validateItemReferences(productId, components, ownerSub);
       existing.setProductId(productId.trim().toUpperCase(Locale.ROOT));
@@ -224,26 +226,9 @@ public class BomService {
     bomRepository.save(entity);
   }
 
-  private String generateNextCode() {
-    int max =
-        bomRepository.findAll().stream()
-            .map(BomEntity::getCode)
-            .map(BomService::extractNumericSuffix)
-            .filter(n -> n >= 0)
-            .max(Integer::compareTo)
-            .orElse(0);
+  private String generateNextCode(String ownerSub) {
+    int max = bomRepository.findMaxCodeSuffixByOwnerSub(ownerSub);
     return "BOM-" + String.format("%03d", max + 1);
-  }
-
-  private static int extractNumericSuffix(String code) {
-    if (code == null) return -1;
-    int idx = code.lastIndexOf('-');
-    if (idx < 0 || idx == code.length() - 1) return -1;
-    try {
-      return Integer.parseInt(code.substring(idx + 1));
-    } catch (NumberFormatException ex) {
-      return -1;
-    }
   }
 
   private Sort parseSort(String sort) {
@@ -275,7 +260,7 @@ public class BomService {
         .revision(entity.getRevision())
         .status(entity.getStatus())
         .updatedAt(entity.getUpdatedAt())
-        .componentsCount(entity.getComponents() == null ? 0 : entity.getComponents().size());
+        .componentsCount(Objects.requireNonNullElse(entity.getComponents(), List.<BomComponentEmbeddable>of()).size());
   }
 
   private BomDetail toDetailModel(BomEntity entity) {
@@ -303,8 +288,8 @@ public class BomService {
             c -> {
               BomComponentEmbeddable emb = new BomComponentEmbeddable();
               emb.setItemId(c.getItemId().trim().toUpperCase(Locale.ROOT));
-              emb.setQuantity(BigDecimal.valueOf(c.getQuantity() == null ? 0d : c.getQuantity()));
-              emb.setUom(c.getUom() == null ? "" : c.getUom().trim());
+              emb.setQuantity(BigDecimal.valueOf(Objects.requireNonNullElse(c.getQuantity(), 0d)));
+              emb.setUom(Objects.requireNonNullElse(c.getUom(), "").trim());
               emb.setNote(c.getNote());
               return emb;
             })
@@ -314,11 +299,11 @@ public class BomService {
   private void validateItemReferences(String productId, List<BomComponent> components, String ownerSub) {
     String normalizedProductId = productId == null ? "" : productId.trim().toUpperCase(Locale.ROOT);
     if (normalizedProductId.isBlank()) {
-      throw new IllegalStateException("invalid_product_item");
+      throw ApiException.badRequest("invalid_product_item");
     }
     ItemEntity product = itemRepository.findByCodeIgnoreCaseAndOwnerSub(normalizedProductId, ownerSub).orElse(null);
     if (product == null) {
-      throw new IllegalStateException("product_item_not_found");
+      throw ApiException.conflict("product_item_not_found");
     }
 
     if (components == null) {
@@ -333,7 +318,7 @@ public class BomService {
         continue;
       }
       if (itemRepository.findByCodeIgnoreCaseAndOwnerSub(itemId, ownerSub).isEmpty()) {
-        throw new IllegalStateException("component_item_not_found");
+        throw ApiException.conflict("component_item_not_found");
       }
     }
   }

@@ -1,5 +1,6 @@
 package com.craftify.backend.service;
 
+import com.craftify.backend.error.ApiException;
 import com.craftify.backend.model.WorkItemDetail;
 import com.craftify.backend.model.WorkItemList;
 import com.craftify.backend.model.WorkItemPage;
@@ -42,7 +43,7 @@ public class WorkItemService {
   private final InventoryRepository inventoryRepository;
   private final CurrentUserService currentUserService;
   private final CategoryService categoryService;
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper;
 
   public WorkItemService(
       WorkItemRepository workItemRepository,
@@ -50,13 +51,15 @@ public class WorkItemService {
       ItemRepository itemRepository,
       InventoryRepository inventoryRepository,
       CurrentUserService currentUserService,
-      CategoryService categoryService) {
+      CategoryService categoryService,
+      ObjectMapper objectMapper) {
     this.workItemRepository = workItemRepository;
     this.bomRepository = bomRepository;
     this.itemRepository = itemRepository;
     this.inventoryRepository = inventoryRepository;
     this.currentUserService = currentUserService;
     this.categoryService = categoryService;
+    this.objectMapper = objectMapper;
   }
 
   @Transactional(readOnly = true)
@@ -99,29 +102,29 @@ public class WorkItemService {
   public WorkItemDetail requestFromBom(String bomId, BigDecimal requestedQty) {
     String ownerSub = currentUserService.requiredSub();
     if (bomId == null || bomId.isBlank()) {
-      throw new IllegalStateException("bom_not_found");
+      throw ApiException.notFound("bom_not_found");
     }
     BigDecimal normalizedRequestedQty = normalizeWholeRequestedQty(requestedQty);
     if (normalizedRequestedQty == null) {
-      throw new IllegalStateException("invalid_requested_qty");
+      throw ApiException.badRequest("invalid_requested_qty");
     }
 
     BomEntity bom = bomRepository.findByCodeIgnoreCaseAndOwnerSub(bomId.trim(), ownerSub).orElse(null);
     if (bom == null) {
-      throw new IllegalStateException("bom_not_found");
+      throw ApiException.notFound("bom_not_found");
     }
     String outputItemId = bom.getProductId() == null ? "" : bom.getProductId().trim().toUpperCase(Locale.ROOT);
     if (outputItemId.isBlank()) {
-      throw new IllegalStateException("invalid_product_item");
+      throw ApiException.badRequest("invalid_product_item");
     }
     ItemEntity outputItem = itemRepository.findByCodeIgnoreCaseAndOwnerSub(outputItemId, ownerSub).orElse(null);
     if (outputItem == null) {
-      throw new IllegalStateException("output_item_not_found");
+      throw ApiException.conflict("output_item_not_found");
     }
 
     List<BomComponentEmbeddable> components = bom.getComponents() == null ? List.of() : bom.getComponents();
     if (components.isEmpty()) {
-      throw new IllegalStateException("invalid_bom_components");
+      throw ApiException.badRequest("invalid_bom_components");
     }
 
     Map<String, BigDecimal> requiredByItemCode = new HashMap<>();
@@ -133,11 +136,11 @@ public class WorkItemService {
               ? BigDecimal.ZERO
               : c.getQuantity().setScale(6, RoundingMode.HALF_UP);
       if (itemCode.isBlank() || perUnit.compareTo(BigDecimal.ZERO) <= 0) {
-        throw new IllegalStateException("invalid_bom_components");
+        throw ApiException.badRequest("invalid_bom_components");
       }
       ItemEntity componentItem = itemRepository.findByCodeIgnoreCaseAndOwnerSub(itemCode, ownerSub).orElse(null);
       if (componentItem == null) {
-        throw new IllegalStateException("component_item_not_found");
+        throw ApiException.conflict("component_item_not_found");
       }
       componentItems.put(itemCode, componentItem);
       BigDecimal required = perUnit.multiply(normalizedRequestedQty).setScale(6, RoundingMode.HALF_UP);
@@ -151,7 +154,7 @@ public class WorkItemService {
       InventoryEntity inv = inventoryRepository.findByItemIdIgnoreCaseAndOwnerSub(itemCode, ownerSub).orElse(null);
       BigDecimal available = inv == null || inv.getAvailable() == null ? BigDecimal.ZERO : inv.getAvailable();
       if (inv == null || available.compareTo(required) < 0) {
-        throw new IllegalStateException("insufficient_inventory");
+        throw ApiException.conflict("insufficient_inventory");
       }
       inventoryByItemCode.put(itemCode, inv);
     }
@@ -177,7 +180,7 @@ public class WorkItemService {
     }
 
     WorkItemEntity entity = new WorkItemEntity();
-    entity.setCode(generateNextCode());
+    entity.setCode(generateNextCode(ownerSub));
     entity.setBomId(bom.getCode());
     entity.setParentBomItem(
         bom.getProductName() == null || bom.getProductName().isBlank()
@@ -211,14 +214,14 @@ public class WorkItemService {
   public WorkItemDetail cancel(String id) {
     String ownerSub = currentUserService.requiredSub();
     if (id == null || id.isBlank()) {
-      throw new IllegalStateException("work_item_not_found");
+      throw ApiException.notFound("work_item_not_found");
     }
     WorkItemEntity existing = workItemRepository.findByCodeIgnoreCaseAndOwnerSub(id.trim(), ownerSub).orElse(null);
     if (existing == null) {
-      throw new IllegalStateException("work_item_not_found");
+      throw ApiException.notFound("work_item_not_found");
     }
     if (existing.getStatus() == WorkItemStatus.CANCELED || existing.getStatus() == WorkItemStatus.COMPLETED) {
-      throw new IllegalStateException("work_item_not_cancelable");
+      throw ApiException.conflict("work_item_not_cancelable");
     }
 
     List<AllocatedComponentSnapshot> allocations = parseAllocatedComponentsJson(existing.getAllocatedComponentsJson());
@@ -226,7 +229,7 @@ public class WorkItemService {
       allocations = deriveAllocationsFromBom(existing.getBomId(), existing.getRequestedQty(), ownerSub);
     }
     if (allocations.isEmpty()) {
-      throw new IllegalStateException("invalid_work_item_snapshot");
+      throw ApiException.conflict("invalid_work_item_snapshot");
     }
 
     for (AllocatedComponentSnapshot alloc : allocations) {
@@ -234,7 +237,7 @@ public class WorkItemService {
           inventoryRepository.findByItemIdIgnoreCaseAndOwnerSub(alloc.itemId(), ownerSub).orElse(null);
       if (inv == null) {
         InventoryEntity created = new InventoryEntity();
-        created.setCode(generateNextInventoryCode());
+        created.setCode(generateNextInventoryCode(ownerSub));
         created.setItemId(alloc.itemId());
         created.setItemName(alloc.itemName());
         created.setItemCategoryName(alloc.itemCategoryName());
@@ -261,14 +264,14 @@ public class WorkItemService {
   public WorkItemDetail complete(String id) {
     String ownerSub = currentUserService.requiredSub();
     if (id == null || id.isBlank()) {
-      throw new IllegalStateException("work_item_not_found");
+      throw ApiException.notFound("work_item_not_found");
     }
     WorkItemEntity existing = workItemRepository.findByCodeIgnoreCaseAndOwnerSub(id.trim(), ownerSub).orElse(null);
     if (existing == null) {
-      throw new IllegalStateException("work_item_not_found");
+      throw ApiException.notFound("work_item_not_found");
     }
     if (existing.getStatus() == WorkItemStatus.CANCELED || existing.getStatus() == WorkItemStatus.COMPLETED) {
-      throw new IllegalStateException("work_item_not_completable");
+      throw ApiException.conflict("work_item_not_completable");
     }
 
     String productCode =
@@ -295,14 +298,14 @@ public class WorkItemService {
       }
     }
     if (productCode.isBlank() || "UNKNOWN".equalsIgnoreCase(productCode)) {
-      throw new IllegalStateException("invalid_work_item_snapshot");
+      throw ApiException.conflict("invalid_work_item_snapshot");
     }
 
     InventoryEntity productInventory =
         inventoryRepository.findByItemIdIgnoreCaseAndOwnerSub(productCode, ownerSub).orElse(null);
     if (productInventory == null) {
       InventoryEntity created = new InventoryEntity();
-      created.setCode(generateNextInventoryCode());
+      created.setCode(generateNextInventoryCode(ownerSub));
       created.setItemId(productCode);
       created.setItemName(outputName);
       created.setItemCategoryName(outputCategory);
@@ -324,37 +327,14 @@ public class WorkItemService {
     return toDetailModel(workItemRepository.save(existing));
   }
 
-  private String generateNextCode() {
-    int max =
-        workItemRepository.findAll().stream()
-            .map(WorkItemEntity::getCode)
-            .map(WorkItemService::extractNumericSuffix)
-            .filter(n -> n >= 0)
-            .max(Integer::compareTo)
-            .orElse(0);
+  private String generateNextCode(String ownerSub) {
+    int max = workItemRepository.findMaxCodeSuffixByOwnerSub(ownerSub);
     return "WI-" + String.format("%03d", max + 1);
   }
 
-  private String generateNextInventoryCode() {
-    int max =
-        inventoryRepository.findAll().stream()
-            .map(InventoryEntity::getCode)
-            .map(WorkItemService::extractNumericSuffix)
-            .filter(n -> n >= 0)
-            .max(Integer::compareTo)
-            .orElse(0);
+  private String generateNextInventoryCode(String ownerSub) {
+    int max = inventoryRepository.findMaxCodeSuffixByOwnerSub(ownerSub);
     return "INV-" + String.format("%03d", max + 1);
-  }
-
-  private static int extractNumericSuffix(String code) {
-    if (code == null) return -1;
-    int idx = code.lastIndexOf('-');
-    if (idx < 0 || idx == code.length() - 1) return -1;
-    try {
-      return Integer.parseInt(code.substring(idx + 1));
-    } catch (NumberFormatException ex) {
-      return -1;
-    }
   }
 
   private Sort parseSort(String sort) {
@@ -414,7 +394,7 @@ public class WorkItemService {
     try {
       return objectMapper.writeValueAsString(allocations == null ? List.of() : allocations);
     } catch (Exception ex) {
-      throw new IllegalStateException("invalid_work_item_snapshot");
+      throw ApiException.conflict("invalid_work_item_snapshot");
     }
   }
 
@@ -427,7 +407,7 @@ public class WorkItemService {
           objectMapper.readValue(json, new TypeReference<List<AllocatedComponentSnapshot>>() {});
       return rows == null ? List.of() : rows;
     } catch (Exception ex) {
-      throw new IllegalStateException("invalid_work_item_snapshot");
+      throw ApiException.conflict("invalid_work_item_snapshot");
     }
   }
 
