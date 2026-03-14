@@ -112,7 +112,7 @@ public class ItemsApiController implements ItemsApi {
   }
 
   @Override
-  public ResponseEntity<ItemDetail> itemsIdPut(String id, String ifMatch, @Valid @NotNull UpdateItemRequest req) {
+  public ResponseEntity<ItemDetail> itemsIdPut(String id, String ifMatch, UpdateItemRequest req) {
     Integer expectedVersion = HttpHeaderVersionUtil.parseIfMatchVersion(ifMatch);
     if (expectedVersion == null) {
       return ResponseEntity.status(412).build();
@@ -126,7 +126,7 @@ public class ItemsApiController implements ItemsApi {
   }
 
   @Override
-  public ResponseEntity<ItemDetail> itemsPost(@Valid @NotNull CreateItemRequest req) {
+  public ResponseEntity<ItemDetail> itemsPost(CreateItemRequest req) {
     ItemDetail created = itemService.create(req);
     if (created == null) {
       return ResponseEntity.status(409).build();

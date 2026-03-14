@@ -21,7 +21,7 @@ export async function listInventory(authFetch, params = {}) {
 }
 
 export async function listAllInventory(authFetch, params = {}) {
-  const pageSize = Number(params.size) > 0 ? Number(params.size) : 200;
+  const pageSize = Number(params.size) > 0 ? Number(params.size) : 8;
   const first = await listInventory(authFetch, { ...params, page: 0, size: pageSize });
   const totalPages = Math.max(1, Number(first?.totalPages || 1));
   const firstContent = Array.isArray(first?.content) ? first.content : [];

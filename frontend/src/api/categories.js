@@ -26,6 +26,34 @@ export async function listCategories(authFetch, params = {}) {
 }
 
 /**
+ * List all categories by traversing backend pages.
+ * @param {Function} authFetch
+ * @param {Object} params
+ *  - same filters/sort as listCategories
+ *  - size (optional, defaults to 8 per page)
+ */
+export async function listAllCategories(authFetch, params = {}) {
+  const pageSize = Number(params.size) > 0 ? Number(params.size) : 8;
+  const first = await listCategories(authFetch, {...params, page: 0, size: pageSize});
+  const totalPages = Math.max(1, Number(first?.totalPages || 1));
+  const firstContent = Array.isArray(first?.content) ? first.content : [];
+
+  if (totalPages === 1) {
+    return firstContent;
+  }
+
+  const pageRequests = [];
+  for (let p = 1; p < totalPages; p += 1) {
+    pageRequests.push(listCategories(authFetch, {...params, page: p, size: pageSize}));
+  }
+  const rest = await Promise.all(pageRequests);
+  return [
+    ...firstContent,
+    ...rest.flatMap((r) => (Array.isArray(r?.content) ? r.content : [])),
+  ];
+}
+
+/**
  * Create category
  * @param {Function} authFetch
  * @param {string} name

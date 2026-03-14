@@ -3,7 +3,7 @@ import {useNavigate, useParams} from "react-router-dom";
 import {useAuthFetch} from "../hooks/useAuthFetch";
 import {getItem, listAllItems} from "../api/items";
 import {
-    listCategories,
+    listAllCategories,
     createCategory as apiCreateCategory,
     renameCategory as apiRenameCategory,
     deleteCategory as apiDeleteCategory,
@@ -374,14 +374,14 @@ export default function InventoryDetailsPage() {
             try {
                 setLoading(true);
                 setError("");
-                const [itemsData, categoryPage] = await Promise.all([
+                const [itemsData, categoryRows] = await Promise.all([
                     listAllItems(authFetch, {sort: "name,asc", status: "Active"}),
-                    listCategories(authFetch, {page: 0, size: 200, sort: "name,asc"}),
+                    listAllCategories(authFetch, {sort: "name,asc"}),
                 ]);
                 if (ignore) return;
 
                 let safeItems = Array.isArray(itemsData) ? itemsData : [];
-                const safeCatObjs = Array.isArray(categoryPage?.content) ? categoryPage.content : [];
+                const safeCatObjs = Array.isArray(categoryRows) ? categoryRows : [];
                 const safeCategories = safeCatObjs.map((c) => c?.name).filter(Boolean);
                 setCatObjs(safeCatObjs);
                 setCategories(Array.from(new Set(safeCategories)).sort((a, b) => a.localeCompare(b)));

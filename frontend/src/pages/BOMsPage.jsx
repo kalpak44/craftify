@@ -245,7 +245,7 @@ export const BOMsPage = () => {
         try {
             const [bom, inventoryRows] = await Promise.all([
                 getBom(authFetch, bomId),
-                listAllInventory(authFetch, {sort: "itemId,asc"}),
+                listAllInventory(authFetch, {sort: "itemId,asc", size: pageSize}),
             ]);
             const byItemId = {};
             (inventoryRows || []).forEach((inv) => {

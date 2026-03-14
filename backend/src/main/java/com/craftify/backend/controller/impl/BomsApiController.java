@@ -49,7 +49,7 @@ public class BomsApiController implements BomsApi {
   }
 
   @Override
-  public ResponseEntity<BomDetail> bomsPost(@Valid @NotNull BomDetail req) {
+  public ResponseEntity<BomDetail> bomsPost(BomDetail req) {
     BomDetail created = bomService.create(req);
     if (created == null) {
       return ResponseEntity.status(409).header("X-Error-Code", ERROR_BOM_CODE_CONFLICT).build();
@@ -60,7 +60,7 @@ public class BomsApiController implements BomsApi {
   }
 
   @Override
-  public ResponseEntity<BomDetail> bomsIdPut(String id, String ifMatch, @Valid @NotNull BomDetail req) {
+  public ResponseEntity<BomDetail> bomsIdPut(String id, String ifMatch, BomDetail req) {
     Integer expectedVersion = HttpHeaderVersionUtil.parseIfMatchVersion(ifMatch);
     if (expectedVersion == null) {
       return ResponseEntity.status(412).build();

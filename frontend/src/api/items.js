@@ -68,10 +68,10 @@ export async function listItems(authFetch, params = {}) {
  * @param {Function} authFetch
  * @param {Object} params
  *  - same filters/sort as listItems
- *  - size (optional, defaults to 200 per page)
+ *  - size (optional, defaults to 8 per page)
  */
 export async function listAllItems(authFetch, params = {}) {
-  const pageSize = Number(params.size) > 0 ? Number(params.size) : 200;
+  const pageSize = Number(params.size) > 0 ? Number(params.size) : 8;
   const first = await listItems(authFetch, {...params, page: 0, size: pageSize});
   const totalPages = Math.max(1, Number(first?.totalPages || 1));
   const firstContent = Array.isArray(first?.content) ? first.content : [];

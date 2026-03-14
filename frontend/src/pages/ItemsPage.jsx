@@ -3,7 +3,7 @@ import {useNavigate} from "react-router-dom";
 import {useAuthFetch} from "../hooks/useAuthFetch";
 import {useLocalization} from "../hooks/useLocalization";
 import {listItems, listAllItems, getItem, deleteItem, exportItemsCsv, importItemsCsv} from "../api/items";
-import {listCategories} from "../api/categories";
+import {listAllCategories} from "../api/categories";
 import {createInventoryFromItem} from "../api/inventory";
 
 /**
@@ -96,9 +96,9 @@ export const ItemsPage = () => {
         let ignore = false;
         (async () => {
             try {
-                const res = await listCategories(authFetch, {page: 0, size: 200, sort: "name,asc"});
+                const categories = await listAllCategories(authFetch, {sort: "name,asc", size: pageSize});
                 if (ignore) return;
-                const names = (res?.content || []).map((c) => c?.name).filter(Boolean);
+                const names = categories.map((c) => c?.name).filter(Boolean);
                 setCategoryOptions(["all", ...names]);
             } catch (_) {
                 if (!ignore) {
@@ -109,7 +109,7 @@ export const ItemsPage = () => {
         return () => {
             ignore = true;
         };
-    }, [authFetch, reloadTick]);
+    }, [authFetch, reloadTick, pageSize]);
 
     // Fetch all filtered rows from backend when sort/query/filters change (debounced)
     useEffect(() => {
@@ -127,6 +127,7 @@ export const ItemsPage = () => {
                                 ? "updatedAt"
                                 : "name";
                 const allRows = await listAllItems(authFetch, {
+                    size: pageSize,
                     sort: `${serverSortKey},${sort.dir}`,
                     q: queryDebounced || undefined,
                     status: status !== "all" ? status : undefined,
@@ -145,7 +146,7 @@ export const ItemsPage = () => {
         return () => {
             ignore = true;
         };
-    }, [authFetch, sort, queryDebounced, status, category, uom, reloadTick]);
+    }, [authFetch, sort, queryDebounced, status, category, uom, reloadTick, pageSize]);
 
     useEffect(() => {
         let ignore = false;

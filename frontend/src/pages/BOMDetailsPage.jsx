@@ -2,7 +2,7 @@ import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 import {useAuthFetch} from "../hooks/useAuthFetch";
 import {getBom, createBom, updateBom} from "../api/boms";
-import {listItems} from "../api/items";
+import {listAllItems} from "../api/items";
 
 /**
  * BOMDetailsPage — React + Tailwind (Mobile-friendly UX + Responsive, Fixed Background Gradient)
@@ -42,6 +42,8 @@ const emptyRow = () => ({
     uom: "",
     notes: "",
 });
+
+const PICKER_PAGE_SIZE = 8;
 
 // ---------- Utilities ----------
 function classNames(...a) {
@@ -207,9 +209,9 @@ export default function BOMDetailsPage() {
         let ignore = false;
         (async () => {
             try {
-                const page = await listItems(authFetch, { page: 0, size: 200, sort: "name,asc" });
+                const allItems = await listAllItems(authFetch, {sort: "name,asc", size: PICKER_PAGE_SIZE});
                 if (ignore) return;
-                const mapped = (page?.content || []).map(it => ({
+                const mapped = (allItems || []).map(it => ({
                     id: it.id || it.code || "",
                     name: it.name || "",
                     uom: it.uomBase || "",

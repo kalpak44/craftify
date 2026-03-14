@@ -54,7 +54,7 @@ public class CategoriesApiController implements CategoriesApi {
 
   @Override
   public ResponseEntity<Category> categoriesIdPatch(
-      UUID id, @Valid @NotNull RenameCategoryRequest renameCategoryRequest) {
+      UUID id, RenameCategoryRequest renameCategoryRequest) {
     Category updated = categoryService.rename(id, renameCategoryRequest.getName());
     if (updated == null) {
       return ResponseEntity.notFound().build();
@@ -63,7 +63,7 @@ public class CategoriesApiController implements CategoriesApi {
   }
 
   @Override
-  public ResponseEntity<Category> categoriesPost(@Valid @NotNull CreateCategoryRequest createCategoryRequest) {
+  public ResponseEntity<Category> categoriesPost(CreateCategoryRequest createCategoryRequest) {
     Category created = categoryService.create(createCategoryRequest.getName());
     if (created == null) {
       return ResponseEntity.status(409).build();

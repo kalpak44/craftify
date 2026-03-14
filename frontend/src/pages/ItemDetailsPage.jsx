@@ -2,7 +2,7 @@ import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 import {useAuthFetch} from "../hooks/useAuthFetch";
 import {getItem, createItem, updateItem} from "../api/items";
-import {listCategories, createCategory as apiCreateCategory, renameCategory as apiRenameCategory, deleteCategory as apiDeleteCategory} from "../api/categories";
+import {listAllCategories, createCategory as apiCreateCategory, renameCategory as apiRenameCategory, deleteCategory as apiDeleteCategory} from "../api/categories";
 
 /**
  * ItemDetailsPage — React + Tailwind
@@ -615,20 +615,8 @@ export default function ItemDetailsPage() {
         let ignore = false;
         (async () => {
             try {
-                const first = await listCategories(authFetch, { page: 0, size: 200, sort: "name,asc" });
+                const objs = await listAllCategories(authFetch, {sort: "name,asc"});
                 if (ignore) return;
-                const totalPages = Math.max(1, Number(first?.totalPages || 1));
-                const rest = totalPages > 1
-                    ? await Promise.all(
-                        Array.from({length: totalPages - 1}, (_, i) =>
-                            listCategories(authFetch, {page: i + 1, size: 200, sort: "name,asc"})
-                        )
-                    )
-                    : [];
-                const objs = [
-                    ...(Array.isArray(first?.content) ? first.content : []),
-                    ...rest.flatMap((p) => (Array.isArray(p?.content) ? p.content : [])),
-                ];
                 setCatObjs(objs);
                 const names = objs.map(c => c.name).filter(Boolean).sort((a,b)=>a.localeCompare(b));
                 setCategories(Array.from(new Set(names)));

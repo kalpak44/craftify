@@ -43,6 +43,7 @@ export const WorkItemsPage = () => {
                                 ? "status"
                                 : "requestedAt";
                 const data = await listAllWorkItems(authFetch, {
+                    size: pageSize,
                     sort: `${serverSortKey},${sort.dir}`,
                     q: query.trim() || undefined,
                     status: status !== "all" ? status : undefined,
@@ -68,7 +69,7 @@ export const WorkItemsPage = () => {
         return () => {
             ignore = true;
         };
-    }, [authFetch, query, sort, status, reloadTick]);
+    }, [authFetch, query, sort, status, reloadTick, pageSize]);
 
     const filtered = useMemo(() => {
         let data = rows;

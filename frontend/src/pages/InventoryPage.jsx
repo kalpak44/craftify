@@ -36,7 +36,7 @@ export default function InventoryPage() {
             try {
                 setLoading(true);
                 setError("");
-                const data = await listAllInventory(authFetch, {sort: "code,asc"});
+                const data = await listAllInventory(authFetch, {sort: "code,asc", size: pageSize});
                 if (!ignore) setRows(Array.isArray(data) ? data : []);
             } catch (e) {
                 if (!ignore) setError(e?.message || t("inventory.error.load", null, "Failed to load inventory."));
@@ -47,7 +47,7 @@ export default function InventoryPage() {
         return () => {
             ignore = true;
         };
-    }, [authFetch]);
+    }, [authFetch, pageSize]);
 
     const categories = useMemo(
         () => ["all", ...Array.from(new Set(rows.map((r) => r.categoryName).filter(Boolean))).sort((a, b) => a.localeCompare(b))],
@@ -121,7 +121,7 @@ export default function InventoryPage() {
     const toggleOne = (code) => setSelected((s) => ({...s, [code]: !s[code]}));
 
     const reloadRows = async () => {
-        const data = await listAllInventory(authFetch, {sort: "code,asc"});
+        const data = await listAllInventory(authFetch, {sort: "code,asc", size: pageSize});
         setRows(Array.isArray(data) ? data : []);
     };
 
