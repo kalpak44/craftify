@@ -3,6 +3,7 @@ package com.craftify.backend.controller.impl;
 import com.craftify.backend.controller.BomsApi;
 import com.craftify.backend.model.BomDetail;
 import com.craftify.backend.model.BomPage;
+import com.craftify.backend.model.BomQuery;
 import com.craftify.backend.model.BomStatus;
 import com.craftify.backend.service.BomService;
 import com.craftify.backend.utils.HttpHeaderVersionUtil;
@@ -36,9 +37,7 @@ public class BomsApiController implements BomsApi {
       @Nullable BomStatus status) {
     log.info("GET /boms page={} size={} sort={} q={} status={}", page, size, sort, q, status);
     BomPage body =
-        bomService.list(
-            new BomService.BomQuery(
-                page == null ? 0 : page, size == null ? 8 : size, sort, q, status));
+        bomService.list(new BomQuery(page == null ? 0 : page, size == null ? 8 : size, sort, q, status));
     return ResponseEntity.ok(body);
   }
 

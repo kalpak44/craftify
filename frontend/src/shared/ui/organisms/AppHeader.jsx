@@ -3,30 +3,31 @@ import {useEffect, useRef, useState} from "react";
 import {Button} from "../atoms/Button";
 import {BrandMark} from "../atoms/BrandMark";
 import {NavItem} from "../molecules/NavItem";
+import {LocaleSwitcher} from "../molecules/LocaleSwitcher";
 import {ThemeToggle} from "../molecules/ThemeToggle";
+import {useLocalization} from "../../../hooks/useLocalization";
 import {logoutUser} from "../../../utils/authSession";
-
-const AUTH_ITEMS = [
-    {to: "/", label: "Home"},
-    {to: "/items", label: "Items"},
-    {to: "/inventory", label: "Inventory"},
-    {to: "/boms", label: "BOMs"},
-    {to: "/work-items", label: "Work Items"},
-    {to: "/calendar", label: "Calendar"},
-];
-
-const PUBLIC_ITEMS = [
-    {to: "/", label: "Home"},
-    {to: "/terms", label: "Terms"},
-    {to: "/privacy", label: "Privacy"},
-];
 
 export function AppHeader() {
     const {isAuthenticated, isLoading, loginWithRedirect, logout, user} = useAuth0();
+    const {t} = useLocalization();
     const [menuOpen, setMenuOpen] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
     const menuRef = useRef(null);
-    const items = isAuthenticated ? AUTH_ITEMS : PUBLIC_ITEMS;
+    const authItems = [
+        {to: "/", label: t("nav.home")},
+        {to: "/items", label: t("nav.items")},
+        {to: "/inventory", label: t("nav.inventory")},
+        {to: "/boms", label: t("nav.boms")},
+        {to: "/work-items", label: t("nav.workItems")},
+        {to: "/calendar", label: t("nav.calendar")},
+    ];
+    const publicItems = [
+        {to: "/", label: t("nav.home")},
+        {to: "/terms", label: t("nav.terms")},
+        {to: "/privacy", label: t("nav.privacy")},
+    ];
+    const items = isAuthenticated ? authItems : publicItems;
 
     useEffect(() => {
         const handleClick = (event) => {
@@ -63,7 +64,7 @@ export function AppHeader() {
                             Craftify
                         </p>
                         <p className="truncate text-xs uppercase tracking-[0.24em] text-[var(--text-muted)]">
-                            Factory orchestration
+                            {t("brand.tagline")}
                         </p>
                     </div>
                 </div>
@@ -77,11 +78,12 @@ export function AppHeader() {
                 </nav>
 
                 <div className="hidden items-center gap-3 lg:flex">
+                    <LocaleSwitcher/>
                     <ThemeToggle/>
                     {!isLoading && !isAuthenticated ? (
                         <>
-                            <Button variant="ghost" onClick={openLogin}>Log in</Button>
-                            <Button variant="primary" onClick={openSignup}>Start free</Button>
+                            <Button variant="ghost" onClick={openLogin}>{t("auth.logIn")}</Button>
+                            <Button variant="primary" onClick={openSignup}>{t("auth.startFree")}</Button>
                         </>
                     ) : null}
                     {!isLoading && isAuthenticated ? (
@@ -93,12 +95,12 @@ export function AppHeader() {
                             >
                                 <img
                                     src={user?.picture}
-                                    alt={user?.name || "profile"}
+                                    alt={user?.name || t("header.profileAlt")}
                                     className="h-9 w-9 rounded-full object-cover ring-1 ring-black/5 dark:ring-white/10"
                                 />
                                 <span className="hidden pr-2 md:block">
                                     <span className="block text-sm font-semibold text-[var(--text-primary)]">
-                                        {user?.name || "Craftify user"}
+                                        {user?.name || t("header.userFallback")}
                                     </span>
                                     <span className="block max-w-40 truncate text-xs text-[var(--text-muted)]">
                                         {user?.email}
@@ -111,10 +113,10 @@ export function AppHeader() {
                                     <p className="mt-1 text-xs text-[var(--text-muted)]">{user?.email}</p>
                                     <div className="mt-4 flex flex-col gap-2">
                                         <NavItem to="/calendar" mobile onClick={() => setMenuOpen(false)}>
-                                            Open calendar
+                                            {t("auth.openCalendar")}
                                         </NavItem>
                                         <Button variant="secondary" onClick={() => logoutUser(logout)}>
-                                            Log out
+                                            {t("auth.logOut")}
                                         </Button>
                                     </div>
                                 </div>
@@ -129,7 +131,7 @@ export function AppHeader() {
                         type="button"
                         onClick={() => setMobileOpen((current) => !current)}
                         className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/70 text-[var(--text-primary)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.7)] dark:bg-white/10 dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]"
-                        aria-label="Open navigation"
+                        aria-label={t("header.openNavigation")}
                     >
                         <span aria-hidden="true">{mobileOpen ? "×" : "≡"}</span>
                     </button>
@@ -139,6 +141,7 @@ export function AppHeader() {
             {mobileOpen ? (
                 <div className="border-t border-white/45 bg-[color:var(--shell-bg)]/96 px-4 py-4 backdrop-blur-2xl lg:hidden">
                     <div className="mx-auto flex max-w-7xl flex-col gap-2">
+                        <LocaleSwitcher/>
                         {items.map((item) => (
                             <NavItem key={item.to} to={item.to} mobile onClick={() => setMobileOpen(false)}>
                                 {item.label}
@@ -146,8 +149,8 @@ export function AppHeader() {
                         ))}
                         {!isLoading && !isAuthenticated ? (
                             <div className="mt-3 flex flex-col gap-2">
-                                <Button variant="secondary" onClick={openLogin}>Log in</Button>
-                                <Button variant="primary" onClick={openSignup}>Start free</Button>
+                                <Button variant="secondary" onClick={openLogin}>{t("auth.logIn")}</Button>
+                                <Button variant="primary" onClick={openSignup}>{t("auth.startFree")}</Button>
                             </div>
                         ) : null}
                         {!isLoading && isAuthenticated ? (
@@ -155,7 +158,7 @@ export function AppHeader() {
                                 <p className="text-sm font-semibold text-[var(--text-primary)]">{user?.name}</p>
                                 <p className="mt-1 text-xs text-[var(--text-muted)]">{user?.email}</p>
                                 <Button className="mt-4 w-full" variant="secondary" onClick={() => logoutUser(logout)}>
-                                    Log out
+                                    {t("auth.logOut")}
                                 </Button>
                             </div>
                         ) : null}

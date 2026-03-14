@@ -5,6 +5,7 @@ import com.craftify.backend.model.BomComponent;
 import com.craftify.backend.model.BomDetail;
 import com.craftify.backend.model.BomList;
 import com.craftify.backend.model.BomPage;
+import com.craftify.backend.model.BomQuery;
 import com.craftify.backend.model.BomStatus;
 import com.craftify.backend.persistence.entity.BomComponentEmbeddable;
 import com.craftify.backend.persistence.entity.BomEntity;
@@ -27,8 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class BomService {
-
-  public record BomQuery(int page, int size, String sort, String q, BomStatus status) {}
 
   private final BomRepository bomRepository;
   private final ItemRepository itemRepository;

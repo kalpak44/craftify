@@ -1,9 +1,11 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useLocation, useNavigate} from "react-router-dom";
 import {useAuthFetch} from "../hooks/useAuthFetch";
+import {useLocalization} from "../hooks/useLocalization";
 import {listAllInventory, deleteInventory, importInventoryCsv} from "../api/inventory";
 
 export default function InventoryPage() {
+    const {t} = useLocalization();
     const navigate = useNavigate();
     const location = useLocation();
     const authFetch = useAuthFetch();
@@ -37,7 +39,7 @@ export default function InventoryPage() {
                 const data = await listAllInventory(authFetch, {sort: "code,asc"});
                 if (!ignore) setRows(Array.isArray(data) ? data : []);
             } catch (e) {
-                if (!ignore) setError(e?.message || "Failed to load inventory.");
+                if (!ignore) setError(e?.message || t("inventory.error.load", null, "Failed to load inventory."));
             } finally {
                 if (!ignore) setLoading(false);
             }
@@ -323,7 +325,7 @@ export default function InventoryPage() {
                     onDone();
                 }}
             >
-                Open details
+                {t("common.openDetails", null, "Open details")}
             </button>
             <button
                 className="w-full text-left px-4 py-2.5 text-sm hover:bg-red-500/10 text-red-700 dark:text-red-400"
@@ -332,7 +334,7 @@ export default function InventoryPage() {
                     onDone();
                 }}
             >
-                Delete
+                {t("common.delete", null, "Delete")}
             </button>
         </>
     );
@@ -342,9 +344,9 @@ export default function InventoryPage() {
             <header className="mx-auto px-4 pt-8 pb-5">
                 <div className="flex items-start md:items-end justify-between gap-4 flex-wrap">
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Inventory</h1>
+                        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">{t("inventory.title", null, "Inventory")}</h1>
                         <p className="mt-1 md:mt-2 text-slate-500 dark:text-gray-400 text-sm md:text-base">
-                            Inventory records linked to Items with category override support.
+                            {t("inventory.subtitle", null, "Inventory records linked to Items with category override support.")}
                         </p>
                     </div>
                     <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
@@ -352,7 +354,7 @@ export default function InventoryPage() {
                             onClick={() => navigate("/inventory/new")}
                             className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm"
                         >
-                            + New Inventory
+                            + {t("inventory.new", null, "New Inventory")}
                         </button>
                     </div>
                 </div>
@@ -370,7 +372,7 @@ export default function InventoryPage() {
                                 }}
                                 className="rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                             >
-                                {categories.map((c) => <option key={c} value={c}>{c === "all" ? "All Categories" : c}</option>)}
+                                {categories.map((c) => <option key={c} value={c}>{c === "all" ? t("common.allCategories", null, "All Categories") : c}</option>)}
                             </select>
                             <select
                                 value={uomFilter}
@@ -380,7 +382,7 @@ export default function InventoryPage() {
                                 }}
                                 className="rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                             >
-                                {uoms.map((u) => <option key={u} value={u}>{u === "all" ? "All UoM" : u}</option>)}
+                                {uoms.map((u) => <option key={u} value={u}>{u === "all" ? t("common.allUom", null, "All UoM") : u}</option>)}
                             </select>
                         </div>
 
@@ -391,7 +393,7 @@ export default function InventoryPage() {
                                     setQuery(e.target.value);
                                     setPage(1);
                                 }}
-                                placeholder="Search code, item ref, item name..."
+                                placeholder={t("inventory.searchPlaceholder", null, "Search code, item ref, item name...")}
                                 className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 pl-3 pr-10 py-2 text-sm"
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 dark:text-gray-500">⌕</span>
@@ -410,31 +412,31 @@ export default function InventoryPage() {
                                 disabled={importingCsv}
                                 className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm hover:bg-slate-200 dark:hover:bg-gray-700 disabled:opacity-50"
                             >
-                                {importingCsv ? "Importing..." : "Import CSV"}
+                                {importingCsv ? t("common.importing", null, "Importing...") : t("common.importCsv", null, "Import CSV")}
                             </button>
                             <button
                                 onClick={handleExportCSV}
                                 className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm hover:bg-slate-200 dark:hover:bg-gray-700"
                             >
-                                Export CSV
+                                {t("common.exportCsv", null, "Export CSV")}
                             </button>
                             <button
                                 onClick={handlePrint}
                                 className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm hover:bg-slate-200 dark:hover:bg-gray-700"
                             >
-                                Print / PDF
+                                {t("common.printPdf", null, "Print / PDF")}
                             </button>
                             <button
                                 onClick={() => setShowDeleteModal(true)}
                                 disabled={!selectedCount}
                                 className="px-3 py-2 rounded-lg bg-red-600/80 hover:bg-red-600 text-white text-sm disabled:opacity-40"
                             >
-                                Delete
+                                {t("common.delete", null, "Delete")}
                             </button>
                         </div>
                     </div>
                 </div>
-                {loading && <div className="mt-2 text-xs text-blue-300">Loading…</div>}
+                {loading && <div className="mt-2 text-xs text-blue-300">{t("common.loading", null, "Loading...")}</div>}
                 {error && <div className="mt-2 text-xs text-red-400">{error}</div>}
             </div>
 
@@ -443,7 +445,7 @@ export default function InventoryPage() {
                     <div className="mb-2 flex items-center justify-between">
                         <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-gray-300">
                             <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll}/>
-                            <span>Select all on page</span>
+                            <span>{t("common.selectAllOnPage", null, "Select all on page")}</span>
                         </label>
                         <span className="text-xs text-slate-500 dark:text-gray-400">
               {paged.length === 0 ? 0 : ((page - 1) * pageSize + 1)}-{((page - 1) * pageSize) + paged.length} of {filtered.length}
@@ -476,8 +478,8 @@ export default function InventoryPage() {
                                                     e.stopPropagation();
                                                     setSheetCode(r.code);
                                                 }}
-                                                aria-label="Actions"
-                                                title="Actions"
+                                                aria-label={t("common.actions", null, "Actions")}
+                                                title={t("common.actions", null, "Actions")}
                                             >
                                                 …
                                             </button>
@@ -491,13 +493,13 @@ export default function InventoryPage() {
                                             <span>•</span>
                                             <span>{r.uom}</span>
                                             <span>•</span>
-                                            <span className="font-mono">Available: {r.available}</span>
+                                            <span className="font-mono">{t("inventory.table.available", null, "Available")}: {r.available}</span>
                                             {r.categoryDetached && (
                                                 <>
                                                     <span>•</span>
                                                     <span
                                                         className="px-2 py-0.5 text-[10px] rounded-full bg-blue-600/30 text-blue-300 whitespace-nowrap">
-                            Detached
+                            {t("inventory.detached", null, "Detached")}
                           </span>
                                                 </>
                                             )}
@@ -509,7 +511,7 @@ export default function InventoryPage() {
                         {paged.length === 0 && (
                             <div
                                 className="rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-6 text-center text-slate-500 dark:text-gray-400">
-                                No inventory items found.
+                                {t("inventory.empty", null, "No inventory items found.")}
                             </div>
                         )}
                     </div>
@@ -523,13 +525,13 @@ export default function InventoryPage() {
                             <th className="px-4 py-3">
                                 <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll}/>
                             </th>
-                            {th("Code", "code")}
-                            {th("Item Ref", "itemId")}
-                            {th("Item Name", "itemName")}
-                            {th("Category", "categoryName")}
-                            {th("UoM", "uom")}
-                            {th("Available", "available", true)}
-                            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-gray-300 text-right">Actions</th>
+                            {th(t("inventory.table.code", null, "Code"), "code")}
+                            {th(t("inventory.table.itemRef", null, "Item Ref"), "itemId")}
+                            {th(t("inventory.table.itemName", null, "Item Name"), "itemName")}
+                            {th(t("inventory.table.category", null, "Category"), "categoryName")}
+                            {th(t("inventory.table.uom", null, "UoM"), "uom")}
+                            {th(t("inventory.table.available", null, "Available"), "available", true)}
+                            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-gray-300 text-right">{t("common.actions", null, "Actions")}</th>
                         </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-800">
@@ -552,7 +554,7 @@ export default function InventoryPage() {
                                         <span>{r.categoryName}</span>
                                         {r.categoryDetached && (
                                             <span
-                                                className="px-2 py-0.5 text-[10px] rounded-full bg-blue-600/30 text-blue-300">Detached</span>
+                                                className="px-2 py-0.5 text-[10px] rounded-full bg-blue-600/30 text-blue-300">{t("inventory.detached", null, "Detached")}</span>
                                         )}
                                     </div>
                                 </td>
@@ -561,8 +563,8 @@ export default function InventoryPage() {
                                 <td className="px-4 py-3 text-right" onClick={stopRowNav}>
                                     <button
                                         className="inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-slate-100/70 dark:hover:bg-gray-800/60 text-slate-700 dark:text-gray-300"
-                                        aria-label="Actions"
-                                        title="Actions"
+                                        aria-label={t("common.actions", null, "Actions")}
+                                        title={t("common.actions", null, "Actions")}
                                         onClick={(e) => openDesktopMenu(e, r.code)}
                                     >
                                         …
@@ -573,7 +575,7 @@ export default function InventoryPage() {
                         {paged.length === 0 && (
                             <tr>
                                 <td className="px-4 py-6 text-center text-slate-500 dark:text-gray-400" colSpan={8}>
-                                    No inventory items found.
+                                    {t("inventory.empty", null, "No inventory items found.")}
                                 </td>
                             </tr>
                         )}
@@ -584,7 +586,7 @@ export default function InventoryPage() {
                 <div
                     className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-slate-500 dark:text-gray-400">
                     <div className="flex items-center gap-2">
-                        <span>Rows per page</span>
+                        <span>{t("common.rowsPerPage", null, "Rows per page")}</span>
                         <select
                             value={pageSize}
                             onChange={(e) => {
@@ -599,7 +601,7 @@ export default function InventoryPage() {
                         </select>
                         <span className="hidden sm:inline">•</span>
                         <span>
-              Showing <span className="text-slate-700 dark:text-gray-300">{paged.length === 0 ? 0 : ((page - 1) * pageSize + 1)}</span>-
+              {t("common.showing", null, "Showing")} <span className="text-slate-700 dark:text-gray-300">{paged.length === 0 ? 0 : ((page - 1) * pageSize + 1)}</span>-
               <span className="text-slate-700 dark:text-gray-300">{((page - 1) * pageSize) + paged.length}</span> of
               <span className="text-slate-700 dark:text-gray-300"> {filtered.length}</span>
             </span>
@@ -610,7 +612,7 @@ export default function InventoryPage() {
                             disabled={page <= 1}
                             className="px-3 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 disabled:opacity-40"
                         >
-                            Prev
+                            {t("common.prev", null, "Prev")}
                         </button>
                         <span className="px-2">{page} / {totalPages}</span>
                         <button
@@ -618,7 +620,7 @@ export default function InventoryPage() {
                             disabled={page >= totalPages}
                             className="px-3 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 disabled:opacity-40"
                         >
-                            Next
+                            {t("common.next", null, "Next")}
                         </button>
                     </div>
                 </div>
@@ -642,7 +644,7 @@ export default function InventoryPage() {
                         <div className="mx-auto h-1 w-10 rounded-full bg-white/20 mb-1.5"/>
                         <div className="px-2 pb-2">
                             <div className="text-xs text-slate-500 dark:text-gray-400 mb-2 px-1">
-                                Actions for <span className="font-mono text-slate-700 dark:text-gray-300">{sheetCode}</span>
+                                {t("common.actionsFor", null, "Actions for")} <span className="font-mono text-slate-700 dark:text-gray-300">{sheetCode}</span>
                             </div>
                             <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 divide-y divide-white/10">
                                 <MenuItems code={sheetCode} onDone={() => setSheetCode(null)}/>
@@ -651,7 +653,7 @@ export default function InventoryPage() {
                                 className="mt-2 w-full px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                                 onClick={() => setSheetCode(null)}
                             >
-                                Close
+                                {t("common.close", null, "Close")}
                             </button>
                         </div>
                     </div>
@@ -664,16 +666,16 @@ export default function InventoryPage() {
                     <div className="absolute inset-0 flex items-center justify-center p-4">
                         <div
                             className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 p-5 shadow-2xl">
-                            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Delete inventory items</h2>
+                            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{t("inventory.deleteManyTitle", null, "Delete inventory items")}</h2>
                             <p className="mt-2 text-sm text-slate-600 dark:text-gray-400">
-                                Delete {selectedCount} selected inventory record(s)?
+                                {t("inventory.deleteManyMessage", {count: selectedCount}, `Delete ${selectedCount} selected inventory record(s)?`)}
                             </p>
                             <div className="mt-4 flex items-center justify-end gap-2">
                                 <button
                                     onClick={() => setShowDeleteModal(false)}
                                     className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm"
                                 >
-                                    Cancel
+                                    {t("common.cancel", null, "Cancel")}
                                 </button>
                                 <button
                                     onClick={() => {
@@ -682,7 +684,7 @@ export default function InventoryPage() {
                                     }}
                                     className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm"
                                 >
-                                    Delete
+                                    {t("common.delete", null, "Delete")}
                                 </button>
                             </div>
                         </div>
@@ -696,16 +698,16 @@ export default function InventoryPage() {
                     <div className="absolute inset-0 flex items-center justify-center p-4">
                         <div
                             className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 p-5 shadow-2xl">
-                            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Delete inventory item</h2>
+                            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{t("inventory.deleteOneTitle", null, "Delete inventory item")}</h2>
                             <p className="mt-2 text-sm text-slate-600 dark:text-gray-400">
-                                Delete inventory record &quot;{deleteOneCode}&quot;?
+                                {t("inventory.deleteOneMessage", {code: deleteOneCode}, `Delete inventory record "${deleteOneCode}"?`)}
                             </p>
                             <div className="mt-4 flex items-center justify-end gap-2">
                                 <button
                                     onClick={() => setDeleteOneCode(null)}
                                     className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm"
                                 >
-                                    Cancel
+                                    {t("common.cancel", null, "Cancel")}
                                 </button>
                                 <button
                                     onClick={() => {
@@ -714,7 +716,7 @@ export default function InventoryPage() {
                                     }}
                                     className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm"
                                 >
-                                    Delete
+                                    {t("common.delete", null, "Delete")}
                                 </button>
                             </div>
                         </div>
@@ -730,15 +732,15 @@ export default function InventoryPage() {
                             className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 p-5 shadow-2xl">
                             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{importResultModal.title}</h2>
                             <div className="mt-3 text-sm text-slate-600 dark:text-gray-400 space-y-1">
-                                <div>Created: <span className="text-slate-900 dark:text-gray-200">{importResultModal.created}</span></div>
-                                <div>Updated: <span className="text-slate-900 dark:text-gray-200">{importResultModal.updated}</span></div>
+                                <div>{t("common.created", null, "Created")}: <span className="text-slate-900 dark:text-gray-200">{importResultModal.created}</span></div>
+                                <div>{t("common.updated", null, "Updated")}: <span className="text-slate-900 dark:text-gray-200">{importResultModal.updated}</span></div>
                                 {importResultModal.errors != null && (
-                                    <div>Errors: <span className="text-slate-900 dark:text-gray-200">{importResultModal.errors}</span></div>
+                                    <div>{t("common.errors", null, "Errors")}: <span className="text-slate-900 dark:text-gray-200">{importResultModal.errors}</span></div>
                                 )}
                             </div>
                             {Array.isArray(importResultModal.headErrors) && importResultModal.headErrors.length > 0 && (
                                 <div className="mt-3 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 p-3">
-                                    <div className="text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">Details</div>
+                                    <div className="text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">{t("common.details", null, "Details")}</div>
                                     <div className="text-xs text-slate-600 dark:text-gray-400 space-y-1 max-h-40 overflow-auto">
                                         {importResultModal.headErrors.map((line, idx) => (
                                             <div key={`${idx}-${line}`}>{line}</div>
@@ -751,7 +753,7 @@ export default function InventoryPage() {
                                     onClick={() => setImportResultModal(null)}
                                     className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm"
                                 >
-                                    OK
+                                    {t("common.ok", null, "OK")}
                                 </button>
                             </div>
                         </div>

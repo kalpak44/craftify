@@ -1,6 +1,7 @@
 package com.craftify.backend.service;
 
 import com.craftify.backend.model.CalendarEventDetail;
+import com.craftify.backend.model.CalendarEventCommand;
 import com.craftify.backend.persistence.entity.CalendarEventEntity;
 import com.craftify.backend.persistence.repository.CalendarEventRepository;
 import jakarta.persistence.criteria.Predicate;
@@ -18,15 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CalendarEventService {
-
-  public record EventCommand(
-      String title,
-      OffsetDateTime start,
-      OffsetDateTime end,
-      String color,
-      String calendar,
-      String location,
-      String description) {}
 
   private final CalendarEventRepository calendarEventRepository;
   private final CurrentUserService currentUserService;
@@ -65,7 +57,7 @@ public class CalendarEventService {
   }
 
   @Transactional
-  public CalendarEventDetail create(EventCommand command) {
+  public CalendarEventDetail create(CalendarEventCommand command) {
     CalendarEventEntity entity = new CalendarEventEntity();
     apply(entity, command);
     entity.setOwnerSub(currentUserService.requiredSub());
@@ -73,7 +65,7 @@ public class CalendarEventService {
   }
 
   @Transactional
-  public CalendarEventDetail update(UUID id, EventCommand command) {
+  public CalendarEventDetail update(UUID id, CalendarEventCommand command) {
     String ownerSub = currentUserService.requiredSub();
     CalendarEventEntity existing = calendarEventRepository.findByIdAndOwnerSub(id, ownerSub).orElse(null);
     if (existing == null) {
@@ -106,7 +98,7 @@ public class CalendarEventService {
     }
   }
 
-  private void apply(CalendarEventEntity entity, EventCommand command) {
+  private void apply(CalendarEventEntity entity, CalendarEventCommand command) {
     entity.setTitle(command.title().trim());
     entity.setStartAt(command.start());
     entity.setEndAt(command.end());

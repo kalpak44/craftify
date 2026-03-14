@@ -1,9 +1,11 @@
 package com.craftify.backend.controller.impl;
 
 import com.craftify.backend.model.CreateInventoryFromItemRequest;
+import com.craftify.backend.model.CreateFromItemResult;
 import com.craftify.backend.model.InventoryDetail;
 import com.craftify.backend.model.InventoryNextCodeResponse;
 import com.craftify.backend.model.InventoryPage;
+import com.craftify.backend.model.InventoryQuery;
 import com.craftify.backend.model.InventoryUpsertRequest;
 import com.craftify.backend.service.InventoryService;
 import jakarta.validation.Valid;
@@ -53,13 +55,7 @@ public class InventoryApiController {
 
     InventoryPage body =
         inventoryService.list(
-            new InventoryService.InventoryQuery(
-                page == null ? 0 : page,
-                size == null ? 8 : size,
-                sort,
-                q,
-                categoryName,
-                uom));
+            new InventoryQuery(page == null ? 0 : page, size == null ? 8 : size, sort, q, categoryName, uom));
 
     return ResponseEntity.ok(body);
   }
@@ -111,8 +107,7 @@ public class InventoryApiController {
       consumes = {"application/json"})
   public ResponseEntity<InventoryDetail> inventoryCreateFromItemPost(
       @Valid @NotNull @RequestBody CreateInventoryFromItemRequest req) {
-    InventoryService.CreateFromItemResult result =
-        inventoryService.createFromItem(req.getItemId(), req.getAvailable(), req.getMode());
+    CreateFromItemResult result = inventoryService.createFromItem(req.getItemId(), req.getAvailable(), req.getMode());
     if (result.created()) {
       return ResponseEntity.created(URI.create("/inventory/" + result.detail().getCode()))
           .body(result.detail());

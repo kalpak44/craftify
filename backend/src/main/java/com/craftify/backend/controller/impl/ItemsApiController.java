@@ -4,6 +4,7 @@ import com.craftify.backend.controller.ItemsApi;
 import com.craftify.backend.model.CreateItemRequest;
 import com.craftify.backend.model.ItemDetail;
 import com.craftify.backend.model.ItemPage;
+import com.craftify.backend.model.ItemQuery;
 import com.craftify.backend.model.Status;
 import com.craftify.backend.model.UpdateItemRequest;
 import com.craftify.backend.service.ItemService;
@@ -62,7 +63,7 @@ public class ItemsApiController implements ItemsApi {
 
     ItemPage body =
         itemService.list(
-            new ItemService.ItemQuery(
+            new ItemQuery(
                 page == null ? 0 : page,
                 size == null ? 8 : size,
                 sort,

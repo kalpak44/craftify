@@ -1,6 +1,7 @@
 package com.craftify.backend.controller.impl;
 
 import com.craftify.backend.model.CalendarEventDetail;
+import com.craftify.backend.model.CalendarEventCommand;
 import com.craftify.backend.model.CalendarEventUpsertRequest;
 import com.craftify.backend.service.CalendarEventService;
 import jakarta.validation.Valid;
@@ -56,7 +57,7 @@ public class CalendarEventsApiController {
   @PostMapping(value = "/calendar/events", produces = {"application/json"}, consumes = {"application/json"})
   public ResponseEntity<CalendarEventDetail> calendarEventsPost(
       @Valid @NotNull @RequestBody CalendarEventUpsertRequest req) {
-    CalendarEventService.EventCommand command = toCommand(req);
+    CalendarEventCommand command = toCommand(req);
     if (command == null) {
       return ResponseEntity.badRequest().build();
     }
@@ -76,7 +77,7 @@ public class CalendarEventsApiController {
       return ResponseEntity.badRequest().build();
     }
 
-    CalendarEventService.EventCommand command = toCommand(req);
+    CalendarEventCommand command = toCommand(req);
     if (command == null) {
       return ResponseEntity.badRequest().build();
     }
@@ -103,7 +104,7 @@ public class CalendarEventsApiController {
     }
   }
 
-  private static CalendarEventService.EventCommand toCommand(CalendarEventUpsertRequest req) {
+  private static CalendarEventCommand toCommand(CalendarEventUpsertRequest req) {
     try {
       OffsetDateTime start = CalendarEventService.parseDateTime(req.getStart());
       OffsetDateTime end = CalendarEventService.parseDateTime(req.getEnd());
@@ -111,7 +112,7 @@ public class CalendarEventsApiController {
         return null;
       }
 
-      return new CalendarEventService.EventCommand(
+      return new CalendarEventCommand(
           req.getTitle(),
           start,
           end,

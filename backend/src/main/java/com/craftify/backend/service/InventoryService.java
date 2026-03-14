@@ -1,9 +1,11 @@
 package com.craftify.backend.service;
 
 import com.craftify.backend.error.ApiException;
+import com.craftify.backend.model.CreateFromItemResult;
 import com.craftify.backend.model.InventoryDetail;
 import com.craftify.backend.model.InventoryList;
 import com.craftify.backend.model.InventoryPage;
+import com.craftify.backend.model.InventoryQuery;
 import com.craftify.backend.model.InventoryUpsertRequest;
 import com.craftify.backend.model.Status;
 import com.craftify.backend.persistence.entity.ItemEntity;
@@ -25,10 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class InventoryService {
-
-  public record InventoryQuery(
-      int page, int size, String sort, String q, String categoryName, String uom) {}
-  public record CreateFromItemResult(InventoryDetail detail, boolean created) {}
 
   private final InventoryRepository inventoryRepository;
   private final ItemRepository itemRepository;

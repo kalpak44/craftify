@@ -1,9 +1,12 @@
 package com.craftify.backend.service;
 
 import com.craftify.backend.error.ApiException;
+import com.craftify.backend.model.AllocatedComponentSnapshot;
+import com.craftify.backend.model.OutputSnapshot;
 import com.craftify.backend.model.WorkItemDetail;
 import com.craftify.backend.model.WorkItemList;
 import com.craftify.backend.model.WorkItemPage;
+import com.craftify.backend.model.WorkItemQuery;
 import com.craftify.backend.model.WorkItemStatus;
 import com.craftify.backend.persistence.entity.BomComponentEmbeddable;
 import com.craftify.backend.persistence.entity.BomEntity;
@@ -34,8 +37,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class WorkItemService {
-
-  public record WorkItemQuery(int page, int size, String sort, String q, WorkItemStatus status) {}
 
   private final WorkItemRepository workItemRepository;
   private final BomRepository bomRepository;
@@ -411,9 +412,6 @@ public class WorkItemService {
     }
   }
 
-  private record AllocatedComponentSnapshot(
-      String itemId, String itemName, String itemCategoryName, String uom, BigDecimal allocatedQty) {}
-
   private List<AllocatedComponentSnapshot> deriveAllocationsFromBom(
       String bomId, BigDecimal requestedQty, String ownerSub) {
     BomEntity bom = bomRepository.findByCodeIgnoreCaseAndOwnerSub(bomId, ownerSub).orElse(null);
@@ -462,8 +460,6 @@ public class WorkItemService {
     String uom = item.getUomBase() != null && !item.getUomBase().isBlank() ? item.getUomBase() : "pcs";
     return new OutputSnapshot(productCode, name, category, uom);
   }
-
-  private record OutputSnapshot(String itemId, String itemName, String categoryName, String uom) {}
 
   private static BigDecimal normalizeWholeRequestedQty(BigDecimal requestedQty) {
     if (requestedQty == null) {

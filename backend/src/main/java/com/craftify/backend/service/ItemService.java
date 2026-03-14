@@ -4,6 +4,7 @@ import com.craftify.backend.error.ApiException;
 import com.craftify.backend.model.ItemDetail;
 import com.craftify.backend.model.ItemList;
 import com.craftify.backend.model.ItemPage;
+import com.craftify.backend.model.ItemQuery;
 import com.craftify.backend.model.ItemUom;
 import com.craftify.backend.model.Status;
 import com.craftify.backend.model.CreateItemRequest;
@@ -34,16 +35,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ItemService {
-
-  public record ItemQuery(
-      int page,
-      int size,
-      String sort,
-      String q,
-      Status status,
-      String categoryName,
-      String uom,
-      boolean includeDeleted) {}
 
   private final ItemRepository itemRepository;
   private final InventoryRepository inventoryRepository;

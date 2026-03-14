@@ -2,6 +2,7 @@ package com.craftify.backend.controller.impl;
 
 import com.craftify.backend.model.WorkItemDetail;
 import com.craftify.backend.model.WorkItemPage;
+import com.craftify.backend.model.WorkItemQuery;
 import com.craftify.backend.model.WorkItemRequest;
 import com.craftify.backend.model.WorkItemStatus;
 import com.craftify.backend.service.WorkItemService;
@@ -40,8 +41,7 @@ public class WorkItemsApiController {
     log.info("GET /work-items page={} size={} sort={} q={} status={}", page, size, sort, q, status);
     WorkItemPage body =
         workItemService.list(
-            new WorkItemService.WorkItemQuery(
-                page == null ? 0 : page, size == null ? 8 : size, sort, q, status));
+            new WorkItemQuery(page == null ? 0 : page, size == null ? 8 : size, sort, q, status));
     return ResponseEntity.ok(body);
   }
 

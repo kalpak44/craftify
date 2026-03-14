@@ -1,6 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {useAuthFetch} from "../hooks/useAuthFetch";
+import {useLocalization} from "../hooks/useLocalization";
 import {listItems, listAllItems, getItem, deleteItem, exportItemsCsv, importItemsCsv} from "../api/items";
 import {listCategories} from "../api/categories";
 import {createInventoryFromItem} from "../api/inventory";
@@ -26,6 +27,7 @@ import {createInventoryFromItem} from "../api/inventory";
  * - Mock data intentionally minimal (id, name, status, category, uom).
  */
 export const ItemsPage = () => {
+    const {t} = useLocalization();
     // Backend-backed data
     const [rows, setRows] = useState([]);
     const [query, setQuery] = useState("");
@@ -78,6 +80,7 @@ export const ItemsPage = () => {
     const navigate = useNavigate();
     const authFetch = useAuthFetch();
     const itemCode = (item) => item?.code || item?.id;
+    const labelForStatus = (value) => t(`status.${String(value || "").toLowerCase()}`, null, value);
 
     // Options (category uses categoryName, uom uses uomBase)
     const categories = categoryOptions;
@@ -513,7 +516,7 @@ export const ItemsPage = () => {
                     onDone?.();
                 }}
             >
-                Open details
+                {t("common.openDetails", null, "Open details")}
             </button>
             <button
                 className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-gray-800"
@@ -523,7 +526,7 @@ export const ItemsPage = () => {
                     onDone?.();
                 }}
             >
-                Search in Inventory
+                {t("items.actions.searchInventory", null, "Search in Inventory")}
             </button>
             {rowById.get(id)?.status === "Active" && (
                 <button
@@ -537,7 +540,7 @@ export const ItemsPage = () => {
                         onDone?.();
                     }}
                 >
-                    Create Inventory
+                    {t("items.actions.createInventory", null, "Create Inventory")}
                 </button>
             )}
             <div className="my-1 border-t border-slate-200 dark:border-white/10" />
@@ -549,7 +552,7 @@ export const ItemsPage = () => {
                     onDone?.();
                 }}
             >
-                Delete
+                {t("common.delete", null, "Delete")}
             </button>
         </div>
     );
@@ -560,37 +563,37 @@ export const ItemsPage = () => {
             <header className="mx-auto px-4 pt-8 pb-5">
                 <div className="flex items-start md:items-end justify-between gap-4 flex-wrap">
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Items</h1>
-                        <p className="mt-1 md:mt-2 text-slate-500 dark:text-gray-400 text-sm md:text-base">Search, filter, and manage SKUs.</p>
+                        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">{t("items.title", null, "Items")}</h1>
+                        <p className="mt-1 md:mt-2 text-slate-500 dark:text-gray-400 text-sm md:text-base">{t("items.subtitle", null, "Search, filter, and manage SKUs.")}</p>
                     </div>
                     <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
                         <button
                             className="flex-1 sm:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
                             onClick={() => navigate("/items/new")}
                         >
-                            + New Item
+                            + {t("items.new", null, "New Item")}
                         </button>
                     </div>
                 </div>
                 <div className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-2">
                     <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-3">
-                        <div className="text-xs text-slate-500 dark:text-gray-400">Total Items</div>
+                        <div className="text-xs text-slate-500 dark:text-gray-400">{t("items.summary.total", null, "Total Items")}</div>
                         <div className="text-lg font-semibold text-slate-900 dark:text-white">{summary.total}</div>
                     </div>
                     <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-3">
-                        <div className="text-xs text-slate-500 dark:text-gray-400">Draft</div>
+                        <div className="text-xs text-slate-500 dark:text-gray-400">{t("status.draft", null, "Draft")}</div>
                         <div className="text-lg font-semibold text-blue-300">{summary.draft}</div>
                     </div>
                     <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-3">
-                        <div className="text-xs text-slate-500 dark:text-gray-400">Active</div>
+                        <div className="text-xs text-slate-500 dark:text-gray-400">{t("status.active", null, "Active")}</div>
                         <div className="text-lg font-semibold text-green-400">{summary.active}</div>
                     </div>
                     <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-3">
-                        <div className="text-xs text-slate-500 dark:text-gray-400">Hold</div>
+                        <div className="text-xs text-slate-500 dark:text-gray-400">{t("status.hold", null, "Hold")}</div>
                         <div className="text-lg font-semibold text-yellow-400">{summary.hold}</div>
                     </div>
                     <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-3">
-                        <div className="text-xs text-slate-500 dark:text-gray-400">Discontinued</div>
+                        <div className="text-xs text-slate-500 dark:text-gray-400">{t("status.discontinued", null, "Discontinued")}</div>
                         <div className="text-lg font-semibold text-slate-700 dark:text-gray-300">{summary.discontinued}</div>
                     </div>
                 </div>
@@ -611,7 +614,7 @@ export const ItemsPage = () => {
                             >
                                 {categories.map((c) => (
                                     <option key={c} value={c}>
-                                        {c === "all" ? "All Categories" : c}
+                                        {c === "all" ? t("common.allCategories", null, "All Categories") : c}
                                     </option>
                                 ))}
                             </select>
@@ -624,11 +627,11 @@ export const ItemsPage = () => {
                                 }}
                                 className="rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                             >
-                                <option value="all">All Statuses</option>
-                                <option value="Draft">Draft</option>
-                                <option value="Active">Active</option>
-                                <option value="Hold">Hold</option>
-                                <option value="Discontinued">Discontinued</option>
+                                <option value="all">{t("common.allStatuses", null, "All Statuses")}</option>
+                                <option value="Draft">{t("status.draft", null, "Draft")}</option>
+                                <option value="Active">{t("status.active", null, "Active")}</option>
+                                <option value="Hold">{t("status.hold", null, "Hold")}</option>
+                                <option value="Discontinued">{t("status.discontinued", null, "Discontinued")}</option>
                             </select>
 
                             <select
@@ -641,7 +644,7 @@ export const ItemsPage = () => {
                             >
                                 {uoms.map((u) => (
                                     <option key={u} value={u}>
-                                        {u === "all" ? "All UoM" : u}
+                                        {u === "all" ? t("common.allUom", null, "All UoM") : u}
                                     </option>
                                 ))}
                             </select>
@@ -649,7 +652,7 @@ export const ItemsPage = () => {
 
                         <div className="relative flex-1">
                             <input
-                                placeholder="Search name or ID…"
+                                placeholder={t("items.searchPlaceholder", null, "Search name or ID…")}
                                 value={query}
                                 onChange={(e) => {
                                     setQuery(e.target.value);
@@ -674,7 +677,7 @@ export const ItemsPage = () => {
                                 disabled={importingCsv}
                                 className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm hover:bg-slate-200 dark:hover:bg-gray-700 disabled:opacity-50"
                             >
-                                {importingCsv ? "Importing..." : "Import CSV"}
+                                {importingCsv ? t("common.importing", null, "Importing...") : t("common.importCsv", null, "Import CSV")}
                             </button>
                             <button
                                 onClick={handleExportCSV}
@@ -682,14 +685,14 @@ export const ItemsPage = () => {
                                 className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm hover:bg-slate-200 dark:hover:bg-gray-700"
                                 title={`Export ${selectedCount ? "selected" : "filtered"} rows to CSV`}
                             >
-                                Export CSV
+                                {t("common.exportCsv", null, "Export CSV")}
                             </button>
                             <button
                                 onClick={handlePrint}
                                 className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm hover:bg-slate-200 dark:hover:bg-gray-700"
                                 title="Open print dialog (save as PDF)"
                             >
-                                Print / PDF
+                                {t("common.printPdf", null, "Print / PDF")}
                             </button>
                             <button
                                 onClick={openDeleteModal}
@@ -697,12 +700,12 @@ export const ItemsPage = () => {
                                 className="px-3 py-2 rounded-lg bg-red-600/80 hover:bg-red-600 text-white text-sm disabled:opacity-40"
                                 title={selectedCount ? `Delete ${selectedCount} selected` : "Select rows to delete"}
                             >
-                                Delete
+                                {t("common.delete", null, "Delete")}
                             </button>
                         </div>
                     </div>
                 </div>
-                {loading && <div className="mt-2 text-xs text-blue-300">Loading…</div>}
+                {loading && <div className="mt-2 text-xs text-blue-300">{t("common.loading", null, "Loading...")}</div>}
                 {error && <div className="mt-2 text-xs text-red-400">{error}</div>}
             </div>
 
@@ -714,7 +717,7 @@ export const ItemsPage = () => {
                     <div className="mb-2 flex items-center justify-between">
                         <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-gray-300">
                             <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll} onClick={stopRowNav}/>
-                            <span>Select all on page</span>
+                            <span>{t("common.selectAllOnPage", null, "Select all on page")}</span>
                         </label>
                         <span className="text-xs text-slate-500 dark:text-gray-400">
               {paged.length === 0 ? 0 : ((page - 1) * pageSize + 1)}–{((page - 1) * pageSize) + paged.length} of {serverTotalElements}
@@ -749,8 +752,8 @@ export const ItemsPage = () => {
                                                     e.stopPropagation();
                                                     setSheetId(itemCode(item));
                                                 }}
-                                                aria-label="Actions"
-                                                title="Actions"
+                                                aria-label={t("common.actions", null, "Actions")}
+                                                title={t("common.actions", null, "Actions")}
                                             >
                                                 …
                                             </button>
@@ -764,7 +767,7 @@ export const ItemsPage = () => {
                                                 item.status === "Active" ? "bg-green-600/30 text-green-400"
                                                     : item.status === "Hold" ? "bg-yellow-600/30 text-yellow-400"
                                                         : "bg-gray-600/30 text-slate-500 dark:text-gray-400"}`}>
-                        {item.status}
+                        {labelForStatus(item.status)}
                       </span>
                                         </div>
                                     </div>
@@ -773,7 +776,7 @@ export const ItemsPage = () => {
                         ))}
                         {paged.length === 0 && (
                             <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-6 text-center text-slate-500 dark:text-gray-400">
-                                No items found.
+                                {t("items.empty", null, "No items found.")}
                             </div>
                         )}
                     </div>
@@ -787,12 +790,12 @@ export const ItemsPage = () => {
                             <th className="px-4 py-3">
                                 <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll} onClick={stopRowNav}/>
                             </th>
-                            {th("ID", "id")}
-                            {th("Product name", "name")}
-                            {th("Status", "status")}
-                            {th("Category", "categoryName")}
-                            {th("UoM", "uomBase")}
-                            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-gray-300 text-right">Actions</th>
+                            {th(t("items.table.id", null, "ID"), "id")}
+                            {th(t("items.table.name", null, "Product name"), "name")}
+                            {th(t("items.table.status", null, "Status"), "status")}
+                            {th(t("items.table.category", null, "Category"), "categoryName")}
+                            {th(t("items.table.uom", null, "UoM"), "uomBase")}
+                            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-gray-300 text-right">{t("common.actions", null, "Actions")}</th>
                         </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-800">
@@ -820,7 +823,7 @@ export const ItemsPage = () => {
                                   : "bg-gray-600/30 text-slate-500 dark:text-gray-400"
                       }`}
                   >
-                    {item.status}
+                    {labelForStatus(item.status)}
                   </span>
                                 </td>
                                 <td className="px-4 py-3 text-slate-500 dark:text-gray-400">{item.categoryName || ""}</td>
@@ -829,8 +832,8 @@ export const ItemsPage = () => {
                                     {/* Desktop actions trigger */}
                                     <button
                                         className="inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-slate-100/70 dark:hover:bg-gray-800/60 text-slate-700 dark:text-gray-300"
-                                        aria-label="Actions"
-                                        title="Actions"
+                                        aria-label={t("common.actions", null, "Actions")}
+                                        title={t("common.actions", null, "Actions")}
                                         onClick={(e) => openDesktopMenu(e, itemCode(item))}
                                     >
                                         …
@@ -841,7 +844,7 @@ export const ItemsPage = () => {
                         {paged.length === 0 && (
                             <tr>
                                 <td className="px-4 py-6 text-center text-slate-500 dark:text-gray-400" colSpan={7}>
-                                    No items found.
+                                    {t("items.empty", null, "No items found.")}
                                 </td>
                             </tr>
                         )}
@@ -852,7 +855,7 @@ export const ItemsPage = () => {
                 {/* Footer / Pagination */}
                 <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-slate-500 dark:text-gray-400">
                     <div className="flex items-center gap-2 flex-wrap">
-                        <span>Rows per page</span>
+                        <span>{t("common.rowsPerPage", null, "Rows per page")}</span>
                         <select
                             value={pageSize}
                             onChange={(e) => {
@@ -869,7 +872,7 @@ export const ItemsPage = () => {
                         </select>
                         <span className="hidden sm:inline">•</span>
                         <span>
-              Showing <span className="text-slate-700 dark:text-gray-300">{paged.length === 0 ? 0 : ((page - 1) * pageSize + 1)}</span>–
+              {t("common.showing", null, "Showing")} <span className="text-slate-700 dark:text-gray-300">{paged.length === 0 ? 0 : ((page - 1) * pageSize + 1)}</span>–
               <span className="text-slate-700 dark:text-gray-300">{((page - 1) * pageSize) + paged.length}</span> of
               <span className="text-slate-700 dark:text-gray-300"> {serverTotalElements}</span>
             </span>
@@ -880,7 +883,7 @@ export const ItemsPage = () => {
                             onClick={() => setPage((p) => Math.max(1, p - 1))}
                             className="px-3 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 disabled:opacity-40"
                         >
-                            Prev
+                            {t("common.prev", null, "Prev")}
                         </button>
                         <span className="px-2">
               {page} / {totalPages}
@@ -890,7 +893,7 @@ export const ItemsPage = () => {
                             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                             className="px-3 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 disabled:opacity-40"
                         >
-                            Next
+                            {t("common.next", null, "Next")}
                         </button>
                     </div>
                 </div>
@@ -915,7 +918,7 @@ export const ItemsPage = () => {
                     <div className="absolute inset-x-0 bottom-0 rounded-t-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 p-2 pt-3 shadow-2xl">
                         <div className="mx-auto h-1 w-10 rounded-full bg-white/20 mb-1.5" />
                         <div className="px-2 pb-2">
-                            <div className="text-xs text-slate-500 dark:text-gray-400 mb-2 px-1">Actions for <span className="font-mono text-slate-700 dark:text-gray-300">{sheetId}</span></div>
+                            <div className="text-xs text-slate-500 dark:text-gray-400 mb-2 px-1">{t("common.actionsFor", null, "Actions for")} <span className="font-mono text-slate-700 dark:text-gray-300">{sheetId}</span></div>
                             <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 divide-y divide-white/10">
                                 <MenuItems id={sheetId} onDone={() => setSheetId(null)} />
                             </div>
@@ -923,7 +926,7 @@ export const ItemsPage = () => {
                                 className="mt-2 w-full px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                                 onClick={() => setSheetId(null)}
                             >
-                                Close
+                                {t("common.close", null, "Close")}
                             </button>
                         </div>
                     </div>
@@ -935,13 +938,13 @@ export const ItemsPage = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/60" onClick={() => setCreateInvForItem(null)} />
                     <div className="relative z-10 w-[92%] sm:w-[80%] max-w-md rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 p-5 shadow-xl">
-                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Create inventory item</h2>
+                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{t("items.createInventoryTitle", null, "Create inventory item")}</h2>
                         <p className="mt-2 text-sm text-slate-700 dark:text-gray-300">
-                            Item: <span className="font-mono text-slate-900 dark:text-white">{createInvForItem.id}</span>
+                            {t("common.itemLabel", null, "Item")}: <span className="font-mono text-slate-900 dark:text-white">{createInvForItem.id}</span>
                             {createInvForItem.name ? <span> - {createInvForItem.name}</span> : null}
                         </p>
                         <div className="mt-4">
-                            <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Availability</label>
+                            <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">{t("inventory.table.available", null, "Available")}</label>
                             <input
                                 inputMode="decimal"
                                 value={createInvAvailable}
@@ -951,14 +954,14 @@ export const ItemsPage = () => {
                             />
                         </div>
                         <div className="mt-3">
-                            <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">If inventory already exists</label>
+                            <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">{t("items.inventoryExistsLabel", null, "If inventory already exists")}</label>
                             <select
                                 value={createInvMode}
                                 onChange={(e) => setCreateInvMode(e.target.value)}
                                 className="w-full rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                             >
-                                <option value="add">Add to existing availability</option>
-                                <option value="override">Override availability</option>
+                                <option value="add">{t("items.inventoryModeAdd", null, "Add to existing availability")}</option>
+                                <option value="override">{t("items.inventoryModeOverride", null, "Override availability")}</option>
                             </select>
                         </div>
                         <div className="mt-4 flex flex-col sm:flex-row justify-end gap-2">
@@ -967,7 +970,7 @@ export const ItemsPage = () => {
                                 className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                                 disabled={creatingInventory}
                             >
-                                Cancel
+                                {t("common.cancel", null, "Cancel")}
                             </button>
                             <button
                                 onClick={async () => {
@@ -1007,7 +1010,7 @@ export const ItemsPage = () => {
                                 className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm disabled:opacity-50"
                                 disabled={creatingInventory}
                             >
-                                {creatingInventory ? "Creating..." : "Create"}
+                                {creatingInventory ? t("common.creating", null, "Creating...") : t("common.create", null, "Create")}
                             </button>
                         </div>
                     </div>
@@ -1019,23 +1022,23 @@ export const ItemsPage = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/60" onClick={() => setShowDeleteModal(false)}/>
                     <div className="relative z-10 w-[92%] sm:w-[80%] max-w-md rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 p-5 shadow-xl">
-                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Confirm deletion</h2>
+                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{t("common.confirmDeletion", null, "Confirm deletion")}</h2>
                         <p className="mt-2 text-sm text-slate-700 dark:text-gray-300">
                             You are about to delete <span className="font-medium text-slate-900 dark:text-white">{selectedCount}</span>{" "}
-                            {selectedCount === 1 ? "item" : "items"}. This action cannot be undone.
+                            {selectedCount === 1 ? t("common.item", null, "item") : t("common.items", null, "items")}. {t("common.actionCannotBeUndone", null, "This action cannot be undone.")}
                         </p>
                         <div className="mt-4 flex flex-col sm:flex-row justify-end gap-2">
                             <button
                                 onClick={() => setShowDeleteModal(false)}
                                 className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                             >
-                                Cancel
+                                {t("common.cancel", null, "Cancel")}
                             </button>
                             <button
                                 onClick={confirmDelete}
                                 className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm"
                             >
-                                Delete
+                                {t("common.delete", null, "Delete")}
                             </button>
                         </div>
                     </div>
@@ -1047,22 +1050,22 @@ export const ItemsPage = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/60" onClick={() => setDeleteOneId(null)} />
                     <div className="relative z-10 w-[92%] sm:w-[80%] max-w-md rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 p-5 shadow-xl">
-                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Delete item</h2>
+                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{t("items.deleteOneTitle", null, "Delete item")}</h2>
                         <p className="mt-2 text-sm text-slate-700 dark:text-gray-300">
-                            You are about to delete <span className="font-mono text-slate-900 dark:text-white">{deleteOneId}</span>. This action cannot be undone.
+                            {t("common.aboutToDelete", null, "You are about to delete")} <span className="font-mono text-slate-900 dark:text-white">{deleteOneId}</span>. {t("common.actionCannotBeUndone", null, "This action cannot be undone.")}
                         </p>
                         <div className="mt-4 flex flex-col sm:flex-row justify-end gap-2">
                             <button
                                 onClick={() => setDeleteOneId(null)}
                                 className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-gray-700 text-sm"
                             >
-                                Cancel
+                                {t("common.cancel", null, "Cancel")}
                             </button>
                             <button
                                 onClick={confirmDeleteOne}
                                 className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm"
                             >
-                                Delete
+                                {t("common.delete", null, "Delete")}
                             </button>
                         </div>
                     </div>
@@ -1077,15 +1080,15 @@ export const ItemsPage = () => {
                             className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-gray-900 p-5 shadow-2xl">
                             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{importResultModal.title}</h2>
                             <div className="mt-3 text-sm text-slate-600 dark:text-gray-400 space-y-1">
-                                <div>Created: <span className="text-slate-900 dark:text-gray-200">{importResultModal.created}</span></div>
-                                <div>Updated: <span className="text-slate-900 dark:text-gray-200">{importResultModal.updated}</span></div>
+                                <div>{t("common.created", null, "Created")}: <span className="text-slate-900 dark:text-gray-200">{importResultModal.created}</span></div>
+                                <div>{t("common.updated", null, "Updated")}: <span className="text-slate-900 dark:text-gray-200">{importResultModal.updated}</span></div>
                                 {importResultModal.errors != null && (
-                                    <div>Errors: <span className="text-slate-900 dark:text-gray-200">{importResultModal.errors}</span></div>
+                                    <div>{t("common.errors", null, "Errors")}: <span className="text-slate-900 dark:text-gray-200">{importResultModal.errors}</span></div>
                                 )}
                             </div>
                             {Array.isArray(importResultModal.headErrors) && importResultModal.headErrors.length > 0 && (
                                 <div className="mt-3 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 p-3">
-                                    <div className="text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">Details</div>
+                                    <div className="text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">{t("common.details", null, "Details")}</div>
                                     <div className="text-xs text-slate-600 dark:text-gray-400 space-y-1 max-h-40 overflow-auto">
                                         {importResultModal.headErrors.map((line, idx) => (
                                             <div key={`${idx}-${line}`}>{line}</div>
@@ -1098,7 +1101,7 @@ export const ItemsPage = () => {
                                     onClick={() => setImportResultModal(null)}
                                     className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm"
                                 >
-                                    OK
+                                    {t("common.ok", null, "OK")}
                                 </button>
                             </div>
                         </div>
@@ -1127,7 +1130,7 @@ export const ItemsPage = () => {
                                     onClick={() => setFeedbackModal(null)}
                                     className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm"
                                 >
-                                    OK
+                                    {t("common.ok", null, "OK")}
                                 </button>
                             </div>
                         </div>

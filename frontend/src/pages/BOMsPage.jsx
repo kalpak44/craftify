@@ -1,6 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {useAuthFetch} from "../hooks/useAuthFetch";
+import {useLocalization} from "../hooks/useLocalization";
 import {listBoms, getBom, deleteBom, exportBomsCsv, importBomsCsv} from "../api/boms";
 import {listAllInventory} from "../api/inventory";
 import {requestWorkItem} from "../api/workItems";
@@ -26,6 +27,7 @@ import {requestWorkItem} from "../api/workItems";
  * - Uses mocked data stored in component state for client-side ops.
  */
 export const BOMsPage = () => {
+    const {t} = useLocalization();
     // Backend-backed data
     const [rows, setRows] = useState([]);
 
@@ -116,7 +118,7 @@ export const BOMsPage = () => {
                 setServerTotalPages(res.totalPages || 1);
                 setServerTotalElements(typeof res.totalElements === "number" ? res.totalElements : mapped.length);
             } catch (e) {
-                if (!ignore) setError(e?.message || "Failed to load BOMs");
+                if (!ignore) setError(e?.message || t("boms.error.load", null, "Failed to load BOMs"));
             } finally {
                 if (!ignore) setLoading(false);
             }
@@ -475,7 +477,7 @@ export const BOMsPage = () => {
                     onDone?.();
                 }}
             >
-                Request Work Item
+                {t("boms.actions.requestWorkItem", null, "Request Work Item")}
             </button>
             <div className="my-1 border-t border-slate-200 dark:border-white/10"/>
             <button
@@ -486,7 +488,7 @@ export const BOMsPage = () => {
                     onDone?.();
                 }}
             >
-                Delete
+                {t("common.delete", null, "Delete")}
             </button>
         </div>
     );
@@ -497,16 +499,15 @@ export const BOMsPage = () => {
             <header className="mx-auto px-4 pt-8 pb-5">
                 <div className="flex items-start md:items-end justify-between gap-4 flex-wrap">
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">BOMs</h1>
-                        <p className="mt-1 md:mt-2 text-slate-500 dark:text-gray-400 text-sm md:text-base">Define and manage bill of
-                            materials.</p>
+                        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">{t("boms.title", null, "BOMs")}</h1>
+                        <p className="mt-1 md:mt-2 text-slate-500 dark:text-gray-400 text-sm md:text-base">{t("boms.subtitle", null, "Define and manage bill of materials.")}</p>
                     </div>
                     <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
                         <button
                             className="flex-1 sm:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
                             onClick={() => navigate("/boms/new")}
                         >
-                            + New BOM
+                            + {t("boms.new", null, "New BOM")}
                         </button>
                     </div>
                 </div>
@@ -516,7 +517,7 @@ export const BOMsPage = () => {
                 <div className="mx-auto px-4 pb-2">
                     <div className="rounded-xl border border-blue-500/40 bg-blue-500/10 px-3 py-2 text-sm text-blue-200 flex items-center gap-2">
                         <span className="inline-block h-3.5 w-3.5 border-2 border-blue-300/40 border-t-blue-300 rounded-full animate-spin"/>
-                        <span>{importingCsv ? "Importing BOM CSV..." : "Exporting BOM CSV..."}</span>
+                        <span>{importingCsv ? t("boms.importing", null, "Importing BOM CSV...") : t("boms.exporting", null, "Exporting BOM CSV...")}</span>
                     </div>
                 </div>
             )}
@@ -533,16 +534,16 @@ export const BOMsPage = () => {
                             }}
                             className="rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 px-3 py-2 text-sm"
                         >
-                            <option value="all">All Statuses</option>
-                            <option value="Active">Active</option>
-                            <option value="Draft">Draft</option>
-                            <option value="Hold">Hold</option>
-                            <option value="Obsolite">Obsolite</option>
+                            <option value="all">{t("common.allStatuses", null, "All Statuses")}</option>
+                            <option value="Active">{t("status.active", null, "Active")}</option>
+                            <option value="Draft">{t("status.draft", null, "Draft")}</option>
+                            <option value="Hold">{t("status.hold", null, "Hold")}</option>
+                            <option value="Obsolite">{t("status.obsolite", null, "Obsolite")}</option>
                         </select>
 
                         <div className="relative flex-1">
                             <input
-                                placeholder="Search BOM ID, Product, or Item ID…"
+                                placeholder={t("boms.searchPlaceholder", null, "Search BOM ID, Product, or Item ID…")}
                                 value={query}
                                 onChange={(e) => {
                                     setQuery(e.target.value);
@@ -559,13 +560,13 @@ export const BOMsPage = () => {
                                 disabled={importingCsv || exportingCsv}
                                 onClick={() => importInputRef.current?.click()}
                                 className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm hover:bg-slate-200 dark:hover:bg-gray-700 disabled:opacity-50">
-                                {importingCsv ? "Importing..." : "Import CSV"}
+                                {importingCsv ? t("common.importing", null, "Importing...") : t("common.importCsv", null, "Import CSV")}
                             </button>
                             <button
                                 disabled={importingCsv || exportingCsv}
                                 onClick={handleExportCSV}
                                 className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 text-sm hover:bg-slate-200 dark:hover:bg-gray-700 disabled:opacity-50">
-                                {exportingCsv ? "Exporting..." : "Export CSV"}
+                                {exportingCsv ? t("common.exporting", null, "Exporting...") : t("common.exportCsv", null, "Export CSV")}
                             </button>
                             <button
                                 onClick={openDeleteModal}
@@ -573,7 +574,7 @@ export const BOMsPage = () => {
                                 className="px-3 py-2 rounded-lg bg-red-600/80 hover:bg-red-600 text-white text-sm disabled:opacity-40"
                                 title={selectedCount ? `Delete ${selectedCount} selected` : "Select rows to delete"}
                             >
-                                Delete
+                                {t("common.delete", null, "Delete")}
                             </button>
                         </div>
                     </div>
@@ -589,7 +590,7 @@ export const BOMsPage = () => {
                         <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-gray-300">
                             <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll}
                                    onClick={stopRowNav}/>
-                            <span>Select all on page</span>
+                            <span>{t("common.selectAllOnPage", null, "Select all on page")}</span>
                         </label>
                         <span className="text-xs text-slate-500 dark:text-gray-400">
               {filtered.length === 0 ? 0 : pageStart + 1}–{Math.min(filtered.length, pageStart + pageSize)} of {filtered.length}
@@ -602,7 +603,7 @@ export const BOMsPage = () => {
                                 key={bom.id}
                                 className="rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-3 active:bg-slate-100/60 dark:active:bg-gray-800/40"
                                 onClick={() => goToDetails(bom.id)}
-                                title="Open Details"
+                                title={t("common.openDetails", null, "Open details")}
                             >
                                 <div className="flex items-start gap-3">
                                     <input
@@ -624,8 +625,8 @@ export const BOMsPage = () => {
                                                     e.stopPropagation();
                                                     setSheetId(bom.id);
                                                 }}
-                                                aria-label="Actions"
-                                                title="Actions"
+                                                aria-label={t("common.actions", null, "Actions")}
+                                                title={t("common.actions", null, "Actions")}
                                             >
                                                 …
                                             </button>
@@ -636,7 +637,7 @@ export const BOMsPage = () => {
                                             <span>•</span>
                                             <span>{bom.revision}</span>
                                             <span>•</span>
-                                            <span className="truncate">{bom.components} components</span>
+                                            <span className="truncate">{bom.components} {t("boms.components", null, "components")}</span>
                                             <span>•</span>
                                             <span>{bom.lastUpdated}</span>
                                             <span
@@ -645,7 +646,7 @@ export const BOMsPage = () => {
                                                         : bom.status === "Draft" ? "bg-blue-600/30 text-blue-300"
                                                             : bom.status === "Hold" ? "bg-yellow-600/30 text-yellow-400"
                                                                 : "bg-gray-600/30 text-slate-500 dark:text-gray-400"}`}>
-                        {bom.status}
+                        {t(`status.${String(bom.status || "").toLowerCase()}`, null, bom.status)}
                       </span>
                                         </div>
                                     </div>
@@ -655,7 +656,7 @@ export const BOMsPage = () => {
                         {paged.length === 0 && (
                             <div
                                 className="rounded-xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-gray-900/60 p-6 text-center text-slate-500 dark:text-gray-400">
-                                No BOMs found.
+                                {t("boms.empty", null, "No BOMs found.")}
                             </div>
                         )}
                     </div>
@@ -670,13 +671,13 @@ export const BOMsPage = () => {
                                 <input type="checkbox" checked={allOnPageSelected} onChange={toggleAll}
                                        onClick={stopRowNav}/>
                             </th>
-                            {th("BOM ID", "id")}
-                            {th("Product", "product")}
-                            {th("Item ID", "productId")}
-                            {th("Revision", "revision")}
-                            {th("Status", "status")}
-                            {th("# Components", "components", true)}
-                            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-gray-300 text-right">Actions</th>
+                            {th(t("boms.table.id", null, "BOM ID"), "id")}
+                            {th(t("boms.table.product", null, "Product"), "product")}
+                            {th(t("boms.table.itemId", null, "Item ID"), "productId")}
+                            {th(t("boms.table.revision", null, "Revision"), "revision")}
+                            {th(t("boms.table.status", null, "Status"), "status")}
+                            {th(t("boms.table.components", null, "# Components"), "components", true)}
+                            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-gray-300 text-right">{t("common.actions", null, "Actions")}</th>
                         </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-800">
@@ -685,7 +686,7 @@ export const BOMsPage = () => {
                                 key={bom.id}
                                 className="hover:bg-slate-100/60 dark:hover:bg-gray-800/40 transition cursor-pointer"
                                 onClick={() => goToDetails(bom.id)}
-                                title="Open Details"
+                                title={t("common.openDetails", null, "Open details")}
                             >
                                 <td className="px-4 py-3" onClick={stopRowNav}>
                                     <input type="checkbox" checked={!!selected[bom.id]}
@@ -709,7 +710,7 @@ export const BOMsPage = () => {
                                       : "bg-gray-600/30 text-slate-500 dark:text-gray-400"
                       }`}
                   >
-                    {bom.status}
+                    {t(`status.${String(bom.status || "").toLowerCase()}`, null, bom.status)}
                   </span>
                                 </td>
                                 <td className="px-4 py-3 text-right text-slate-900 dark:text-gray-200">{bom.components}</td>
@@ -717,8 +718,8 @@ export const BOMsPage = () => {
                                     {/* Desktop actions trigger */}
                                     <button
                                         className="inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-slate-100/70 dark:hover:bg-gray-800/60 text-slate-700 dark:text-gray-300"
-                                        aria-label="Actions"
-                                        title="Actions"
+                                        aria-label={t("common.actions", null, "Actions")}
+                                        title={t("common.actions", null, "Actions")}
                                         onClick={(e) => openDesktopMenu(e, bom.id)}
                                     >
                                         …
@@ -729,7 +730,7 @@ export const BOMsPage = () => {
                         {paged.length === 0 && (
                             <tr>
                                 <td className="px-4 py-6 text-center text-slate-500 dark:text-gray-400" colSpan={8}>
-                                    No BOMs found.
+                                    {t("boms.empty", null, "No BOMs found.")}
                                 </td>
                             </tr>
                         )}
@@ -741,7 +742,7 @@ export const BOMsPage = () => {
                 <div
                     className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-slate-500 dark:text-gray-400">
                     <div className="flex items-center gap-2">
-                        <span>Rows per page</span>
+                        <span>{t("common.rowsPerPage", null, "Rows per page")}</span>
                         <select
                             value={pageSize}
                             onChange={(e) => {
@@ -758,7 +759,7 @@ export const BOMsPage = () => {
                         </select>
                         <span className="hidden sm:inline">•</span>
                         <span>
-              Showing <span className="text-slate-700 dark:text-gray-300">{filtered.length === 0 ? 0 : pageStart + 1}</span>–
+              {t("common.showing", null, "Showing")} <span className="text-slate-700 dark:text-gray-300">{filtered.length === 0 ? 0 : pageStart + 1}</span>–
               <span className="text-slate-700 dark:text-gray-300">{Math.min(filtered.length, pageStart + pageSize)}</span> of
               <span className="text-slate-700 dark:text-gray-300"> {filtered.length}</span>
             </span>
@@ -769,7 +770,7 @@ export const BOMsPage = () => {
                             onClick={() => setPage((p) => Math.max(1, p - 1))}
                             className="px-3 py-1 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-white/10 disabled:opacity-40"
                         >
-                            Prev
+                            {t("common.prev", null, "Prev")}
                         </button>
                         <span className="px-2">
               {page} / {totalPages}
