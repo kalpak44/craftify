@@ -61,17 +61,33 @@ public class ItemsApiController implements ItemsApi {
         uom,
         includeDeleted);
 
-    ItemPage body =
-        itemService.list(
-            new ItemQuery(
-                page == null ? 0 : page,
-                size == null ? 8 : size,
-                sort,
-                q,
-                status,
-                categoryName,
-                uom,
-                includeDeleted != null && includeDeleted));
+    ItemPage body;
+    try {
+      body =
+          itemService.list(
+              new ItemQuery(
+                  page == null ? 0 : page,
+                  size == null ? 8 : size,
+                  sort,
+                  q,
+                  status,
+                  categoryName,
+                  uom,
+                  includeDeleted != null && includeDeleted));
+    } catch (RuntimeException ex) {
+      log.error(
+          "GET /items failed page={} size={} sort={} q={} status={} categoryName={} uom={} includeDeleted={}",
+          page,
+          size,
+          sort,
+          q,
+          status,
+          categoryName,
+          uom,
+          includeDeleted,
+          ex);
+      throw ex;
+    }
 
     return ResponseEntity.ok(body);
   }

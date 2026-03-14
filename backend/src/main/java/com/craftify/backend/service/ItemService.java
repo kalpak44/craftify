@@ -383,6 +383,7 @@ public class ItemService {
         .updatedAt(entity.getUpdatedAt());
   }
 
+
   private ItemDetail toDetailModel(ItemEntity entity) {
     return new ItemDetail()
         .id(entity.getCode())
