@@ -78,7 +78,7 @@ export function AppHeader() {
                 </nav>
 
                 <div className="hidden items-center gap-3 lg:flex">
-                    <LocaleSwitcher/>
+                    {!isAuthenticated ? <LocaleSwitcher/> : null}
                     <ThemeToggle/>
                     {!isLoading && !isAuthenticated ? (
                         <>
@@ -112,6 +112,7 @@ export function AppHeader() {
                                     <p className="text-sm font-semibold text-[var(--text-primary)]">{user?.name}</p>
                                     <p className="mt-1 text-xs text-[var(--text-muted)]">{user?.email}</p>
                                     <div className="mt-4 flex flex-col gap-2">
+                                        <LocaleSwitcher/>
                                         <NavItem to="/calendar" mobile onClick={() => setMenuOpen(false)}>
                                             {t("auth.openCalendar")}
                                         </NavItem>
@@ -141,7 +142,7 @@ export function AppHeader() {
             {mobileOpen ? (
                 <div className="border-t border-white/45 bg-[color:var(--shell-bg)]/96 px-4 py-4 backdrop-blur-2xl lg:hidden">
                     <div className="mx-auto flex max-w-7xl flex-col gap-2">
-                        <LocaleSwitcher/>
+                        {!isAuthenticated ? <LocaleSwitcher/> : null}
                         {items.map((item) => (
                             <NavItem key={item.to} to={item.to} mobile onClick={() => setMobileOpen(false)}>
                                 {item.label}
@@ -157,6 +158,9 @@ export function AppHeader() {
                             <div className="glass-panel mt-3 p-4">
                                 <p className="text-sm font-semibold text-[var(--text-primary)]">{user?.name}</p>
                                 <p className="mt-1 text-xs text-[var(--text-muted)]">{user?.email}</p>
+                                <div className="mt-4">
+                                    <LocaleSwitcher/>
+                                </div>
                                 <Button className="mt-4 w-full" variant="secondary" onClick={() => logoutUser(logout)}>
                                     {t("auth.logOut")}
                                 </Button>
