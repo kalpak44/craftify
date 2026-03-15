@@ -1,13 +1,13 @@
 import {Outlet} from "react-router-dom";
 import {AuthenticationGuard} from "../../components/authentication-guard/AuthenticationGuard";
-import {AppShell} from "../../shared/ui/templates/AppShell";
+import {ErpShell} from "../../shared/ui/templates/ErpShell";
 
 export function ProtectedLayout() {
     return (
         <AuthenticationGuard>
-            <AppShell>
+            <ErpShell>
                 <Outlet/>
-            </AppShell>
+            </ErpShell>
         </AuthenticationGuard>
     );
 }
