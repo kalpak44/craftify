@@ -1,0 +1,456 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "preparingWorkspace": "Preparing workspace",
+    "language": "Kalba",
+    "languageSwitcher": "Keisti kalbą"
+  },
+  "brand": {
+    "tagline": "Gamybos valdymas"
+  },
+  "nav": {
+    "home": "Pradžia",
+    "items": "Pozicijos",
+    "inventory": "Atsargos",
+    "dashboard": "Dashboard",
+    "orders": "Orders",
+    "production": "Kitchen / Production",
+    "inventoryModule": "Inventory",
+    "procurement": "Procurement",
+    "deliveries": "Deliveries",
+    "tables": "Tables / Floor",
+    "menu": "Menu",
+    "reports": "Reports",
+    "settings": "Settings",
+    "boms": "Specifikacijos",
+    "workItems": "Darbo užduotys",
+    "calendar": "Kalendorius",
+    "terms": "Sąlygos",
+    "privacy": "Privatumas"
+  },
+  "navDesc": {
+    "dashboard": "KPIs, activity, and operational overview",
+    "orders": "Restaurant and delivery demand",
+    "production": "Kitchen queues, batches, and preparation",
+    "inventory": "Stock, transfers, and replenishment",
+    "procurement": "Suppliers, purchasing, and receiving",
+    "deliveries": "Drivers, routes, and ingredient logistics",
+    "tables": "Floor view, reservations, and seating",
+    "menu": "Dishes, ingredients, and availability",
+    "reports": "Performance, waste, and service trends",
+    "settings": "Localization, defaults, and workspace setup"
+  },
+  "auth": {
+    "logIn": "Prisijungti",
+    "startFree": "Pradėti nemokamai",
+    "createAccount": "Sukurti paskyrą",
+    "logOut": "Atsijungti",
+    "openCalendar": "Atidaryti kalendorių"
+  },
+  "header": {
+    "profileAlt": "profilis",
+    "userFallback": "Craftify naudotojas",
+    "openNavigation": "Atidaryti navigaciją"
+  },
+  "theme": {
+    "switchToLight": "Perjungti į šviesią temą",
+    "switchToDark": "Perjungti į tamsią temą"
+  },
+  "home": {
+    "eyebrowAuth": "Operations cockpit",
+    "eyebrowGuest": "Lean manufacturing workspace",
+    "titleAuth": "Welcome back{userName}.",
+    "titleGuest": "Planning, stock, and execution in one calmer surface.",
+    "descriptionAuth": "Jump into the next production step, review inventory pressure, and keep BOM changes moving in one focused workspace.",
+    "descriptionGuest": "Craftify gives growing manufacturing teams one structured system for items, BOMs, inventory, and work requests.",
+    "primaryAuth": "Open items workspace",
+    "primaryGuest": "Start free",
+    "secondaryAuth": "Review work items",
+    "secondaryGuest": "Create account",
+    "snapshotEyebrow": "Operations snapshot",
+    "metricModules": "Modules",
+    "metricImportSpeed": "Import speed",
+    "metricSetupBurden": "Setup burden",
+    "focusEyebrow": "Current focus",
+    "focusTitle": "Atomic, feature-ready frontend",
+    "focusDescription": "Shared primitives live below the route layer, so new features can ship without cloning layout, typography, and action patterns.",
+    "featuresEyebrow": "Why this structure holds up",
+    "featuresTitle": "A frontend shape that scales by feature, not by page sprawl.",
+    "featuresDescription": "Atomic UI primitives keep consistency. Feature modules own behavior. Routes only compose the experience.",
+    "featureInventoryTitle": "Inventory intelligence",
+    "featureInventoryDescription": "Drive stock visibility through one extendable pattern for filters, actions, imports, and detail forms.",
+    "featureBomTitle": "BOM workflows",
+    "featureBomDescription": "Keep product structure editing, revision context, and downstream work requests close to the domain.",
+    "featureWorkTitle": "Work orchestration",
+    "featureWorkDescription": "Expose status, calendar actions, and completion flows through reusable feature modules."
+  },
+  "legal": {
+    "termsTitle": "Terms of Service",
+    "termsDescription": "These are placeholder terms. Replace them with your actual terms of service.",
+    "termsItem1": "Use of the service",
+    "termsItem2": "Account responsibilities",
+    "termsItem3": "Billing and cancellations",
+    "termsItem4": "Limitations of liability",
+    "privacyTitle": "Privacy Policy",
+    "privacyDescription": "This is a placeholder privacy policy. Replace it with your real policy.",
+    "privacyDetails": "We explain what data we collect, how we use it, and what choices you have."
+  },
+  "system": {
+    "notFoundTitle": "404",
+    "notFoundDescription": "We couldn't find that page.",
+    "goHome": "Go home"
+  },
+  "erp": {
+    "sidebarCaption": "Restaurant and production ops",
+    "primaryModules": "Core modules",
+    "secondaryModules": "Operational tools",
+    "workspaceLabel": "Operations workspace",
+    "searchLabel": "Search modules and records",
+    "searchPlaceholder": "Search modules, orders, inventory, and settings",
+    "defaultTitle": "ERP workspace",
+    "defaultDescription": "A shared operational shell for restaurant and production workflows.",
+    "placeholderSectionTitle": "Module foundation is ready",
+    "placeholderSectionDescription": "This route now follows the shared ERP shell and can be expanded incrementally with mock services and reusable patterns.",
+    "mockMode": "Mock preview",
+    "nextSliceEyebrow": "Next slice",
+    "nextSliceTitle": "Build the operational workflow, not just the page chrome.",
+    "nextSliceDescription": "Start with realistic mock data, shared list and card patterns, and page-level actions before connecting incomplete APIs.",
+    "settings": {
+      "profile": "Profile",
+      "profileDesc": "Keep operator identity, sign-in behavior, and account-linked defaults consistent across the workspace.",
+      "notifications": "Notifications",
+      "notificationsDesc": "Prepare alert and reminder preferences for kitchen events, delivery issues, and purchasing follow-ups.",
+      "locations": "Locations",
+      "locationsDesc": "Expand this area with site, station, and storage defaults as the operational data model grows.",
+      "localization": "Localization",
+      "localizationDesc": "Control language, formatting, and regional presentation rules for daily work across devices."
+    },
+    "kpi": {
+      "totalOrders": "Orders today",
+      "ordersDetail": "Dining room and delivery orders currently tracked across the service window.",
+      "activeTables": "Active tables",
+      "tablesDetail": "Tables currently seated or turning and likely to affect kitchen pacing.",
+      "deliveriesInProgress": "Deliveries in progress",
+      "deliveriesDetail": "Drivers and inbound ingredient routes that still require monitoring.",
+      "lowStockIngredients": "Low-stock ingredients",
+      "stockDetail": "Ingredients close to replenishment thresholds or already blocking service.",
+      "revenueToday": "Revenue today",
+      "revenueDetail": "Current service-day estimate across dine-in, pickup, and delivery.",
+      "kitchenQueue": "Kitchen queue",
+      "queueDetail": "Tickets, batches, and prep tasks waiting for completion or escalation."
+    },
+    "status": {
+      "prep": "In prep",
+      "ready": "Ready",
+      "delivery": "Out for delivery",
+      "completed": "Completed",
+      "onRoute": "On route",
+      "loading": "Loading",
+      "delayed": "Delayed",
+      "seated": "Seated",
+      "turning": "Turning",
+      "reserved": "Reserved"
+    },
+    "activity": {
+      "deliveryArrived": "Ingredient delivery arrived",
+      "orderFired": "Order fired to kitchen",
+      "lowStockRaised": "Low-stock alert raised",
+      "driverDelayed": "Driver reported a delay"
+    },
+    "quickAction": {
+      "newOrder": "Open order queue",
+      "newOrderDesc": "Review active orders and service timing by channel.",
+      "stockCheck": "Check stock pressure",
+      "stockCheckDesc": "Review low-stock ingredients and replenishment needs.",
+      "startBatch": "Start production batch",
+      "startBatchDesc": "Jump into active work items and kitchen prep tasks.",
+      "dispatch": "Review dispatch board",
+      "dispatchDesc": "Open delivery coordination for customer and ingredient runs."
+    }
+  },
+  "dashboard": {
+    "pageTitle": "Dashboard",
+    "pageDescription": "Track the current pulse of service, stock, kitchen pressure, and delivery flow.",
+    "headerAction": "Open setup wizard",
+    "eyebrow": "Welcome back",
+    "title": "A calmer operational picture for the entire workspace.",
+    "description": "This dashboard combines dining room, kitchen, stock, and delivery signals into one mobile-friendly view that can grow with future ERP modules.",
+    "primaryAction": "Review live orders",
+    "secondaryAction": "Open work queue",
+    "activityEyebrow": "Recent activity",
+    "salesEyebrow": "Daily momentum",
+    "salesTitle": "Weekly sales trend",
+    "liveBadge": "Updated",
+    "quickActionsEyebrow": "Quick actions",
+    "opsEyebrow": "Operational overview",
+    "deliveryEyebrow": "Delivery mix",
+    "deliveryTitle": "Dispatch performance",
+    "orderMixTitle": "Order status mix",
+    "ingredientTitle": "Ingredient pressure",
+    "ordersEyebrow": "Orders",
+    "ordersTitle": "Live order board",
+    "tablesEyebrow": "Floor",
+    "tablesTitle": "Table snapshot",
+    "deliveryBoardEyebrow": "Deliveries",
+    "deliveryBoardTitle": "Dispatch board",
+    "viewAll": "View all",
+    "lineItems": "items",
+    "seats": "seats"
+  },
+  "orders": {
+    "pageTitle": "Orders",
+    "pageDescription": "Track dining room, pickup, and delivery demand from one queue.",
+    "eyebrow": "Demand flow",
+    "title": "Prepare the order module around service speed and visibility.",
+    "description": "The next implementation step should combine table orders, online channels, and fulfillment states without fragmenting the workflow across multiple disconnected screens.",
+    "cta": "Review inventory coverage",
+    "highlight": {
+      "one": {
+        "title": "Unified order inbox",
+        "description": "Merge dine-in, pickup, delivery, and catering into one filterable queue."
+      },
+      "two": {
+        "title": "Actionable status tracking",
+        "description": "Highlight prep, ready, delayed, and completed states with clear next actions."
+      },
+      "three": {
+        "title": "Guest and channel context",
+        "description": "Show table, customer, channel, ETA, and item count in the first scan line."
+      },
+      "four": {
+        "title": "Responsive execution",
+        "description": "Keep the mobile view usable during active service without horizontal scrolling."
+      }
+    }
+  },
+  "production": {
+    "pageTitle": "Kitchen / Production",
+    "pageDescription": "Coordinate prep queues, batches, and production capacity.",
+    "eyebrow": "Execution flow",
+    "title": "Use the production module as the bridge between BOMs and live kitchen work.",
+    "description": "This section should eventually connect recipes, prep batches, and work items so operators can see capacity, blockers, and next steps from one place.",
+    "cta": "Open work items",
+    "highlight": {
+      "one": {
+        "title": "Prep queue visibility",
+        "description": "Surface urgent batches, blocked tickets, and in-progress production clearly."
+      },
+      "two": {
+        "title": "Station-aware layout",
+        "description": "Keep kitchen stations, output targets, and required ingredients easy to compare."
+      },
+      "three": {
+        "title": "BOM-to-batch continuity",
+        "description": "Reuse BOM and work item data instead of duplicating production logic."
+      },
+      "four": {
+        "title": "Touch-friendly controls",
+        "description": "Operators should be able to update state quickly on smaller devices."
+      }
+    }
+  },
+  "inventory": {
+    "pageTitle": "Inventory",
+    "pageDescription": "Manage ingredients, stock movements, and replenishment signals."
+  },
+  "procurement": {
+    "pageTitle": "Procurement",
+    "pageDescription": "Coordinate supplier orders, receiving, and replenishment planning.",
+    "eyebrow": "Supply coordination",
+    "title": "Build procurement around lead time, stock pressure, and receiving confidence.",
+    "description": "Supplier workflows should connect directly to low-stock triggers, purchase requests, and inbound delivery expectations without creating parallel data models.",
+    "cta": "Open inventory",
+    "highlight": {
+      "one": {
+        "title": "Supplier-focused planning",
+        "description": "Compare demand, lead time, and minimum order constraints in one place."
+      },
+      "two": {
+        "title": "Receiving-ready details",
+        "description": "Track expected arrivals, dock notes, and quality checks cleanly."
+      },
+      "three": {
+        "title": "Replaceable mock services",
+        "description": "Start with realistic purchase requests and supplier fixtures before API integration."
+      },
+      "four": {
+        "title": "Shared inventory language",
+        "description": "Reuse units, locations, and item references already present in the inventory and items flows."
+      }
+    }
+  },
+  "deliveries": {
+    "pageTitle": "Deliveries",
+    "pageDescription": "Track driver routes, dispatch timing, and ingredient logistics.",
+    "eyebrow": "Movement",
+    "title": "Plan delivery workflows for both customer orders and inbound ingredient runs.",
+    "description": "The route structure is now ready for route boards, ETA tracking, and issue reporting without forcing a second navigation system.",
+    "cta": "Back to dashboard",
+    "highlight": {
+      "one": {
+        "title": "Dispatch board",
+        "description": "Keep routes, drivers, ETAs, and exceptions visible together."
+      },
+      "two": {
+        "title": "Inbound and outbound coverage",
+        "description": "Support both customer deliveries and ingredient logistics inside one domain."
+      },
+      "three": {
+        "title": "Delay reporting",
+        "description": "Make route blockers and late arrivals obvious and actionable."
+      },
+      "four": {
+        "title": "Operational summaries",
+        "description": "Use cards first, then expand into denser tables on wider screens."
+      }
+    }
+  },
+  "tables": {
+    "pageTitle": "Tables / Floor",
+    "pageDescription": "Manage seating, reservations, and front-of-house floor status.",
+    "eyebrow": "Floor control",
+    "title": "Use this section for host stand and dining room visibility.",
+    "description": "Table state, reservations, seating turnover, and order linkage should stay simple enough for service teams to scan instantly during busy shifts.",
+    "cta": "Open orders",
+    "highlight": {
+      "one": {
+        "title": "Visual floor status",
+        "description": "Show seated, reserved, turning, and available states clearly."
+      },
+      "two": {
+        "title": "Reservation context",
+        "description": "Keep booking time, party size, and special notes near the table state."
+      },
+      "three": {
+        "title": "Fast reassignment",
+        "description": "Mobile-friendly controls should support quick updates during service."
+      },
+      "four": {
+        "title": "Order connection",
+        "description": "Link table state back to active orders without duplicating guest workflow data."
+      }
+    }
+  },
+  "menu": {
+    "pageTitle": "Menu",
+    "pageDescription": "Manage dishes, pricing, availability, and ingredient relationships.",
+    "eyebrow": "Menu design",
+    "title": "Treat menu configuration as an operational module, not static content.",
+    "description": "Dishes, prep dependencies, availability windows, and cost impact should fit naturally alongside item and inventory management.",
+    "cta": "Open items",
+    "highlight": {
+      "one": {
+        "title": "Dish-to-ingredient mapping",
+        "description": "Keep menu items close to their ingredient and production dependencies."
+      },
+      "two": {
+        "title": "Availability awareness",
+        "description": "Reflect stock pressure and production limits in availability decisions."
+      },
+      "three": {
+        "title": "Channel-specific presentation",
+        "description": "Leave room for dine-in, delivery, and seasonal variations later."
+      },
+      "four": {
+        "title": "Replaceable pricing mocks",
+        "description": "Use realistic sample dishes and pricing rules until backend coverage is ready."
+      }
+    }
+  },
+  "reports": {
+    "pageTitle": "Reports",
+    "pageDescription": "Review performance, waste, cost, and service trends without leaving the ERP shell.",
+    "eyebrow": "Analysis",
+    "title": "Reporting should grow from operational patterns already present in the dashboard.",
+    "description": "The initial route should stay lightweight while chart, export, and filter conventions are normalized across the product.",
+    "cta": "Open dashboard",
+    "highlight": {
+      "one": {
+        "title": "Shared KPI language",
+        "description": "Reuse dashboard metrics and status definitions for report summaries."
+      },
+      "two": {
+        "title": "Scalable filters",
+        "description": "Build date, location, and channel filters once and reuse them."
+      },
+      "three": {
+        "title": "Export-aware design",
+        "description": "Prepare report sections that can later support print and CSV export cleanly."
+      },
+      "four": {
+        "title": "Small-screen readability",
+        "description": "Summary cards and simplified charts should remain useful on mobile."
+      }
+    }
+  },
+  "settings": {
+    "pageTitle": "Settings",
+    "pageDescription": "Control localization, defaults, workspace setup, and operator preferences.",
+    "title": "Settings foundation",
+    "description": "This area anchors workspace configuration so setup and ongoing preferences can expand without spreading settings across unrelated pages.",
+    "eyebrow": "Configuration",
+    "workspaceEyebrow": "Current workspace",
+    "languageLabel": "Language",
+    "languageHelp": "Choose the default language for the protected workspace.",
+    "themeLabel": "Theme",
+    "themeHelp": "Apply the visual theme operators should use after sign-in.",
+    "save": "Save preferences",
+    "saving": "Saving...",
+    "saved": "Preferences saved.",
+    "saveError": "We could not save your preferences.",
+    "openWizard": "Launch setup wizard"
+  },
+  "wizard": {
+    "pageTitle": "Setup wizard",
+    "pageDescription": "Guide a new workspace through the operator preferences that must be set on first login.",
+    "eyebrow": "Onboarding",
+    "title": "Set the workspace preferences before entering operations.",
+    "description": "This wizard captures the current operator preferences already exposed in settings and stores them for the authenticated user.",
+    "progressEyebrow": "Progress",
+    "activeStep": "Current",
+    "language": "Language",
+    "theme": "Theme",
+    "lightTheme": "Light",
+    "darkTheme": "Dark",
+    "back": "Back",
+    "next": "Next",
+    "finish": "Finish setup",
+    "saving": "Saving...",
+    "saveError": "We could not finish setup. Try again.",
+    "step": {
+      "locale": {
+        "title": "Choose your language",
+        "description": "Set the language operators should use in the workspace.",
+        "help": "This becomes the saved default for the authenticated user and can still be changed later in settings.",
+        "fieldHelp": "Use the language that should open by default after login."
+      },
+      "theme": {
+        "title": "Choose your theme",
+        "description": "Pick the default visual theme for the workspace shell.",
+        "help": "The saved theme is applied immediately and remains editable in settings.",
+        "fieldHelp": "Use the theme that should be restored on future logins."
+      },
+      "review": {
+        "title": "Review setup",
+        "description": "Confirm the defaults before entering the dashboard.",
+        "help": "This summary confirms the current preferences before the onboarding flag is completed."
+      }
+    }
+  },
+  "items": {
+    "pageTitle": "Items",
+    "pageDescription": "Maintain products, ingredients, and stock-linked master data."
+  },
+  "boms": {
+    "pageTitle": "BOMs",
+    "pageDescription": "Manage bill of materials and production structure details."
+  },
+  "workItems": {
+    "pageTitle": "Work items",
+    "pageDescription": "Track production requests, status transitions, and completion."
+  },
+  "calendar": {
+    "pageTitle": "Calendar",
+    "pageDescription": "Coordinate time-based production and operational events."
+  }
+}

@@ -82,8 +82,6 @@ export const ROUTE_META = {
     "/dashboard": {
         titleKey: "dashboard.pageTitle",
         descriptionKey: "dashboard.pageDescription",
-        actionLabelKey: "dashboard.headerAction",
-        actionTo: "/settings/setup",
     },
     "/orders": {
         titleKey: "orders.pageTitle",
@@ -124,8 +122,6 @@ export const ROUTE_META = {
     "/settings": {
         titleKey: "settings.pageTitle",
         descriptionKey: "settings.pageDescription",
-        actionLabelKey: "settings.openWizard",
-        actionTo: "/settings/setup",
     },
     "/settings/setup": {
         titleKey: "wizard.pageTitle",

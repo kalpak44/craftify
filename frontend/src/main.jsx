@@ -6,6 +6,7 @@ import {BrowserRouter} from "react-router-dom";
 import {Auth0ProviderWithNavigate} from "./Auth0ProviderWithNavigate.jsx";
 import {LocalizationProvider} from "./providers/LocalizationProvider.jsx";
 import {ThemeProvider} from "./providers/ThemeProvider.jsx";
+import {UserPreferencesProvider} from "./providers/UserPreferencesProvider.jsx";
 
 const path = import.meta.env.VITE_APP_ROOT_PATH;
 
@@ -23,7 +24,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <ThemeProvider>
                 <BrowserRouter basename={path}>
                     <Auth0ProviderWithNavigate>
-                        <App/>
+                        <UserPreferencesProvider>
+                            <App/>
+                        </UserPreferencesProvider>
                     </Auth0ProviderWithNavigate>
                 </BrowserRouter>
             </ThemeProvider>

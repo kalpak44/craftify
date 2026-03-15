@@ -35,7 +35,14 @@ const formatMessage = (message, values) => {
     );
 };
 
-const getMessage = (locale, key, fallback) => MESSAGES[locale]?.[key] ?? MESSAGES[DEFAULT_LOCALE][key] ?? fallback ?? key;
+const getNestedMessage = (messages, key) => key
+    .split(".")
+    .reduce((value, segment) => (value && typeof value === "object" ? value[segment] : undefined), messages);
+
+const getMessage = (locale, key, fallback) => getNestedMessage(MESSAGES[locale], key)
+    ?? getNestedMessage(MESSAGES[DEFAULT_LOCALE], key)
+    ?? fallback
+    ?? key;
 
 export function LocalizationProvider({children}) {
     const [locale, setLocale] = useState(getInitialLocale);

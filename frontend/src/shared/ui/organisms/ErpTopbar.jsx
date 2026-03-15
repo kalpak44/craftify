@@ -6,12 +6,11 @@ import {LocaleSwitcher} from "../molecules/LocaleSwitcher";
 import {ThemeToggle} from "../molecules/ThemeToggle";
 import {useLocalization} from "../../../hooks/useLocalization";
 import {findRouteMeta} from "../../../features/erp/config/navigation";
-import {logoutUser} from "../../../utils/authSession";
 
 export function ErpTopbar({onOpenNavigation}) {
     const location = useLocation();
     const {t} = useLocalization();
-    const {user, logout} = useAuth0();
+    const {user} = useAuth0();
     const meta = findRouteMeta(location.pathname);
 
     return (
@@ -20,7 +19,7 @@ export function ErpTopbar({onOpenNavigation}) {
                 <button
                     type="button"
                     onClick={onOpenNavigation}
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/70 text-sm font-semibold text-[var(--text-primary)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.7)] lg:hidden dark:bg-white/10 dark:text-white dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]"
+                    className="glass-panel inline-flex h-11 w-11 items-center justify-center rounded-full text-sm font-semibold text-[var(--text-primary)] lg:hidden"
                     aria-label={t("header.openNavigation")}
                 >
                     NAV
@@ -46,7 +45,7 @@ export function ErpTopbar({onOpenNavigation}) {
                         id="erp-shell-search"
                         type="search"
                         placeholder={t("erp.searchPlaceholder")}
-                        className="h-11 w-full rounded-full bg-white/70 px-4 text-sm text-[var(--text-primary)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.7)] outline-none ring-0 placeholder:text-[var(--text-muted)] dark:bg-white/10 dark:text-white dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]"
+                        className="glass-panel h-11 w-full rounded-full px-4 text-sm text-[var(--text-primary)] outline-none ring-0 placeholder:text-[var(--text-muted)]"
                     />
                 </div>
 
@@ -58,10 +57,9 @@ export function ErpTopbar({onOpenNavigation}) {
                             {t(meta.actionLabelKey)}
                         </Button>
                     ) : null}
-                    <div className="rounded-full bg-white/70 px-2 py-2 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.7)] dark:bg-white/10 dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]">
-                        <button
-                            type="button"
-                            onClick={() => logoutUser(logout)}
+                    <div className="glass-panel rounded-full px-2 py-2">
+                        <Link
+                            to="/settings"
                             className="flex items-center gap-3 rounded-full px-2 text-left"
                         >
                             <img
@@ -77,7 +75,7 @@ export function ErpTopbar({onOpenNavigation}) {
                                     {user?.email}
                                 </span>
                             </span>
-                        </button>
+                        </Link>
                     </div>
                 </div>
             </div>
